@@ -1,0 +1,10 @@
+
+TARGET = kegsmac
+OBJECTS = $(OBJECTS1) macsnd_driver.o macdriver.o
+CCOPTS = -O2 -DMAC
+SUFFIX =
+NAME = kegsmac
+
+XOPTS = -Wall -fpascal-strings -mdynamic-no-pic -arch ppc
+XLIBS =
+
