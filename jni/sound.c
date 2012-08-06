@@ -45,7 +45,7 @@ int	g_queued_samps = 0;
 int	g_queued_nonsamps = 0;
 int	g_num_osc_interrupting = 0;
 
-#if defined(HPUX) || defined(__linux__) || defined(_WIN32) || defined(MAC)
+#if defined(HPUX) || (defined(__linux__) && !defined(__ANDROID__)) || defined(_WIN32) || defined(MAC)
 int	g_audio_enable = -1;
 #else
 # if defined(OSS)
@@ -237,7 +237,7 @@ sound_init()
 void
 sound_init_general()
 {
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC) && !defined(__ANDROID__)
 	int	pid;
 	int	shmid;
 	int	tmp;
@@ -247,7 +247,7 @@ sound_init_general()
 	int	size;
 	int	ret;
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC) && !defined(__ANDROID__)
 	if(!g_use_shmem) {
 		if(g_audio_enable < 0) {
 			printf("Defaulting audio off for slow X display\n");
@@ -264,7 +264,7 @@ sound_init_general()
 
 	size = SOUND_SHM_SAMP_SIZE * SAMPLE_CHAN_SIZE;
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC) && !defined(__ANDROID__)
 	shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | 0777);
 	if(shmid < 0) {
 		printf("sound_init: shmget ret: %d, errno: %d\n", shmid,
@@ -295,7 +295,7 @@ sound_init_general()
 
 	fflush(stdout);
 
-#if !defined(MAC) && !defined(_WIN32) && !defined(__CYGWIN__)
+#if !defined(MAC) && !defined(_WIN32) && !defined(__CYGWIN__) && !defined(__ANDROID__)
 	/* prepare pipe so parent can signal child each other */
 	/*  pipe[0] = read side, pipe[1] = write end */
 	ret = pipe(&g_pipe_fd[0]);
@@ -348,8 +348,10 @@ sound_init_general()
 # ifdef MAC
 	macsnd_init(shmaddr);
 # else
+#  if !defined(__ANDROID__)
 /* windows */
 	win32snd_init(shmaddr);
+#  endif
 # endif
 #endif /* _WIN32 */
 
@@ -1009,7 +1011,7 @@ sound_play(double dsamps)
 	
 				outptr += 2;
 
-#if defined(__linux__) || defined(OSS)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(OSS)
 				/* Linux seems to expect little-endian */
 				/*  samples always, even on PowerPC */
 # ifdef KEGS_LITTLE_ENDIAN

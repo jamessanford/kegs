@@ -17,7 +17,7 @@ const char rcsid_sound_driver_c[] = "@(#)$KmKId: sound_driver.c,v 1.17 2004-09-2
 # include <sys/audio.h>
 #endif
 
-#if defined(__linux__) || defined(OSS)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(OSS)
 # include <sys/soundcard.h>
 #endif
 
@@ -128,10 +128,14 @@ child_sound_loop(int read_fd, int write_fd, word32 *shm_addr)
 	g_childsnd_vbl = 0;
 	g_childsnd_shm_addr = shm_addr;
 
+#if defined(__ANDROID__)
+        return;
+#endif
+
 #ifdef HPUX
 	child_sound_init_hpdev();
 #endif
-#if defined(__linux__) || defined(OSS)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(OSS)
 	child_sound_init_linux();
 #endif
 #ifdef _WIN32
@@ -351,7 +355,7 @@ child_sound_init_hpdev()
 }
 #endif	/* HPUX */
 
-#if defined(__linux__) || defined(OSS)
+#if (defined(__linux__) && !defined(__ANDROID__)) || defined(OSS)
 void
 child_sound_init_linux()
 {

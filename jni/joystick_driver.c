@@ -13,8 +13,10 @@ const char rcsid_joystick_driver_c[] = "@(#)$KmKId: joystick_driver.c,v 1.12 200
 #include "defc.h"
 #include <sys/time.h>
 
+#ifndef __ANDROID__
 #ifdef __linux__
 # include <linux/joystick.h>
+#endif
 #endif
 
 #ifdef _WIN32
@@ -37,6 +39,7 @@ int	g_joystick_num_axes = 0;
 int	g_joystick_num_buttons = 0;
 
 
+#ifndef __ANDROID__
 #ifdef __linux__
 # define JOYSTICK_DEFINED
 void
@@ -128,6 +131,7 @@ joystick_update_buttons()
 {
 }
 #endif /* LINUX */
+#endif
 
 #ifdef _WIN32
 # define JOYSTICK_DEFINED

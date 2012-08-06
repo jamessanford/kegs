@@ -14,6 +14,8 @@ const char rcsid_dis_c[] = "@(#)$KmKId: dis.c,v 1.103 2004-11-24 16:41:41-05 ken
 #include "defc.h"
 #include <stdarg.h>
 
+#include <android/log.h>
+
 #include "disas.h"
 
 #define LINE_SIZE 160
@@ -1170,8 +1172,9 @@ halt_printf(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-	vprintf(fmt, args);
+        __android_log_vprint(ANDROID_LOG_ERROR,"libkegs",fmt,args);
 	va_end(args);
+        while(1) { sleep(600); } // sleep forever
 
 	set_halt(1);
 }
