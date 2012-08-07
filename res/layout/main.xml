@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    
+    <com.froop.app.kegs.KegsView
+      android:id="@+id/kegsview"
+      android:layout_width="704px"
+      android:layout_height="462px"/>
+
+<LinearLayout orientation="horiontal" android:layout_width="wrap_content" android:layout_height="wrap_content">
+
+<Button android:id="@+id/key_escape" android:text="Esc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+
+<Button android:id="@+id/key_return" android:text="Return" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+    
+<Button android:id="@+id/key_tab" android:text="Tab" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+    
+<Button android:id="@+id/key_f4" android:text="F4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+
+<ToggleButton android:id="@+id/key_control"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="left|bottom"
+    android:textOn="Ctrl"
+    android:textOff="Ctrl" />
+
+<ToggleButton android:id="@+id/key_open_apple"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="left|bottom"
+    android:textOn="Cmd"
+    android:textOff="Cmd" />
+
+<ToggleButton android:id="@+id/key_closed_apple"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="left|bottom"
+    android:textOn="Opt"
+    android:textOff="Opt" />
+
+<Button android:id="@+id/key_left" android:text="Left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+
+<Button android:id="@+id/key_right" android:text="Right" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+
+<Button android:id="@+id/key_up" android:text="Up" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+
+<Button android:id="@+id/key_down" android:text="Down" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" />
+
+</LinearLayout>
+
+</FrameLayout>
