@@ -114,7 +114,6 @@ xdriver_end()
 
 void
 x_get_kimage(Kimage *kimage_ptr) {
-// TODO: need to fix this
         byte    *ptr;
         int     width;
         int     height;
@@ -126,17 +125,17 @@ x_get_kimage(Kimage *kimage_ptr) {
         depth = kimage_ptr->depth;
         mdepth = kimage_ptr->mdepth;
 
-                size = (width*height*mdepth) >> 3;
-                ptr = (byte *)malloc(size);
+        size = (width*height*mdepth) >> 3;
+        ptr = (byte *)malloc(size);
 
-                if(ptr == 0) {
-                        mac_printf("malloc for data fail, mdepth:%d\n", mdepth);
-                        exit(2);
-                }
+        if(ptr == 0) {
+                mac_printf("malloc for data fail, mdepth:%d\n", mdepth);
+                exit(2);
+        }
 
-                kimage_ptr->data_ptr = ptr;
+        kimage_ptr->data_ptr = ptr;
 
-                kimage_ptr->dev_handle = (void *)-1;
+        kimage_ptr->dev_handle = (void *)-1;
 }
 
 
