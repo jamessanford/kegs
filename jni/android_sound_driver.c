@@ -122,8 +122,8 @@ void child_sound_init_android() {
   SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, outputMixObject};
   SLDataSink audioSnk = {&loc_outmix, NULL};
 
-  const SLInterfaceID ids[3] = {SL_IID_BUFFERQUEUE, SL_IID_VOLUME};
-  const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+  const SLInterfaceID ids[2] = {SL_IID_BUFFERQUEUE, SL_IID_VOLUME};
+  const SLboolean req[2] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
   result = (*engineEngine)->CreateAudioPlayer(engineEngine, &bqPlayerObject, &audioSrc, &audioSnk, 2, ids, req);
   assert(SL_RESULT_SUCCESS == result);
 
