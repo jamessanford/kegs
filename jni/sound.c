@@ -45,7 +45,7 @@ int	g_queued_samps = 0;
 int	g_queued_nonsamps = 0;
 int	g_num_osc_interrupting = 0;
 
-#if defined(HPUX) || (defined(__linux__) && !defined(__ANDROID__)) || defined(_WIN32) || defined(MAC)
+#if defined(HPUX) || defined(__linux__) || defined(_WIN32) || defined(MAC) || defined(__ANDROID__)
 int	g_audio_enable = -1;
 #else
 # if defined(OSS)
@@ -344,16 +344,16 @@ sound_init_general()
 	}
 
 	parent_sound_get_sample_rate(g_pipe2_fd[0]);
-#else
-# ifdef MAC
+#endif
+#ifdef MAC
 	macsnd_init(shmaddr);
-# else
-#  if !defined(__ANDROID__)
-/* windows */
+#endif
+#ifdef __ANDROID__
+       android_snd_init(shmaddr);
+#endif
+#ifdef _WIN32
 	win32snd_init(shmaddr);
-#  endif
-# endif
-#endif /* _WIN32 */
+#endif
 
 }
 
@@ -598,7 +598,7 @@ send_sound(int real_samps, int size)
 	DOC_LOG("send_sound", -1, g_last_sound_play_dsamp,
 						(real_samps << 30) + size);
 
-#if defined(MAC) || defined(_WIN32)
+#if defined(MAC) || defined(_WIN32) || defined(__ANDROID__)
 	ret = 0;
 	child_sound_playit(tmp);
 #else
@@ -1011,7 +1011,7 @@ sound_play(double dsamps)
 	
 				outptr += 2;
 
-#if (defined(__linux__) && !defined(__ANDROID__)) || defined(OSS)
+#if defined(__linux__) || defined(OSS)
 				/* Linux seems to expect little-endian */
 				/*  samples always, even on PowerPC */
 # ifdef KEGS_LITTLE_ENDIAN

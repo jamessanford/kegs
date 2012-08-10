@@ -75,12 +75,15 @@ reliable_buf_write(word32 *shm_addr, int pos, int size)
 	while(size > 0) {
 #ifdef _WIN32
 		ret = win32_send_audio(ptr, size);
-#else
-# ifdef MAC
+#endif
+#ifdef MAC
 		ret = mac_send_audio(ptr, size);
-# else
+#endif
+#ifdef __ANDROID__
+		ret = android_send_audio(ptr, size);
+#endif
+#if !defined(_WIN32) && !defined(MAC) && !defined(__ANDROID__)
 		ret = write(g_audio_socket, ptr, size);
-# endif
 #endif
 
 		if(ret < 0) {
@@ -128,10 +131,6 @@ child_sound_loop(int read_fd, int write_fd, word32 *shm_addr)
 	g_childsnd_vbl = 0;
 	g_childsnd_shm_addr = shm_addr;
 
-#if defined(__ANDROID__)
-        return;
-#endif
-
 #ifdef HPUX
 	child_sound_init_hpdev();
 #endif
@@ -144,6 +143,10 @@ child_sound_loop(int read_fd, int write_fd, word32 *shm_addr)
 #endif
 #ifdef MAC
 	child_sound_init_mac();
+	return;
+#endif
+#if defined(__ANDROID__)
+	child_sound_init_android();
 	return;
 #endif
 
