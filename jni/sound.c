@@ -1543,7 +1543,12 @@ doc_write_ctl_reg(int osc, int val, double dsamps)
 		if(old_halt != 0) {
 			/* start sound */
 			DOC_LOG("ctl_sound_play", osc, eff_dsamps, val);
+#ifdef __ANDROID__
+			//  OG  If the sound_play is executed, it may restart a oscillo we thought was stopped at time,
+			//      hence  crashing the start_sound function
+#else
 			sound_play(eff_dsamps);
+#endif
 			g_doc_regs[osc].ctl = val;
 
 			start_sound(osc, eff_dsamps, dsamps);
@@ -1893,6 +1898,12 @@ doc_write_c03d(int val, double dcycs)
 				}
 				g_doc_num_osc_en = tmp;
 				UPDATE_G_DCYCS_PER_DOC_UPDATE(tmp);
+
+#ifdef __ANDROID__
+				// OG Update any oscs that were running to take care of the new numbers of oscillo
+				for(i = 0; i<g_doc_num_osc_en; i++)
+					doc_recalc_sound_parms(i,0.0,0.0);
+#endif
 
 				/* Stop any oscs that were running but now */
 				/*   are disabled */
