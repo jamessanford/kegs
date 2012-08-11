@@ -13,15 +13,11 @@ const char rcsid_protos_mac_h[] = "@(#)$KmKId: protos_macdriver.h,v 1.11 2004-11
 /* END_HDR */
 
 /* macdriver.c */
-pascal OSStatus quit_event_handler(EventHandlerCallRef call_ref, EventRef event, void *ignore);
+
 void show_simple_alert(char *str1, char *str2, char *str3, int num);
 void x_dialog_create_kegs_conf(const char *str);
-int x_show_alert(int is_fatal, const char *str);
-pascal OSStatus my_cmd_handler(EventHandlerCallRef handlerRef, EventRef event, void *userdata);
-void update_window(void);
-void show_event(UInt32 event_class, UInt32 event_kind, int handled);
-pascal OSStatus my_win_handler(EventHandlerCallRef handlerRef, EventRef event, void *userdata);
-pascal OSStatus dummy_event_handler(EventHandlerCallRef call_ref, EventRef in_event, void *ignore);
+int x_show_alert(int is_fatal, const char *str);void update_window(void);
+
 void mac_update_modifiers(word32 state);
 void mac_warp_mouse(void);
 void check_input_events(void);

@@ -911,8 +911,12 @@ inst44_out_of_time_8
 	GET_2BYTE_ARG;
 	/* arg & 0xff = dest bank, arg & 0xff00 = src bank */
 	if(psr & 0x110) {
+		// OG MVP should work even with no native mode - keep the warning though
+		printf("MVP but not native m or x!\n");
+		/*
 		halt_printf("MVP but not native m or x!\n");
 		break;
+		*/
 	}
 	CYCLES_MINUS_2
 	dbank = arg & 0xff;
@@ -1158,8 +1162,12 @@ inst54_notnat_8
 	GET_2BYTE_ARG;
 	/* arg & 0xff = dest bank, arg & 0xff00 = src bank */
 	if(psr & 0x110) {
+		// OG MVN should work even with no native mode - keep the warning though
+		printf("MVN but not native m or x!\n");
+		/*
 		halt_printf("MVN but not native m or x!\n");
 		break;
+		*/
 	}
 	CYCLES_MINUS_2;
 	dbank = arg & 0xff;

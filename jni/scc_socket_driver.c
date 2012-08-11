@@ -14,12 +14,17 @@ const char rcsid_scc_socket_driver_c[] = "@(#)$KmKId: scc_socket_driver.c,v 1.11
 
 #include "defc.h"
 #include "scc.h"
+#ifndef UNDER_CE	//OG
 #include <signal.h>
-
+#endif
 extern Scc scc_stat[2];
 extern int g_serial_modem[];
 
+#ifndef _MSC_VER //OG
 extern int h_errno;
+#else
+#define socklen_t int
+#endif
 int g_wsastartup_called = 0;
 
 /* Usage: scc_socket_init() called to init socket mode */
@@ -186,7 +191,7 @@ scc_socket_open_outgoing(int port, double dcycs)
 	memset(&sa_in, 0, sizeof(sa_in));
 	sa_in.sin_family = AF_INET;
 	sa_in.sin_port = htons(23);
-	hostentptr = gethostbyname(&scc_ptr->modem_cmd_str[0]);
+	hostentptr = gethostbyname((const char*)&scc_ptr->modem_cmd_str[0]);	// OG Added Cast
 	if(hostentptr == 0) {
 #ifdef _WIN32
 		fatal_printf("Lookup host %s failed\n",
@@ -343,8 +348,8 @@ scc_accept_socket(int port, double dcycs)
 		return;		/* just give up */
 	}
 	if(scc_ptr->rdwrfd == -1) {
-		rdwrfd = accept(scc_ptr->sockfd, scc_ptr->host_handle,
-						&(scc_ptr->host_aux1));
+		rdwrfd = accept(scc_ptr->sockfd, (sockaddr*)scc_ptr->host_handle,
+						(socklen_t*)&(scc_ptr->host_aux1));
 		if(rdwrfd < 0) {
 			return;
 		}
@@ -439,7 +444,7 @@ scc_socket_fill_readbuf(int port, int space_left, double dcycs)
 
 	/* Try reading some bytes */
 	space_left = MIN(space_left, 256);
-	ret = recv(rdwrfd, tmp_buf, space_left, 0);
+	ret = recv(rdwrfd, (char*)tmp_buf, space_left, 0);	// OG Added cast
 	if(ret > 0) {
 		for(i = 0; i < ret; i++) {
 			if(tmp_buf[i] == 0) {
@@ -731,7 +736,7 @@ scc_socket_empty_writebuf(int port, double dcycs)
 			}
 
 # ifdef _WIN32
-			ret = send(rdwrfd, &(scc_ptr->out_buf[rdptr]), len, 0);
+			ret = send(rdwrfd, (const char*)&(scc_ptr->out_buf[rdptr]), len, 0); // OG Added Cast
 # else
 			/* ignore SIGPIPE around writes to the socket, so we */
 			/*  can catch a closed socket and prepare to accept */
@@ -791,7 +796,7 @@ scc_socket_modem_write(int port, int c, double dcycs)
 	}
 
 	modem_mode = scc_ptr->modem_mode;
-	str = &(scc_ptr->modem_cmd_str[0]);
+	str = (char*)&(scc_ptr->modem_cmd_str[0]);	// OG Added Cast
 
 #if 0
 	printf("M: %02x\n", c);
@@ -855,7 +860,7 @@ scc_socket_do_cmd_str(int port, double dcycs)
 
 	scc_ptr = &(scc_stat[port]);
 
-	str = &(scc_ptr->modem_cmd_str[0]);
+	str = (char*)&(scc_ptr->modem_cmd_str[0]); // OG Added cast
 	printf("Got modem string :%s:=%02x %02x %02x\n", str, str[0], str[1],
 						str[2]);
 
@@ -1093,7 +1098,7 @@ scc_socket_modem_do_ring(int port, double dcycs)
 			num_rings = 0;
 		}
 		scc_ptr->socket_num_rings = num_rings;
-		scc_ptr->socket_last_ring_dcycs = dcycs;
+		scc_ptr->socket_last_ring_dcycs = (int)dcycs;
 		if(num_rings <= 0) {
 			/* decide on answering */
 			if(scc_ptr->modem_s0_val || (g_serial_modem[port]==0)) {

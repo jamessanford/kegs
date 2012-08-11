@@ -5,6 +5,6 @@ CCOPTS = -O2 -DMAC
 SUFFIX =
 NAME = kegsmac
 
-XOPTS = -Wall -fpascal-strings -mdynamic-no-pic -arch ppc
+XOPTS = 
 XLIBS =
 

@@ -16,8 +16,16 @@ const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.367 2004-11-22 02:39
 #include "defc.h"
 #undef INCLUDE_RCSID_C
 
+#ifdef UNDER_CE
+#define vsnprintf _vsnprintf
+#endif
+
+
 #define PC_LOG_LEN	(8*1024)
 
+int g_speed_fast ;	// OG Expose fast parameter
+int	g_initialized = 0;	// OG To know if the emulator has finalized its initialization
+int	g_accept_events = 0; // OG To know if the emulator is ready to accept external events
 
 char g_argv0_path[256] = "./";
 
@@ -27,7 +35,7 @@ const char *g_kegs_default_paths[] = { "", "./", "/mnt/sdcard/KEGS/",
         "/mnt/sdcard/kegs/",
         "/sdcard/kegs/",
         "/storage/sdcard0/kegs/",
-	"${0}/", 0 };
+        "${0}/", 0 };
 
 #define MAX_EVENTS	64
 
@@ -40,6 +48,7 @@ const char *g_kegs_default_paths[] = { "", "./", "/mnt/sdcard/KEGS/",
 #define EV_VBL_INT	5
 #define EV_SCC		6
 #define EV_VID_UPD	7
+//#define	EV_DELAY_WRITE_C023 8
 
 extern int g_stepping;
 
@@ -102,7 +111,9 @@ int	g_serial_out_masking = 0;
 int	g_serial_modem[2] = { 0, 1 };
 
 int	g_config_iwm_vbl_count = 0;
-const char g_kegs_version_str[] = "0.91";
+const char* g_kegs_version_str = "0.91";
+
+int g_pause=0;	// OG Added pause
 
 #define START_DCYCS	(0.0)
 
@@ -159,6 +170,13 @@ byte *g_dummy_memory1_ptr = 0;
 byte *g_rom_fc_ff_ptr = 0;
 byte *g_rom_cards_ptr = 0;
 
+// OG Added allocated pointers
+byte *g_slow_memory_ptr_allocated = 0;
+byte *g_memory_ptr_allocated = 0;
+byte *g_dummy_memory1_ptr_allocated = 0;
+byte *g_rom_fc_ff_ptr_allocated = 0;
+byte *g_rom_cards_ptr_allocated = 0;
+
 void *g_memory_alloc_ptr = 0;		/* for freeing memory area */
 
 Page_info page_info_rd_wr[2*65536 + PAGE_INFO_PAD_SIZE];
@@ -174,6 +192,69 @@ Data_log *g_log_data_ptr = &(g_data_log_array[0]);
 Data_log *g_log_data_start_ptr = &(g_data_log_array[0]);
 Data_log *g_log_data_end_ptr = &(g_data_log_array[PC_LOG_LEN]);
 
+// OG Added sim65816_initglobals()
+void sim65816_initglobals()
+{
+
+	g_fcycles_stop = 0.0;
+	halt_sim = 0;
+	enter_debug = 0;
+	g_rom_version = -1;
+	g_user_halt_bad = 0;
+	g_halt_on_bad_read = 0;
+	g_ignore_bad_acc = 1;
+	g_ignore_halts = 1;
+	g_code_red = 0;
+	g_code_yellow = 0;
+	g_use_alib = 0;
+	g_raw_serial = 1;
+	g_iw2_emul = 0;
+	g_serial_out_masking = 0;
+	//g_serial_modem[2] = { 0, 1 };
+
+	g_config_iwm_vbl_count = 0;
+
+	g_pause=0;	
+
+	g_last_vbl_dcycs = START_DCYCS;
+	g_cur_dcycs = START_DCYCS;
+
+	g_last_vbl_dadjcycs = 0.0;
+	g_dadjcycs = 0.0;
+
+
+	g_wait_pending = 0;
+	g_stp_pending = 0;
+
+	g_num_irq = 0;
+	g_num_brk = 0;
+	g_num_cop = 0;
+	g_num_enter_engine = 0;
+	g_io_amt = 0;
+	g_engine_action = 0;
+	g_engine_halt_event = 0;
+	g_engine_scan_int = 0;
+	g_engine_doc_int = 0;
+
+	g_testing = 0;
+	g_testing_enabled = 0;
+
+	g_debug_file_fd = -1;
+	g_fatal_log = -1;
+
+	 g_25sec_cntr = 0;
+	g_1sec_cntr = 0;
+
+	 g_dnatcycs_1sec = 0.0;
+	g_natcycs_lastvbl = 0;
+
+	 Verbose = 0;
+	 Halt_on = 0;
+
+	 g_mem_size_base = 256*1024;	/* size of motherboard memory */
+	 g_mem_size_exp = 8*1024*1024;	/* size of expansion RAM card */
+	 g_mem_size_total = 256*1024;	/* Total contiguous RAM from 0 */
+}
 
 void
 show_pc_log()
@@ -303,7 +384,7 @@ toolbox_debug_c(word32 xreg, word32 stack, double *cyc_ptr)
 	pos = g_toolbox_log_pos;
 
 	stack += 9;
-	g_toolbox_log_array[pos][0] = g_last_vbl_dcycs + *cyc_ptr;
+	g_toolbox_log_array[pos][0] = (word32)(g_last_vbl_dcycs + *cyc_ptr);
 	g_toolbox_log_array[pos][1] = stack+1;
 	g_toolbox_log_array[pos][2] = xreg;
 	g_toolbox_log_array[pos][3] = toolbox_debug_4byte(stack+1);
@@ -596,12 +677,28 @@ show_regs()
 	show_regs_act(&engine);
 }
 
-void
-my_exit(int ret)
+//OG for regular exit, use quitEmulator()
+
+void quitEmulator()
+{
+	printf("set_halt(HALT_WANTTOQUIT)\n");	
+	set_halt(HALT_WANTTOQUIT);
+}
+
+//OG change exit to fatal_exit()
+
+#ifndef ACTIVEGS
+	// use standard exit function
+	#define fatalExit	exit
+#else
+	extern void fatalExit(int);
+#endif
+
+void my_exit(int ret)
 {
 	end_screen();
-	printf("exiting\n");
-	exit(ret);
+	printf("exiting (ret=%d)\n",ret);
+	fatalExit(ret);
 }
 
 
@@ -640,6 +737,46 @@ do_reset()
 	engine.kpc = get_memory16_c(0x00fffc, 0);
 
 	g_stepping = 0;
+
+	// OG Cleared remaining IRQS on RESET
+	{
+
+	extern int	g_irq_pending;
+	extern	int g_scan_int_events ;
+	extern int g_c023_val;
+
+/*
+		#define REMOVEIRQ(ADR) { extern int ADR; if (ADR) { remove_irq(); ADR=0; } }	
+		#define CLEARIRQ(ADR) { extern int ADR; ADR=0;  }	
+		
+		REMOVEIRQ(g_adb_kbd_srq_sent);
+		REMOVEIRQ(g_adb_data_int_sent);
+		REMOVEIRQ(g_adb_mouse_int_sent);
+		REMOVEIRQ(c046_vbl_irq_pending);
+		REMOVEIRQ(c046_25sec_irq_pend);
+		REMOVEIRQ(c023_scan_int_irq_pending);
+		REMOVEIRQ(c023_1sec_int_irq_pending);
+		REMOVEIRQ(c046_vbl_irq_pending);
+
+		CLEARIRQ(c041_en_25sec_ints);
+		CLEARIRQ(c041_en_vbl_ints);
+		CLEARIRQ(c041_en_switch_ints);
+		CLEARIRQ(c041_en_move_ints);
+		CLEARIRQ(c041_en_mouse);
+		
+		g_scan_int_events = 0;
+
+		initialize_events();
+*/
+		if (g_irq_pending) 
+			halt_printf("*** irq remainings...\n");
+
+/*
+		g_irq_pending = 0;    	    
+		// reinitiliase zip speed (not sure)???
+		// g_zipgs_reg_c05a = 0x80; 
+		*/
+	}	
 
 }
 
@@ -695,6 +832,7 @@ check_engine_asm_defines()
 	CHECK(fplusptr, fplusptr->plus_x_minus_1, FPLUS_PLUS_X_M1, val1, val2);
 }
 
+
 byte *
 memalloc_align(int size, int skip_amt, void **alloc_ptr)
 {
@@ -703,7 +841,7 @@ memalloc_align(int size, int skip_amt, void **alloc_ptr)
 	word32	offset;
 
 	skip_amt = MAX(256, skip_amt);
-	bptr = calloc(size + skip_amt, 1);
+	bptr = (byte*)calloc(size + skip_amt + 256, 1);	// OG Added cast 
 	if(alloc_ptr) {
 		/* Save allocation address */
 		*alloc_ptr = bptr;
@@ -728,15 +866,34 @@ memory_ptr_init()
 	/*  changes this will be called */
 	mem_size = MIN(0xdf0000, g_mem_size_base + g_mem_size_exp);
 	g_mem_size_total = mem_size;
+
+	// OG using memory_ptr_shut() instead
+	memory_ptr_shut();
+	/*
 	if(g_memory_alloc_ptr) {
 		free(g_memory_alloc_ptr);
 		g_memory_alloc_ptr = 0;
 	}
+	*/
 	g_memory_ptr = memalloc_align(mem_size, 256, &g_memory_alloc_ptr);
 
 	printf("RAM size is 0 - %06x (%.2fMB)\n", mem_size,
 		(double)mem_size/(1024.0*1024.0));
 }
+
+// OG Added memory_ptr_shut
+void
+memory_ptr_shut()
+{
+	if(g_memory_alloc_ptr) 
+	{
+		free(g_memory_alloc_ptr);
+		g_memory_alloc_ptr = 0;
+	}
+	g_memory_ptr = 0;
+}
+	
+
 
 extern int g_screen_redraw_skip_amt;
 extern int g_use_shmem;
@@ -747,12 +904,19 @@ char g_display_env[512];
 int	g_force_depth = -1;
 int	g_screen_depth = 8;
 
-
 int
 kegsmain(int argc, char **argv)
 {
-	int	skip_amt;
 	int	diff;
+
+	// OG Restoring globals
+	sim65816_initglobals();
+	moremem_init();
+
+//OG Disabling argument parsing
+#ifndef ACTIVEGS
+
+	int	skip_amt;
 	int	tmp1;
 	int	i;
 
@@ -857,6 +1021,7 @@ kegsmain(int argc, char **argv)
 			exit(3);
 		}
 	}
+#endif
 
 	check_engine_asm_defines();
 	fixed_memory_ptrs_init();
@@ -913,12 +1078,33 @@ kegsmain(int argc, char **argv)
 
 	do_reset();
 	g_stepping = 0;
+
+	// OG Notify emulator has been initialized and ready to accept external events
+	g_initialized = 1;
+	g_accept_events = 1;
+	
 	do_go();
 
 	/* If we get here, we hit a breakpoint, call debug intfc */
 	do_debug_intfc();
 
-	my_exit(0);
+	// OG Notify emulator is being closed, and cannot accept events anymore
+	g_accept_events = 0;
+
+	sound_shutdown();
+
+	
+	// OG Cleaning up
+	adb_shut();
+	iwm_shut();
+	fixed_memory_ptrs_shut();
+	load_roms_shut_memory();
+	clear_fatal_logs();
+
+	// OG Not needed anymore : the emulator will quit gently
+	//my_exit(0);
+	end_screen();
+
 	return 0;
 }
 
@@ -942,6 +1128,14 @@ load_roms_init_memory()
 	/* So set e1/15fe = 0 */
 	set_memory16_c(0xe115fe, 0, 0);
 }
+
+// OG Added load_roms_shut_memory
+void load_roms_shut_memory()
+{
+	memory_ptr_shut();
+}
+
+#ifndef ACTIVEGS
 
 void
 kegs_expand_path(char *out_ptr, const char *in_ptr, int maxlen)
@@ -1079,6 +1273,8 @@ setup_kegs_file(char *outname, int maxlen, int ok_if_missing,
 
 	my_exit(2);
 }
+
+#endif
 
 Event g_event_list[MAX_EVENTS];
 Event g_event_free;
@@ -1412,10 +1608,13 @@ run_prog()
 
 	while(1) {
 		fflush(stdout);
+
+// OG Disabling control panel
+#ifndef ACTIVEGS
 		if(g_config_control_panel) {
 			config_control_panel();
 		}
-
+#endif
 		if(g_irq_pending && !(engine.psr & 0x4)) {
 			irq_printf("taking an irq!\n");
 			take_irq(0);
@@ -1429,7 +1628,8 @@ run_prog()
 		zip_follow_cps = ((g_zipgs_reg_c059 & 0x8) != 0);
 		zip_speed_0tof_new = g_zipgs_reg_c05a & 0xf0;
 		fast = (g_c036_val_speed & 0x80) || (zip_en && !zip_follow_cps);
-
+		// OG Make fast parameter public
+		g_speed_fast = fast;
 		if(zip_speed_0tof_new != zip_speed_0tof) {
 			zip_speed_0tof = zip_speed_0tof_new;
 			setup_zip_speeds();
@@ -1444,7 +1644,11 @@ run_prog()
 		zip_speed = faster_than_28 &&
 			((zip_speed_0tof != 0) || (limit_speed == 3) ||
 							(g_zipgs_unlock >= 4) );
-		unl_speed = faster_than_28 && !zip_speed;
+
+		// OG unlimited speed should not be affected by zip.	
+		// unl_speed = faster_than_28 && !zip_speed;
+		unl_speed = (limit_speed == 0) && faster_than_28;
+
 		if(unl_speed) {
 			/* use unlimited speed */
 			fspeed_mult = g_projected_pmhz;
@@ -1563,6 +1767,16 @@ run_prog()
 			case EV_VID_UPD:
 				video_update_event_line(type >> 8);
 				break;
+			/*
+			// OG Added DelayWriteC023 Event
+			case EV_DELAY_WRITE_C023:
+				{
+					extern int g_c023_val;
+					printf("clearing c023 for line(%d)\n",type>>8);
+					g_c023_val = g_c023_val & 0xDF & 0x7F;
+				}
+				break;
+			*/
 			default:
 				printf("Unknown event: %d!\n", type);
 				exit(3);
@@ -1854,6 +2068,13 @@ update_60hz(double dcycs, double dtime_now)
 		default: sp_str = "Unlimited"; break;
 		}
 
+// OG Pass speed info to the control (ActiveX specific)
+#ifdef ACTIVEGS	
+		{
+			extern void updateInfo(const char* target,const char *speed);
+			updateInfo(sp_str,total_mhz_ptr);
+		}
+#endif
 		sprintf(status_buf, "dcycs:%9.1f sim MHz:%s "
 			"Eff MHz:%s, sec:%1.3f vol:%02x pal:%x, Limit:%s",
 			dcycs/(1000.0*1000.0), sim_mhz_ptr, total_mhz_ptr,
@@ -2066,9 +2287,22 @@ update_60hz(double dcycs, double dtime_now)
 			irq_printf("Setting c023 to %02x irq_pend: %d\n",
 				tmp, g_irq_pending);
 		}
+		irq_printf("1s irq: %X new: %X\n",g_c023_val,tmp);
 		g_c023_val = tmp;
 	}
 
+	/*
+	{
+		extern int 	g_delayed_c023_val;
+		if (g_delayed_c023_val)
+		{
+				g_c023_val = g_c023_val & 0xDF;
+				g_delayed_c023_val = 0;
+				printf("clearing c023 val\n");
+		}
+	}
+	*/
+	
 	if(!g_scan_int_events) {
 		check_scan_line_int(dcycs, 0);
 	}
@@ -2082,7 +2316,17 @@ update_60hz(double dcycs, double dtime_now)
 	}
 
 	iwm_vbl_update(doit_3_persec);
+
+// OG Disabling config update
+#ifndef ACTIVEGS
 	config_vbl_update(doit_3_persec);
+#else
+// OG Added disk update
+	{
+		extern void checkImages();
+		checkImages();
+	}
+#endif
 
 	video_update();
 	sound_update(dcycs);
@@ -2121,9 +2365,9 @@ do_scan_int(double dcycs, int line)
 		c023_val |= 0xa0;	/* vgc_int and scan_int */
 		if(c023_val & 0x02) {
 			add_irq(IRQ_PENDING_C023_SCAN);
-			irq_printf("Setting c023 to %02x, irq_pend: %d\n",
-				c023_val, g_irq_pending);
+			irq_printf("Setting c023 to %02x, irq_pend: %d\n", c023_val, g_irq_pending);
 		}
+		
 		g_c023_val = c023_val;
 		HALT_ON(HALT_ON_SCAN_INT, "In do_scan_int\n");
 	} else {
@@ -2167,10 +2411,11 @@ check_scan_line_int(double dcycs, int cur_video_line)
 			i = 0;
 		}
 		if(g_slow_memory_ptr[0x19d00+i] & 0x40) {
-			irq_printf("Adding scan_int for line %d\n", i);
-			delay = (DCYCS_IN_16MS/262.0) * ((double)line);
+			//printf("Adding scan_int for line %d\n", i);
+			delay = (int)( (DCYCS_IN_16MS/262.0) * ((double)line) );
 			add_event_entry(g_last_vbl_dcycs + delay, EV_SCAN_INT +
 					(line << 8));
+			//add_event_entry(g_last_vbl_dcycs + delay + (DCYCS_IN_16MS/262.0)*4/5 , EV_DELAY_WRITE_C023+	(line << 8));
 			g_scan_int_events = 1;
 			check_for_one_event_type(EV_SCAN_INT);
 			break;
@@ -2384,12 +2629,15 @@ kegs_vprintf(const char *fmt, va_list ap)
 	int	len;
 	int	ret;
 
-	bufptr = malloc(4096);
+	bufptr = (char*)malloc(4096); // OG Added Cast
 	ret = vsnprintf(bufptr, 4090, fmt, ap);
+
+	// OG Display warning
+	printf("Warning:%s",bufptr);
 
 	len = strlen(bufptr);
 	if(g_fatal_log >= 0 && g_fatal_log < MAX_FATAL_LOGS) {
-		buf2ptr = malloc(len+1);
+		buf2ptr = (char*)malloc(len+1); // OG Added Cast
 		memcpy(buf2ptr, bufptr, len+1);
 		g_fatal_log_strs[g_fatal_log++] = buf2ptr;
 	}
@@ -2437,7 +2685,7 @@ kegs_malloc_str(char *in_str)
 	int	len;
 
 	len = strlen(in_str) + 1;
-	str = malloc(len);
+	str = (char*)malloc(len); // OG Added cast
 	memcpy(str, in_str, len);
 
 	return str;

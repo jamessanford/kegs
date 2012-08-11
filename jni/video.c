@@ -72,7 +72,7 @@ Kimage g_mainwin_kimage;
 extern double g_last_vbl_dcycs;
 
 double	g_video_dcycs_check_input = 0.0;
-int	g_video_extra_check_inputs = 0;
+int	g_video_extra_check_inputs = 0;		// OG Not recommended to use it (or apps might miss mouse changes)
 int	g_video_act_margin_left = BASE_MARGIN_LEFT;
 int	g_video_act_margin_right = BASE_MARGIN_RIGHT;
 int	g_video_act_margin_top = BASE_MARGIN_TOP;
@@ -183,7 +183,7 @@ const byte g_dhires_colors_16[] = {
 		0x0f/* 0xf white */
 };
 
-const int g_lores_colors[] = {
+ int  g_lores_colors[] = {
 		/* rgb */
 		0x000,		/* 0x0 black */
 		0xd03,		/* 0x1 deep red */
@@ -302,7 +302,7 @@ const word32 g_hires_convert[64] = {
 	BIGEND(0x0f0f0f0f),	/* 11,1111 = white ,white, white, white */
 };
 
-const int g_screen_index[] = {
+ int g_screen_index[] = {
 		0x000, 0x080, 0x100, 0x180, 0x200, 0x280, 0x300, 0x380,
 		0x028, 0x0a8, 0x128, 0x1a8, 0x228, 0x2a8, 0x328, 0x3a8,
 		0x050, 0x0d0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0
@@ -323,10 +323,74 @@ video_init()
 	int	width, height;
 	int	total_bytes;
 	int	i, j;
+
+// OG Reinit globals
+	g_a2_screen_buffer_changed = (word32)-1;
+	g_full_refresh_needed = (word32)-1;
+	g_cycs_in_40col = 0;
+	g_cycs_in_xredraw = 0;
+	g_refresh_bytes_xfer = 0;
+
+	g_video_dcycs_check_input = 0.0;
+	//g_video_extra_check_inputs = 0;
+	g_video_act_margin_left = BASE_MARGIN_LEFT;
+	g_video_act_margin_right = BASE_MARGIN_RIGHT;
+	g_video_act_margin_top = BASE_MARGIN_TOP;
+	g_video_act_margin_bottom = BASE_MARGIN_BOTTOM;
+	g_video_act_width = X_A2_WINDOW_WIDTH;
+	g_video_act_height = X_A2_WINDOW_HEIGHT;
+
+	g_need_redraw = 1;
+	g_palette_change_summary = 0;
+
+	g_border_sides_refresh_needed = 1;
+	g_border_special_refresh_needed = 1;
+	g_border_line24_refresh_needed = 1;
+	g_status_refresh_needed = 1;
+
+	g_vbl_border_color = 0;
+	g_border_last_vbl_changes = 0;
+
+	g_use_dhr140 = 0;
+	g_use_bw_hires = 0;
+
+	g_new_a2_stat_cur_line = 0;
+	g_vid_update_last_line = 0;
+
+	g_cur_a2_stat = ALL_STAT_TEXT | ALL_STAT_ANNUNC3 |(0xf << BIT_ALL_STAT_TEXT_COLOR);
+
+
+	g_a2vid_palette = 0xe;
+	g_installed_full_superhires_colormap = 0;
+
+	Max_color_size = 256;
+
+	g_saved_a2vid_palette = -1;
+
+	g_cycs_in_refresh_line = 0;
+	g_cycs_in_refresh_ximage = 0;
+
+	g_num_lines_superhires = 0;
+	g_num_lines_superhires640 = 0;
+	g_num_lines_prev_superhires = 0;
+	g_num_lines_prev_superhires640 = 0;
+
+	/*
+	g_red_mask = 0xff;
+	g_green_mask = 0xff;
+	g_blue_mask = 0xff;
+	g_red_left_shift = 16;
+	g_green_left_shift = 8;
+	g_blue_left_shift = 0;
+	g_red_right_shift = 0;
+	g_green_right_shift = 0;
+	g_blue_right_shift = 0;
+*/
+
 /* Initialize video system */
 
 	for(i = 0; i < 200; i++) {
-		g_a2_line_kimage[i] = (void *)0;
+		g_a2_line_kimage[i] = (Kimage *)0; // OG Changed from void* to kimage*
 		g_a2_line_stat[i] = -1;
 		g_a2_line_left_edge[i] = 0;
 		g_a2_line_right_edge[i] = 0;
@@ -514,10 +578,24 @@ int	g_screen_redraw_skip_amt = -1;
 
 word32	g_cycs_in_check_input = 0;
 
-void
-video_update()
+int g_needfullrefreshfornextframe = 1 ;	
+
+void video_update()
 {
-	int	did_video;
+
+		int	did_video;
+
+	// OG g_needfullrefreshfornextframe
+	if (g_needfullrefreshfornextframe)
+	{
+		g_full_refresh_needed = -1;
+		g_a2_screen_buffer_changed = -1;
+		g_status_refresh_needed = 1;
+		g_border_sides_refresh_needed = 1;
+		g_border_special_refresh_needed = 1;
+		g_needfullrefreshfornextframe = 0;
+	}
+
 
 	update_border_info();
 
@@ -549,6 +627,15 @@ video_update()
 		g_vid_update_last_line = 0;
 		video_update_through_line(0);
 	}
+	
+	
+// OG Notify host that video has been uodated
+#if defined(ACTIVEGSPLUGIN) && defined(MAC)
+	{
+		extern void x_need2refresh();
+		x_need2refresh();
+	}	
+#endif
 }
 
 
@@ -777,8 +864,10 @@ video_update_all_stat_through_line(int line)
 
 STRUCT(Border_changes) {
 	float	fcycs;
-	int	val;
+	int	val;		
 };
+
+int g_border_color = 0;	// OG Expose border color
 
 Border_changes g_border_changes[MAX_BORDER_CHANGES];
 int	g_num_border_changes = 0;
@@ -787,9 +876,11 @@ void
 change_border_color(double dcycs, int val)
 {
 	int	pos;
+	
+	g_border_color = val;	// OG Expose border color
 
 	pos = g_num_border_changes;
-	g_border_changes[pos].fcycs = dcycs - g_last_vbl_dcycs;
+	g_border_changes[pos].fcycs = (float)(dcycs - g_last_vbl_dcycs);
 	g_border_changes[pos].val = val;
 
 	pos++;
@@ -800,6 +891,8 @@ change_border_color(double dcycs, int val)
 		g_num_border_changes = 0;
 	}
 }
+
+extern int first;
 
 void
 update_border_info()
@@ -814,6 +907,7 @@ update_border_info()
 	int	color_now;
 	int	i;
 
+	
 	/* to get this routine to redraw the border, change */
 	/*  g_vbl_border_color,  set g_border_last_vbl_changes = 1 */
 	/*  and change the cur_border_colors[] array */
@@ -2647,7 +2741,8 @@ video_update_event_line(int line)
 	}
 
 	if(g_video_extra_check_inputs) {
-		if(g_video_dcycs_check_input < g_cur_dcycs) {
+		if(g_video_dcycs_check_input < g_cur_dcycs)
+		{
 			video_check_input_events();
 		}
 	}
@@ -2886,10 +2981,16 @@ refresh_border()
 	/**ZZZZ***/
 }
 
+// OG Added video_release_kimages proto
+void video_release_kimages();
+
 void
 end_screen()
 {
 	printf("In end_screen\n");
+
+	// OG Free up allocated images
+	video_release_kimages();
 	xdriver_end();
 }
 
@@ -3007,6 +3108,21 @@ video_get_kimages()
 							g_screen_mdepth);
 }
 
+// OG Added video_release_kimages (to match video_get_kimages)
+void video_release_kimages()
+{
+	extern	void x_release_kimage(Kimage *kimage_ptr);
+
+	x_release_kimage(&g_kimage_text[0]);
+	x_release_kimage(&g_kimage_text[1]);
+	x_release_kimage(&g_kimage_hires[0]);
+	x_release_kimage(&g_kimage_hires[1]);
+	x_release_kimage(&g_kimage_superhires);
+	x_release_kimage(&g_kimage_border_special);
+	x_release_kimage(&g_kimage_border_sides);
+}
+
+
 void
 video_convert_kimage_depth(Kimage *kim_in, Kimage *kim_out, int startx,
 		int starty, int width, int height)
@@ -3068,6 +3184,14 @@ video_push_lines(Kimage *kimage_ptr, int start_line, int end_line, int left_pix,
 {
 	int	mdepth_mismatch;
 	int	srcy;
+	int center = 0; // OG added variable to center screen
+
+	//OG add null pointer check when emulator is restarted
+	if (!kimage_ptr)	
+	{
+		printf("warning : video_push_lines(kimage_ptr=null)\n");
+		return ;
+	}
 
 	if(left_pix >= right_pix || left_pix < 0 || right_pix <= 0) {
 		halt_printf("video_push_lines: lines %d to %d, pix %d to %d\n",
@@ -3089,7 +3213,14 @@ video_push_lines(Kimage *kimage_ptr, int start_line, int end_line, int left_pix,
 	g_refresh_bytes_xfer += 2*(end_line - start_line) *
 							(right_pix - left_pix);
 
-	x_push_kimage(kimage_ptr, g_video_act_margin_left + left_pix,
+	// OG Calculating new center
+	if (g_cur_a2_stat & ALL_STAT_SUPER_HIRES)
+		center=0;
+	else
+		center=EFF_BORDER_WIDTH - BORDER_WIDTH;
+
+	// OG shifting image to the center
+	x_push_kimage(kimage_ptr, g_video_act_margin_left + left_pix + center,	
 			g_video_act_margin_top + srcy, left_pix, srcy,
 			(right_pix - left_pix), 2*(end_line - start_line));
 }
@@ -3153,7 +3284,28 @@ video_push_border_sides()
 #endif
 
 	/* redraw left sides */
-	video_push_border_sides_lines(0, 0, BORDER_WIDTH, 0, 200);
+	// OG Left side can alos be "jagged" as a2 screen is now being centered
+	
+	//video_push_border_sides_lines(0, 0, BORDER_WIDTH, 0, 200);
+
+	prev_line = -1;
+	old_width = -1;
+	for(i = 0; i < 200; i++) {
+		mode = (g_a2_line_stat[i] >> 4) & 7;
+		width = EFF_BORDER_WIDTH;
+		if(mode == MODE_SUPER_HIRES) {
+			width = BORDER_WIDTH;
+		}
+		if(width != old_width) {
+			video_push_border_sides_lines(BORDER_WIDTH,
+				0, old_width,
+				prev_line, i);
+			prev_line = i;
+			old_width = width;
+		}
+	}
+	video_push_border_sides_lines(0/*BORDER_WIDTH*/,
+		0, old_width, prev_line, 200);
 
 	/* right side--can be "jagged" */
 	prev_line = -1;
@@ -3173,7 +3325,7 @@ video_push_border_sides()
 		}
 	}
 
-	video_push_border_sides_lines(BORDER_WIDTH,
+	video_push_border_sides_lines(0/*BORDER_WIDTH*/,
 		X_A2_WINDOW_WIDTH - old_width, old_width, prev_line, 200);
 }
 
@@ -3217,6 +3369,9 @@ video_push_border_special()
 	}
 }
 
+// OG Added window ratio support
+// extern int x_calc_ratio(float&,float&);
+
 void
 video_push_kimages()
 {
@@ -3245,60 +3400,83 @@ video_push_kimages()
 
 	GET_ITIMER(start_time);
 
-	start = -1;
-	last_kim = (Kimage *)-1;
-	cur_kim = (Kimage *)0;
+	float ratiox,ratioy;
 
-	left_pix = 640;
-	right_pix = 0;
-
-	for(line = 0; line < 200; line++) {
-		line_div8 = line >> 3;
-		mask = 1 << (line_div8);
-		cur_kim = g_a2_line_kimage[line];
-		if((g_full_refresh_needed & mask) != 0) {
-			left = 0;
-			right = 560;
-			if(cur_kim == &g_kimage_superhires) {
+	if (x_calc_ratio(ratiox,ratioy))
+	{
+		line = 0;		
+		while (1)
+		{
+			start = line;
+			cur_kim = g_a2_line_kimage[line];		
+			while(line < 200 && g_a2_line_kimage[line] == cur_kim) line++;	
+			if (cur_kim == &g_kimage_superhires)
 				right = 640;
-			}
-		} else {
-			left = g_a2_line_left_edge[line];
-			right = g_a2_line_right_edge[line];
+			else
+				right = 560;
+			
+			video_push_lines(cur_kim, start, line,0,right);
+			if (line==200) break;
 		}
-
-		if(!(g_a2_screen_buffer_changed & mask) || (left > right)) {
-			/* No need to update this line */
-			/* Refresh previous chunks of lines, if any */
-			if(start >= 0) {
-				video_push_lines(last_kim, start, line,
-					left_pix, right_pix);
-				start = -1;
-				left_pix = 640;
-				right_pix = 0;
-			}
-		} else {
-			/* Need to update this line */
-			if(start < 0) {
-				start = line;
-				last_kim = cur_kim;
-			}
-			if(cur_kim != last_kim) {
-				/* do the refresh */
-				video_push_lines(last_kim, start, line,
-					left_pix, right_pix);
-				last_kim = cur_kim;
-				start = line;
-				left_pix = left;
-				right_pix = right;
-			}
-			left_pix = MIN(left, left_pix);
-			right_pix = MAX(right, right_pix);
-		}
+	
 	}
+	else
+	{
+		start = -1;
+		last_kim = (Kimage *)-1;
+		cur_kim = (Kimage *)0;
 
-	if(start >= 0) {
-		video_push_lines(last_kim, start, 200, left_pix, right_pix);
+		left_pix = 640;
+		right_pix = 0;
+
+		for(line = 0; line < 200; line++) {
+			line_div8 = line >> 3;
+			mask = 1 << (line_div8);
+			cur_kim = g_a2_line_kimage[line];
+			if((g_full_refresh_needed & mask) != 0) {
+				left = 0;
+				right = 560;
+				if(cur_kim == &g_kimage_superhires) {
+					right = 640;
+				}
+			} else {
+				left = g_a2_line_left_edge[line];
+				right = g_a2_line_right_edge[line];
+			}
+
+			if(!(g_a2_screen_buffer_changed & mask) || (left > right)) {
+				/* No need to update this line */
+				/* Refresh previous chunks of lines, if any */
+				if(start >= 0) {
+					video_push_lines(last_kim, start, line,
+						left_pix, right_pix);
+					start = -1;
+					left_pix = 640;
+					right_pix = 0;
+				}
+			} else {
+				/* Need to update this line */
+				if(start < 0) {
+					start = line;
+					last_kim = cur_kim;
+				}
+				if(cur_kim != last_kim) {
+					/* do the refresh */
+					video_push_lines(last_kim, start, line,
+						left_pix, right_pix);
+					last_kim = cur_kim;
+					start = line;
+					left_pix = left;
+					right_pix = right;
+				}
+				left_pix = MIN(left, left_pix);
+				right_pix = MAX(right, right_pix);
+			}
+		}
+
+		if(start >= 0) {
+			video_push_lines(last_kim, start, 200, left_pix, right_pix);
+		}
 	}
 
 	g_a2_screen_buffer_changed = 0;
@@ -3330,9 +3508,13 @@ video_update_color_raw(int col_num, int a2_color)
 	newgreen = green >> g_green_right_shift;
 	newblue = blue >> g_blue_right_shift;
 
+	
 	tmp = ((newred & g_red_mask) << g_red_left_shift) +
 			((newgreen & g_green_mask) << g_green_left_shift) +
 			((newblue & g_blue_mask) << g_blue_left_shift);
+
+	
+	
 	g_palette_8to1624[col_num] = tmp;
 
 	x_update_color(col_num, red, green, blue, tmp);
