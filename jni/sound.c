@@ -45,7 +45,7 @@ int	g_queued_samps = 0;
 int	g_queued_nonsamps = 0;
 int	g_num_osc_interrupting = 0;
 
-#if defined(HPUX) || defined(__linux__) || defined(_WIN32) || defined(MAC) || defined(__ANDROID__)
+#if defined(HPUX) || defined(__linux__) || defined(_WIN32) || defined(MAC)
 int	g_audio_enable = -1;
 #else
 # if defined(OSS)
@@ -230,6 +230,31 @@ sound_init()
 		rptr->last_samp_val = 0;
         }
 
+	// OG sound globals initialization
+	g_num_c030_fsamps = 0;
+	g_sound_shm_pos = 0;
+	g_queued_samps = 0;
+	g_queued_nonsamps = 0;
+
+	doc_sound_ctl = 0;
+	doc_saved_val = 0;
+	g_doc_num_osc_en = 1;
+	g_dcycs_per_doc_update = 1.0;
+	g_dupd_per_dcyc = 1.0;
+	g_drecip_osc_en_plus_2 = 1.0 / (double)(1 + 2);
+
+	doc_reg_e0 = 0xff;
+	g_audio_rate = 0;
+	g_daudio_rate = 0.0;
+	g_drecip_audio_rate = 0.0;
+	g_dsamps_per_dcyc = 0.0;
+	g_dcycs_per_samp = 0.0;
+	g_fsamps_per_dcyc = 0.0;
+
+	g_doc_vol = 2;
+
+	g_last_sound_play_dsamp = 0.0;
+
 	sound_init_general();
 }
 
@@ -237,7 +262,7 @@ sound_init()
 void
 sound_init_general()
 {
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC) && !defined(__ANDROID__)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC)
 	int	pid;
 	int	shmid;
 	int	tmp;
@@ -247,7 +272,7 @@ sound_init_general()
 	int	size;
 	int	ret;
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC) && !defined(__ANDROID__)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC)
 	if(!g_use_shmem) {
 		if(g_audio_enable < 0) {
 			printf("Defaulting audio off for slow X display\n");
@@ -264,7 +289,7 @@ sound_init_general()
 
 	size = SOUND_SHM_SAMP_SIZE * SAMPLE_CHAN_SIZE;
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC) && !defined(__ANDROID__)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC)
 	shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | 0777);
 	if(shmid < 0) {
 		printf("sound_init: shmget ret: %d, errno: %d\n", shmid,
@@ -287,7 +312,7 @@ sound_init_general()
 	}
 #else
 /* windows and mac */
-	shmaddr = malloc(size);
+	shmaddr = (word32*)malloc(size);
 	memset(shmaddr, 0, size);
 #endif
 
@@ -295,7 +320,7 @@ sound_init_general()
 
 	fflush(stdout);
 
-#if !defined(MAC) && !defined(_WIN32) && !defined(__CYGWIN__) && !defined(__ANDROID__)
+#if !defined(MAC) && !defined(_WIN32) && !defined(__CYGWIN__)
 	/* prepare pipe so parent can signal child each other */
 	/*  pipe[0] = read side, pipe[1] = write end */
 	ret = pipe(&g_pipe_fd[0]);
@@ -344,16 +369,14 @@ sound_init_general()
 	}
 
 	parent_sound_get_sample_rate(g_pipe2_fd[0]);
-#endif
-#ifdef MAC
+#else
+# ifdef MAC
 	macsnd_init(shmaddr);
-#endif
-#ifdef __ANDROID__
-       android_snd_init(shmaddr);
-#endif
-#ifdef _WIN32
+# else
+/* windows */
 	win32snd_init(shmaddr);
-#endif
+# endif
+#endif /* _WIN32 */
 
 }
 
@@ -363,7 +386,7 @@ parent_sound_get_sample_rate(int read_fd)
 	word32	tmp;
 	int	ret;
 
-	ret = read(read_fd, &tmp, 4);
+	ret = read(read_fd, (char*)&tmp, 4);
 	if(ret != 4) {
 		printf("parent dying, could not get sample rate from child\n");
 		printf("ret: %d, fd: %d errno:%d\n", ret, read_fd, errno);
@@ -394,7 +417,7 @@ sound_reset(double dcycs)
 	dsamps = dcycs * g_dsamps_per_dcyc;
 	for(i = 0; i < 32; i++) {
 		doc_write_ctl_reg(i, g_doc_regs[i].ctl | 1, dsamps);
-		doc_reg_e0 = 0xff;
+		doc_reg_e0 = 0xff;	// OG : Don't understand????
 		if(g_doc_regs[i].has_irq_pending) {
 			halt_printf("reset: has_irq[%02x] = %d\n", i,
 				g_doc_regs[i].has_irq_pending);
@@ -406,13 +429,19 @@ sound_reset(double dcycs)
 	}
 	g_num_osc_interrupting = 0;
 
+// OG No reason to reset the number of active oscillo on reset : this should only be done on startup.
+	/*
 	g_doc_num_osc_en = 1;
 	UPDATE_G_DCYCS_PER_DOC_UPDATE(1);
+	*/
 }
 
 void
 sound_shutdown()
 {
+	// OG stop sound and free memory on sound_shutdown
+	sound_reset(g_cur_dcycs);
+
 #ifdef _WIN32
 	win32snd_shutdown();
 #else
@@ -420,6 +449,14 @@ sound_shutdown()
 		close(g_pipe_fd[1]);
 	}
 #endif
+	
+	// OG Free up allocated memory
+	if (g_sound_shm_addr)
+	{
+		free(g_sound_shm_addr);
+		g_sound_shm_addr = NULL;
+	}
+	
 }
 
 
@@ -598,7 +635,7 @@ send_sound(int real_samps, int size)
 	DOC_LOG("send_sound", -1, g_last_sound_play_dsamp,
 						(real_samps << 30) + size);
 
-#if defined(MAC) || defined(_WIN32) || defined(__ANDROID__)
+#if defined(MAC) || defined(_WIN32)
 	ret = 0;
 	child_sound_playit(tmp);
 #else
@@ -814,7 +851,7 @@ sound_play(double dsamps)
 
 			if(c030_state) {
 				/* add in fractional time */
-				ftmp = (int)(fsampnum + (float)1.0);
+				ftmp = (float)(int)(fsampnum + 1.0f); //OG added cast
 				fpercent += (ftmp - fsampnum);
 			}
 
@@ -1543,7 +1580,10 @@ doc_write_ctl_reg(int osc, int val, double dsamps)
 		if(old_halt != 0) {
 			/* start sound */
 			DOC_LOG("ctl_sound_play", osc, eff_dsamps, val);
-			sound_play(eff_dsamps);
+
+			//  OG  If the sound_play is executed, it may restart a oscillo we thought was stopped at time, 
+			//	hence  crashing the start_sound function 	(cf. game Arrgh!)
+			//sound_play(eff_dsamps);
 			g_doc_regs[osc].ctl = val;
 
 			start_sound(osc, eff_dsamps, dsamps);
@@ -1592,7 +1632,8 @@ doc_recalc_sound_parms(int osc, double eff_dcycs, double dsamps)
 	res = wave_size & 7;
 
 	shifted_size = size << SND_PTR_SHIFT;
-	cur_start = (rptr->waveptr << (8 + SND_PTR_SHIFT)) & (-shifted_size);
+	
+	cur_start = (rptr->waveptr << (8 + SND_PTR_SHIFT)) & (-(int)shifted_size); // OG
 
 	dtmp1 = dfreq * (DOC_SCAN_RATE * g_drecip_audio_rate);
 	dacc = (double)(1 << (20 - (17 - sz + res)));
@@ -1893,6 +1934,10 @@ doc_write_c03d(int val, double dcycs)
 				}
 				g_doc_num_osc_en = tmp;
 				UPDATE_G_DCYCS_PER_DOC_UPDATE(tmp);
+
+				// OG Update any oscs that were running to take care of the new numbers of oscillo
+				for(i = 0; i<g_doc_num_osc_en; i++) 
+					doc_recalc_sound_parms(i,0.0,0.0);
 
 				/* Stop any oscs that were running but now */
 				/*   are disabled */

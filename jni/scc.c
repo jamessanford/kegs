@@ -12,6 +12,10 @@ const char rcsid_scc_c[] = "@(#)$KmKId: scc.c,v 1.44 2004-12-03 17:33:40-05 kent
 
 #include "defc.h"
 
+#ifdef UNDER_CE
+#define vsnprintf _vsnprintf
+#endif
+
 extern int Verbose;
 extern int g_code_yellow;
 extern double g_cur_dcycs;
@@ -1113,7 +1117,7 @@ scc_add_to_readbufv(int port, double dcycs, const char *fmt, ...)
 	int	i;
 
 	va_start(ap, fmt);
-	bufptr = malloc(4096);
+	bufptr = (char*)malloc(4096);	// OG cast added
 	bufptr[0] = 0;
 	ret = vsnprintf(bufptr, 4090, fmt, ap);
 	len = strlen(bufptr);

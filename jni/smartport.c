@@ -18,7 +18,7 @@ extern int g_rom_version;
 extern int g_io_amt;
 extern int g_highest_smartport_unit;
 
-int g_cycs_in_io_read = 0;
+word32 g_cycs_in_io_read = 0;	// OG Changed int to word32
 
 extern Engine_reg engine;
 
@@ -566,7 +566,7 @@ do_read_c7(int unit_num, word32 buf, int blk)
 		return 0x27;
 	}
 
-	len = read(fd, &local_buf[0], 0x200);
+	len = read(fd, (char*)&local_buf[0], 0x200);
 	if(len != 0x200) {
 		printf("read returned %08x, errno:%d, blk:%04x, unit: %02x\n",
 			len, errno, blk, unit_num);
