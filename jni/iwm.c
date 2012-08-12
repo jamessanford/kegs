@@ -226,7 +226,7 @@ draw_iwm_status(int line, char *buf)
 		flag[apple35_sel][iwm.drive_select] = "*";
 	}
 
-	#ifdef ACTIVEGS	// OG Pass monitoring info 
+	#ifdef ACTIVEGS	// OG Pass monitoring info
 	{
 		extern	 void ki_loading(int _motorOn,int _slot,int _drive, int _curtrack);
 		int curtrack=0;
@@ -1662,7 +1662,7 @@ disk_track_to_unix(Disk *dsk, int qtr_track, byte *outbuf)
 		return -1;
 	}
 
-	if(disk_525) 
+	if(disk_525)
 	{
 		// OG
 		// Add support for .nib file
@@ -1674,7 +1674,7 @@ disk_track_to_unix(Disk *dsk, int qtr_track, byte *outbuf)
                         int i;
 			byte* trk_ptr = trk->nib_area+1;
 			byte* nib_ptr = outbuf;
-			for(i = 0; i < len; i += 2) 
+			for(i = 0; i < len; i += 2)
 			{
 				*nib_ptr++ = *trk_ptr;
 				trk_ptr+=2;
@@ -1695,9 +1695,9 @@ show_hex_data(byte *buf, int count)
 	for(i = 0; i < count; i += 16) {
 		printf("%04x: %02x %02x %02x %02x %02x %02x %02x %02x "
 			"%02x %02x %02x %02x %02x %02x %02x %02x\n", i,
-			buf[i+0], buf[i+1], buf[i+2], buf[i+3], 
-			buf[i+4], buf[i+5], buf[i+6], buf[i+7], 
-			buf[i+8], buf[i+9], buf[i+10], buf[i+11], 
+			buf[i+0], buf[i+1], buf[i+2], buf[i+3],
+			buf[i+4], buf[i+5], buf[i+6], buf[i+7],
+			buf[i+8], buf[i+9], buf[i+10], buf[i+11],
 			buf[i+12], buf[i+13], buf[i+14], buf[i+15]);
 	}
 

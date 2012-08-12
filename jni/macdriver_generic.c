@@ -140,7 +140,7 @@ mac_update_modifiers(word32 state)
 
 	state = state & (
 					 cmdKey | controlKey |
-					 shiftKey | alphaLock | optionKey 
+					 shiftKey | alphaLock | optionKey
 				);
 	state_xor = g_mac_shift_control_state ^ state;
 	is_up = 0;
@@ -216,7 +216,7 @@ x_get_kimage(Kimage *kimage_ptr)
 	mdepth = kimage_ptr->mdepth;
 
 	size = 0;
-	if(depth == g_screen_depth) 
+	if(depth == g_screen_depth)
 		{
 
 			if (!macUsingCoreGraphics)

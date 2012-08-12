@@ -22,7 +22,7 @@ extern int g_paddle_buttons;
 extern int g_paddle_val[];
 
 /*
-const char *g_joystick_dev = "/dev/js0";	// default joystick dev file 
+const char *g_joystick_dev = "/dev/js0";	// default joystick dev file
 #define MAX_JOY_NAME	128
 
 int	g_joystick_native_fd = -1;

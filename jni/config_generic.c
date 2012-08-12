@@ -313,7 +313,7 @@ insert_disk(int slot, int drive, const char *name, int ejected, int force_size,
 	can_write = 1;
 
 //OG discard .GZ support
-#ifndef ACTIVEGS  
+#ifndef ACTIVEGS
 	if((name_len > 3) && (strcmp(&name_ptr[name_len - 3], ".gz") == 0)) {
 
 		/* it's gzip'ed, try to gunzip it, then unlink the */
@@ -652,7 +652,7 @@ eject_disk(Disk *dsk)
 
 	/* Leave name_ptr valid */		// OG WHY?
 
-	// OG Free memory allocated for the disk name 
+	// OG Free memory allocated for the disk name
 	if (dsk->name_ptr)
 	{
 		free(dsk->name_ptr);

@@ -756,7 +756,7 @@ fixed_memory_ptrs_init()
 #endif
 }
 
-// OG added fixed_memory_ptrs_shut 
+// OG added fixed_memory_ptrs_shut
 void fixed_memory_ptrs_shut()
 {
 	

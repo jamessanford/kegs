@@ -558,7 +558,7 @@ video_reset()
 		stat |= ALL_STAT_COLOR_C021;
 	}
 	if(g_config_control_panel) {
-		/* Don't update cur_a2_stat when in configuration panel */ 
+		/* Don't update cur_a2_stat when in configuration panel */
 		g_save_cur_a2_stat = stat;
 	} else {
 		g_cur_a2_stat = stat;

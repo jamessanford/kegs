@@ -300,11 +300,11 @@ add_event_key(HWND hwnd, UINT raw_vk, BOOL down, int repeat, UINT flags)
 {
 
 #ifdef ACTIVEGS
-	if (g_config_control_panel)	// OG ignore input events while in debugger 
+	if (g_config_control_panel)	// OG ignore input events while in debugger
 		return ;
 #endif
 
-	if (nb_win32_key>=MAX_EVENT) 
+	if (nb_win32_key>=MAX_EVENT)
 		return ;
 
 	win32_keys[nb_win32_key].raw_vk = raw_vk;
@@ -580,7 +580,7 @@ void x_release_kimage(Kimage *kimage_ptr)
 	}
 }
 
-// OG  Free video global memory 
+// OG  Free video global memory
 void
 xdriver_end()	// Should be renamed to dev_video_shut()  ???
 {
@@ -759,7 +759,7 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
 	HDC localcdc = g_main_cdc; //CreateCompatibleDC(g_main_dc);
 
 	bitm_old = SelectObject(localcdc, kimage_ptr->dev_handle);
-	HRGN hrgn=NULL;  
+	HRGN hrgn=NULL;
 
 	float ratiox,ratioy;
 	int isStretched = x_calc_ratio(ratiox,ratioy);

@@ -768,13 +768,13 @@ do_reset()
 
 		initialize_events();
 */
-		if (g_irq_pending) 
+		if (g_irq_pending)
 			halt_printf("*** irq remainings...\n");
 
 /*
-		g_irq_pending = 0;    	    
+		g_irq_pending = 0;    	
 		// reinitiliase zip speed (not sure)???
-		// g_zipgs_reg_c05a = 0x80; 
+		// g_zipgs_reg_c05a = 0x80;
 		*/
 	}	
 
@@ -841,7 +841,7 @@ memalloc_align(int size, int skip_amt, void **alloc_ptr)
 	word32	offset;
 
 	skip_amt = MAX(256, skip_amt);
-	bptr = (byte*)calloc(size + skip_amt + 256, 1);	// OG Added cast 
+	bptr = (byte*)calloc(size + skip_amt + 256, 1);	// OG Added cast
 	if(alloc_ptr) {
 		/* Save allocation address */
 		*alloc_ptr = bptr;
@@ -885,7 +885,7 @@ memory_ptr_init()
 void
 memory_ptr_shut()
 {
-	if(g_memory_alloc_ptr) 
+	if(g_memory_alloc_ptr)
 	{
 		free(g_memory_alloc_ptr);
 		g_memory_alloc_ptr = 0;

@@ -225,7 +225,7 @@ Cfg_menu g_cfg_main_menu[] = {
 		KNMP(g_user_page2_shadow), CFGTYPE_INT },
 { "Dump text screen to file", (void *)cfg_text_screen_dump, 0, 0, CFGTYPE_FUNC},
 { "", 0, 0, 0, 0 },
-{ "Save changes to config.kegs", (void *)config_write_config_kegs_file, 0, 0, 
+{ "Save changes to config.kegs", (void *)config_write_config_kegs_file, 0, 0,
 		CFGTYPE_FUNC },
 { "", 0, 0, 0, 0 },
 { "Exit Config (or press F4)", (void *)cfg_exit, 0, 0, CFGTYPE_FUNC },
@@ -1736,7 +1736,7 @@ cfg_dirent_sortfn(const void *obj1, const void *obj2)
 #if defined(MAC) || defined(_WIN32)
 	// OG
 	ret = 0;
-//	ret = strcasecmp(direntptr1->name, direntptr2->name); 
+//	ret = strcasecmp(direntptr1->name, direntptr2->name);
 #else
 	ret = strcmp(direntptr1->name, direntptr2->name);
 #endif
@@ -1817,7 +1817,7 @@ cfg_file_readdir(const char *pathptr)
 		if(ret == 0) {
 			fmt = stat_buf.st_mode & S_IFMT;
 			if(fmt == S_IFDIR) {
-				// it's a directory 
+				// it's a directory
 				is_dir = 1;
 			}
 		}
@@ -1865,12 +1865,12 @@ cfg_file_readdir(const char *pathptr)
 			printf("stat %s ret %d, errno:%d\n", &g_cfg_tmp_path[0],
 						ret, errno);
 			stat_buf.st_size = 0;
-			continue;	// skip it 
+			continue;	// skip it
 		} else {
 			fmt = stat_buf.st_mode & S_IFMT;
 			size = stat_buf.st_size;
 			if(fmt == S_IFDIR) {
-				// it's a directory 
+				// it's a directory
 				is_dir = 1;
 			} else if((fmt == S_IFREG) && (is_gz == 0)) {
 				if(g_cfg_slotdrive < 0xfff) {

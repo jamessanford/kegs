@@ -1583,7 +1583,7 @@ doc_write_ctl_reg(int osc, int val, double dsamps)
 			/* start sound */
 			DOC_LOG("ctl_sound_play", osc, eff_dsamps, val);
 
-			//  OG  If the sound_play is executed, it may restart a oscillo we thought was stopped at time, 
+			//  OG  If the sound_play is executed, it may restart a oscillo we thought was stopped at time,
 			//	hence  crashing the start_sound function 	(cf. game Arrgh!)
 			//sound_play(eff_dsamps);
 			g_doc_regs[osc].ctl = val;
@@ -1938,7 +1938,7 @@ doc_write_c03d(int val, double dcycs)
 				UPDATE_G_DCYCS_PER_DOC_UPDATE(tmp);
 
 				// OG Update any oscs that were running to take care of the new numbers of oscillo
-				for(i = 0; i<g_doc_num_osc_en; i++) 
+				for(i = 0; i<g_doc_num_osc_en; i++)
 					doc_recalc_sound_parms(i,0.0,0.0);
 
 				/* Stop any oscs that were running but now */

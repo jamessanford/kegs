@@ -244,8 +244,8 @@ my_win_handler(EventHandlerCallRef handlerRef, EventRef event, void *userdata)
 	} if(event_kind == kEventWindowClose) {
 		
 		// OG Use HALT_WANTTOQUIT pardigme
-		//g_quit_sim_now = 1; 
-		set_halt_act(HALT_WANTTOQUIT); 
+		//g_quit_sim_now = 1;
+		set_halt_act(HALT_WANTTOQUIT);
 		
 #ifndef ACTIVEGS
 		g_quit_seen = 1;
@@ -570,7 +570,7 @@ main
 	g_event_rgnhandle = NewRgn();
 	g_status_font_family = FMGetFontFamilyFromName("\pCourier");
 	
-	SetRect(&win_rect, 0, 0, X_A2_WINDOW_WIDTH, X_A2_WINDOW_HEIGHT 
+	SetRect(&win_rect, 0, 0, X_A2_WINDOW_WIDTH, X_A2_WINDOW_HEIGHT
 			// OG Remove status line from ActiveGS window
 #ifndef ACTIVEGS
 			+ MAX_STATUS_LINES*16 + 8
