@@ -10,13 +10,9 @@ import android.util.Log;
 public class RomDialogFragment extends DialogFragment {
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
-    final CharSequence[] items = {"I don't own a GS",
-                                  "I have a ROM 01",
-                                  "I have a ROM 03"};
-
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-    builder.setTitle("Checking for ROM");
-    builder.setSingleChoiceItems(items, -1,
+    builder.setTitle(R.string.rom_title);
+    builder.setSingleChoiceItems(R.array.rom_choices, -1,
         new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int item) {
         dismiss();
