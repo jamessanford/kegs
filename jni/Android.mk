@@ -11,4 +11,7 @@ LOCAL_SRC_FILES := adb.c clock.c config_generic.c config_kegs.c \
 	scc_macdriver.c android_driver.c android_sound_driver.c
 LOCAL_LDLIBS    := -lm -llog -ljnigraphics -lOpenSLES
 
+# To peek at the generated code:
+# android-ndk-r8b/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86/bin/arm-linux-androideabi-objdump -h -S -z objectfile.o
+
 include $(BUILD_SHARED_LIBRARY)
