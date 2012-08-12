@@ -312,7 +312,7 @@ IWM_WRITE_ROUT (Disk *dsk, word32 val, int fast_disk_emul, double dcycs)
 			bits_read, val, prev_val, prev_bits);
 	}
 
-	sdiff = dcycs - dcycs_last_read;
+	sdiff = (int)( dcycs - dcycs_last_read );
 	if(sdiff < (dcycs_this_nib) || (sdiff > (2*dcycs_this_nib)) ) {
 		dsk->dcycs_last_read = dcycs;
 	} else {

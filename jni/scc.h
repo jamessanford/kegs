@@ -23,7 +23,9 @@ const char rcsid_scc_h[] = "@(#)$KmKId: scc.h,v 1.17 2004-12-03 14:03:12-05 kent
 #endif
 
 #if defined(HPUX) || defined(__linux__) || defined(SOLARIS) || defined(MAC) || defined(__MACH__) || defined(_WIN32)
+#ifndef __ANDROID__
 # define SCC_SOCKETS
+#endif
 #endif
 
 

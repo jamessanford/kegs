@@ -25,8 +25,9 @@ const char rcsid_sound_driver_c[] = "@(#)$KmKId: sound_driver.c,v 1.17 2004-09-2
 # include <sys/socket.h>
 # include <netinet/in.h>
 #endif
+#ifndef UNDER_CE
 #include <errno.h>
-
+#endif
 
 extern int Verbose;
 
@@ -74,16 +75,16 @@ reliable_buf_write(word32 *shm_addr, int pos, int size)
 
 	while(size > 0) {
 #ifdef _WIN32
-		ret = win32_send_audio(ptr, size);
+                ret = win32_send_audio(ptr, size);
 #endif
 #ifdef MAC
-		ret = mac_send_audio(ptr, size);
+                ret = mac_send_audio(ptr, size);
 #endif
 #ifdef __ANDROID__
-		ret = android_send_audio(ptr, size);
+                ret = android_send_audio(ptr, size);
 #endif
 #if !defined(_WIN32) && !defined(MAC) && !defined(__ANDROID__)
-		ret = write(g_audio_socket, ptr, size);
+                ret = write(g_audio_socket, ptr, size);
 #endif
 
 		if(ret < 0) {
@@ -146,8 +147,8 @@ child_sound_loop(int read_fd, int write_fd, word32 *shm_addr)
 	return;
 #endif
 #if defined(__ANDROID__)
-	child_sound_init_android();
-	return;
+        child_sound_init_android();
+        return;
 #endif
 
 	tmp = g_audio_rate;
@@ -163,7 +164,7 @@ child_sound_loop(int read_fd, int write_fd, word32 *shm_addr)
 
 	while(1) {
 		errno = 0;
-		ret = read(read_fd, &tmp, 4);
+		ret = read(read_fd, (char*)&tmp, 4);
 		if(ret <= 0) {
 			printf("child dying from ret: %d, errno: %d\n",
 				ret, errno);

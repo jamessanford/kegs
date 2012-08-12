@@ -14,8 +14,6 @@ const char rcsid_dis_c[] = "@(#)$KmKId: dis.c,v 1.103 2004-11-24 16:41:41-05 ken
 #include "defc.h"
 #include <stdarg.h>
 
-#include <android/log.h>
-
 #include "disas.h"
 
 #define LINE_SIZE 160
@@ -54,7 +52,8 @@ char *line_ptr;
 int mode,old_mode;
 int got_num;
 
-int	g_quit_sim_now = 0;
+// OG replaced by HALT_WANTTOQUIT
+//int	g_quit_sim_now = 0;
 
 int
 get_num()
@@ -169,10 +168,13 @@ do_debug_intfc()
 	g_fullscreen = 0;
 	x_full_screen(0);
 
-	if(g_quit_sim_now) {
+	// OG use HALT_WANTTOQUIT instead of g_quit_sim_now
+	if (halt_sim&HALT_WANTTOQUIT)
+	{
 		printf("Exiting immediately\n");
 		return;
 	}
+	
 
 	printf("Type 'h' for help\n");
 
@@ -586,6 +588,7 @@ do_blank()
 void
 do_go()
 {
+
 	/* also called by do_step */
 
 	g_config_control_panel = 0;
@@ -849,15 +852,15 @@ do_debug_unix()
 	}
 	if(load) {
 		if(a1bank >= 0xe0 && a1bank < 0xe2) {
-			ret = read(fd,&g_slow_memory_ptr[((a1bank & 1)<<16)+a1],len);
+			ret = read(fd,(char*)&g_slow_memory_ptr[((a1bank & 1)<<16)+a1],len);
 		} else {
-			ret = read(fd,&g_memory_ptr[(a1bank << 16) + a1],len);
+			ret = read(fd,(char*)&g_memory_ptr[(a1bank << 16) + a1],len);
 		}
 	} else {
 		if(a1bank >= 0xe0 && a1bank < 0xe2) {
-			ret = write(fd,&g_slow_memory_ptr[((a1bank & 1)<<16)+a1],len);
+			ret = write(fd,(char*)&g_slow_memory_ptr[((a1bank & 1)<<16)+a1],len);
 		} else {
-			ret = write(fd,&g_memory_ptr[(a1bank << 16) + a1],len);
+			ret = write(fd,(char*)&g_memory_ptr[(a1bank << 16) + a1],len);
 		}
 	}
 	printf("Read/write: addr %06x for %04x bytes, ret: %x bytes\n",
@@ -1172,9 +1175,8 @@ halt_printf(const char *fmt, ...)
 	va_list args;
 
 	va_start(args, fmt);
-        __android_log_vprint(ANDROID_LOG_ERROR,"libkegs",fmt,args);
+	vprintf(fmt, args);
 	va_end(args);
-        while(1) { sleep(600); } // sleep forever
 
 	set_halt(1);
 }

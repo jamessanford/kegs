@@ -37,11 +37,20 @@ extern int g_irq_pending;
 extern int g_testing;
 extern int g_num_brk;
 extern int g_num_cop;
+
 extern byte *g_slow_memory_ptr;
 extern byte *g_memory_ptr;
 extern byte *g_rom_fc_ff_ptr;
 extern byte *g_rom_cards_ptr;
 extern byte *g_dummy_memory1_ptr;
+
+// OG Need allocated memory
+extern byte *g_slow_memory_ptr_allocated;
+extern byte *g_memory_ptr_allocated;
+extern byte *g_rom_fc_ff_ptr_allocated;
+extern byte *g_rom_cards_ptr_allocated;
+extern byte *g_dummy_memory1_ptr_allocated;
+
 
 extern int g_num_breakpoints;
 extern word32 g_breakpts[];
@@ -563,8 +572,8 @@ get_memory16_c(word32 addr, int cycs)
 	double	fcycs;
 
 	fcycs = 0;
-	return get_memory_c(addr, fcycs) +
-			(get_memory_c(addr+1, fcycs) << 8);
+	return get_memory_c(addr, (int)fcycs) +
+			(get_memory_c(addr+1, (int)fcycs) << 8);
 }
 
 word32
@@ -573,9 +582,9 @@ get_memory24_c(word32 addr, int cycs)
 	double	fcycs;
 
 	fcycs = 0;
-	return get_memory_c(addr, fcycs) +
-			(get_memory_c(addr+1, fcycs) << 8) +
-			(get_memory_c(addr+2, fcycs) << 16);
+	return get_memory_c(addr, (int)fcycs) +
+			(get_memory_c(addr+1, (int)fcycs) << 8) +
+			(get_memory_c(addr+2, (int)fcycs) << 16);
 }
 
 void
@@ -729,10 +738,11 @@ fixed_memory_ptrs_init()
 	/* set g_slow_memory_ptr, g_rom_fc_ff_ptr, g_dummy_memory1_ptr, */
 	/*  and rom_cards_ptr */
 
-	g_slow_memory_ptr = memalloc_align(128*1024, 0, 0);
-	g_dummy_memory1_ptr = memalloc_align(256, 1024, 0);
-	g_rom_fc_ff_ptr = memalloc_align(256*1024, 512, 0);
-	g_rom_cards_ptr = memalloc_align(16*256, 256, 0);
+	// OG Filled allocated ptr parameter to free the memory
+	g_slow_memory_ptr = memalloc_align(128*1024, 0, (void**)&g_slow_memory_ptr_allocated);
+	g_dummy_memory1_ptr = memalloc_align(256, 1024, (void**)&g_dummy_memory1_ptr_allocated);
+	g_rom_fc_ff_ptr = memalloc_align(256*1024, 512, (void**)&g_rom_fc_ff_ptr_allocated);
+	g_rom_cards_ptr = memalloc_align(16*256, 256, (void**)&g_rom_cards_ptr_allocated);
 
 #if 0
 	printf("g_memory_ptr: %08x, dummy_mem: %08x, slow_mem_ptr: %08x\n",
@@ -745,6 +755,21 @@ fixed_memory_ptrs_init()
 		(word32)&(page_info_rd_wr[PAGE_INFO_PAD_SIZE+0x1ffff].rd_wr));
 #endif
 }
+
+// OG added fixed_memory_ptrs_shut 
+void fixed_memory_ptrs_shut()
+{
+	
+	free(g_slow_memory_ptr_allocated);
+	free(g_dummy_memory1_ptr_allocated);
+	free(g_rom_fc_ff_ptr_allocated);
+	free(g_rom_cards_ptr_allocated);
+	g_slow_memory_ptr=g_slow_memory_ptr_allocated= NULL;
+	g_dummy_memory1_ptr = g_dummy_memory1_ptr_allocated = NULL;
+	g_rom_fc_ff_ptr = g_rom_fc_ff_ptr_allocated = NULL;
+	g_rom_cards_ptr = g_rom_cards_ptr = NULL;
+}
+
 
 word32
 get_itimer()
@@ -889,6 +914,7 @@ get_remaining_operands(word32 addr, word32 opcode, word32 psr, Fplus *fplus_ptr)
 		arg_ptr[2] = arg >> 8;					\
 		arg_ptr[3] = arg >> 16;					\
 	}
+
 
 int
 enter_engine(Engine_reg *engine_ptr)

@@ -459,3 +459,19 @@ check_input_events()
     }
   } while(event_item != NULL && keep_going);
 }
+
+// OG
+void x_release_kimage(Kimage* kimage_ptr)
+{
+        if (kimage_ptr->dev_handle == (void*)-1)
+        {
+                free(kimage_ptr->data_ptr);
+                kimage_ptr->data_ptr = NULL;
+        }
+}
+
+// OG Addding ratio
+int x_calc_ratio(float x,float y)
+{
+        return 1;
+}
