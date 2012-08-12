@@ -112,7 +112,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       ProgressDialog dialog = new ProgressDialog(getActivity());
       // TODO: should probably use an XML layout for this.
       dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-      dialog.setMessage("Checking for ROM...");
+      dialog.setMessage(getResources().getText(R.string.rom_check));
       dialog.setProgressNumberFormat(null);
       dialog.setProgressPercentFormat(null);
       dialog.setIndeterminate(true);
@@ -126,7 +126,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-      builder.setMessage("Unable to obtain ROM.  Find ROM.01 or ROM.03 and put it in the /KEGS/ directory on your SD Card.");
+      builder.setMessage(getResources().getText(R.string.rom_error));
 // TODO do getActivity().finish() on button clicks
       return builder.create();
     }
