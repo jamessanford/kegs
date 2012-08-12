@@ -32,9 +32,6 @@ static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 static SLVolumeItf bqPlayerVolume;
 
 #define MACSND_REBUF_SIZE       (64*1024)
-#define MACSND_QUANTA           512
-/* MACSND_QUANTA must be >= 128 and a power of 2 */
-
 word32  g_macsnd_rebuf[MACSND_REBUF_SIZE];
 volatile word32 *g_macsnd_rebuf_ptr;
 volatile word32 *g_macsnd_rebuf_cur;
@@ -42,32 +39,47 @@ volatile int g_macsnd_playing = 0;
 
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
-  int samps;
   assert(bq == bqPlayerBufferQueue);
   assert(NULL == context);
 
-  samps = g_macsnd_rebuf_ptr - g_macsnd_rebuf_cur;
-  if(samps < 0) {
-    samps += MACSND_REBUF_SIZE;
-  }
-  samps = samps & -(MACSND_QUANTA);       // quantize to 1024 samples
-  if(g_macsnd_rebuf_cur + samps > &(g_macsnd_rebuf[MACSND_REBUF_SIZE])) {
-    samps = &(g_macsnd_rebuf[MACSND_REBUF_SIZE]) - g_macsnd_rebuf_cur;
-  }
-  if(samps > 0) {
-    g_macsnd_playing = 1;
+  // Read volatile items once.
+  word32 *buf_ptr = (word32 *)g_macsnd_rebuf_ptr;  // where new data is being written
+  word32 *buf_cur = (word32 *)g_macsnd_rebuf_cur;  // where we play from
 
-    SLresult result;
-    result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, (char *)g_macsnd_rebuf_cur, samps * 4);
-    assert(SL_RESULT_SUCCESS == result);
-
-    g_macsnd_rebuf_cur += samps;
-    if(g_macsnd_rebuf_cur >= &(g_macsnd_rebuf[MACSND_REBUF_SIZE])) {
-      g_macsnd_rebuf_cur -= MACSND_REBUF_SIZE;
-    }
-  } else {
+  // Bail early so g_macsnd_playing can be reset.
+  if (buf_ptr == buf_cur) {
     g_macsnd_playing = 0;
+    return;
   }
+  g_macsnd_playing = 1;
+
+// Play g_macsnd_rebuf_cur to EITHER
+//    g_macsnd_rebuf_ptr
+//      OR
+//    &g_macsnd_rebuf[MACSND_REBUF_SIZE]
+  word32 *last;
+  if (buf_ptr < buf_cur) {
+    // new data has wrapped around, only play to the end of the buffer.
+    last = &g_macsnd_rebuf[MACSND_REBUF_SIZE];
+  } else {
+    // play to buf_ptr
+    last = buf_ptr;
+  }
+
+  int samps;
+  samps = last - buf_cur;
+  samps = MIN(samps, 768);
+
+  // Where we'll start playing from next time.
+  if (&buf_cur[samps] == &g_macsnd_rebuf[MACSND_REBUF_SIZE]) {
+    g_macsnd_rebuf_cur = &g_macsnd_rebuf[0];
+  } else {
+    g_macsnd_rebuf_cur = &buf_cur[samps];
+  }
+
+  SLresult result;
+  result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, (char *)buf_cur, samps * 4);
+  assert(SL_RESULT_SUCCESS == result);
 }
 
 int android_send_audio(byte *ptr, int in_size) {
