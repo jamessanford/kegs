@@ -149,14 +149,11 @@ Cfg_menu g_cfg_disk_menu[] = {
 { 0, 0, 0, 0, 0 },
 };
 
-// OG Use define instead of const for joystick_types
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 Cfg_menu g_cfg_joystick_menu[] = {
 { "Joystick Configuration", g_cfg_joystick_menu, 0, 0, CFGTYPE_MENU },
-{ "Joystick Emulation,"TOSTRING(JOYSTICK_TYPE_KEYPAD)",Keypad Joystick,"TOSTRING(JOYSTICK_TYPE_MOUSE)",Mouse Joystick,"TOSTRING(JOYSTICK_TYPE_NATIVE_1)",Native Joystick 1,"
-	TOSTRING(JOYSTICK_TYPE_NATIVE_2)",Native Joystick 2,"TOSTRING(JOYSTICK_TYPE_NONE)",No Joystick", KNMP(g_joystick_type), CFGTYPE_INT },
+{ "Joystick Configuration", g_cfg_joystick_menu, 0, 0, CFGTYPE_MENU },
+{ "Joystick Emulation,0,Keypad Joystick,1,Mouse Joystick,2,Native Joystick 1,"
+        "3,Native Joystick 2", KNMP(g_joystick_type), CFGTYPE_INT },
 { "Joystick Scale X,0x100,Standard,0x119,+10%,0x133,+20%,"
 	"0x150,+30%,0xb0,-30%,0xcd,-20%,0xe7,-10%",
 		KNMP(g_joystick_scale_factor_x), CFGTYPE_INT },

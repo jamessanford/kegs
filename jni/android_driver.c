@@ -38,10 +38,16 @@ int g_screen_mdepth = 0;
 int g_android_mouse_x = 0;
 int g_android_mouse_y = 0;
 
+extern int g_joystick_type;
+extern int g_paddle_buttons;
+extern int g_paddle_val[];
+
 extern Kimage g_mainwin_kimage;
 
 extern int g_send_sound_to_file;
 
+extern int g_config_kegs_update_needed;
+extern int g_limit_speed;
 extern int g_quit_sim_now;
 
 int	g_has_focus = 0;
@@ -331,6 +337,67 @@ dev_video_init()
         g_installed_full_superhires_colormap = 1;
 }
 
+void joystick_init() {
+  g_paddle_val[0] = 32767;  // x
+  g_paddle_val[1] = 32767;  // y
+  g_paddle_val[2] = 32767;  // x #2
+  g_paddle_val[3] = 32767;  // y #2
+  g_paddle_buttons = 0x0C;
+  if (g_joystick_type != JOYSTICK_TYPE_NATIVE_1) {
+    g_joystick_type = JOYSTICK_TYPE_NATIVE_1;
+    g_config_kegs_update_needed = 1;
+  }
+}
+
+void joystick_update(double dcycs) {
+  paddle_update_trigger_dcycs(dcycs);
+}
+
+void joystick_update_buttons() {
+}
+
+void joystick_shut() {
+}
+
+int x_joystick_update(jclass joystick_class, jobject joystick_event) {
+  static int button_last = 0;
+
+  jfieldID fid = (*g_env)->GetFieldID(g_env, joystick_class, "x", "I");
+  if (fid == NULL) {
+    LOGE("NO FID");
+    return 0;
+  }
+  jint x = (*g_env)->GetIntField(g_env, joystick_event, fid);
+
+  fid = (*g_env)->GetFieldID(g_env, joystick_class, "y", "I");
+  if (fid == NULL) {
+    LOGE("NO FID");
+    return 0;
+  }
+  jint y = (*g_env)->GetIntField(g_env, joystick_event, fid);
+
+  fid = (*g_env)->GetFieldID(g_env, joystick_class, "buttons", "I");
+  if (fid == NULL) {
+    LOGE("NO FID");
+    return 0;
+  }
+  jint buttons = (*g_env)->GetIntField(g_env, joystick_event, fid);
+
+  if (x != 0xFFFF) {
+    g_paddle_val[0] = MIN(32767, MAX(-32767, x));
+  }
+  if (y != 0xFFFF) {
+    g_paddle_val[1] = MIN(32767, MAX(-32767, y));
+  }
+  g_paddle_buttons = (g_paddle_buttons & ~3) + (buttons & 3);
+
+  if (buttons != button_last) {
+    button_last = buttons;
+    return 0;  // wait until the next cycle to process more events
+  }
+  return 1;
+}
+
 int x_mouse_update(jclass mouse_class, jobject mouse_event) {
   static int button_last = 0;
 
@@ -378,6 +445,19 @@ int x_mouse_update(jclass mouse_class, jobject mouse_event) {
   return 1;
 }
 
+void x_key_special(int key_id) {
+  key_id = key_id & 0x7f;
+  switch(key_id) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      g_limit_speed = key_id;
+      g_config_kegs_update_needed = 1;
+      break;
+  }
+}
+
 int x_key_update(jclass key_class, jobject key_event) {
   jfieldID fid = (*g_env)->GetFieldID(g_env, key_class, "key_id", "I");
   if (fid == NULL) {
@@ -397,9 +477,10 @@ int x_key_update(jclass key_class, jobject key_event) {
   LOGE("got key_id %d %d", key_id, key_up);
 #endif
 
-  int a2_code = key_id;
-  if (a2_code != -1) {
-    adb_physical_key_update(a2_code, key_up);
+  if (key_id >= 0 && key_id < 0x80) {
+    adb_physical_key_update(key_id, key_up);
+  } else if (key_id >= 0x80) {
+    x_key_special(key_id);
   }
   if (!key_up) {
     return 0;  // only process one key down event per loop
@@ -445,15 +526,19 @@ check_input_events()
     event_item = (*g_env)->CallObjectMethod(g_env, g_eventqueue, mid);
 
     if (event_item != NULL) {
-      jclass mouse_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/KegsView$MouseKegsEvent");
-      jclass key_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/KegsView$KeyKegsEvent");
+      jclass mouse_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$MouseKegsEvent");
+      jclass joystick_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$JoystickKegsEvent");
+      jclass key_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$KeyKegsEvent");
 
       if (mouse_class != NULL && (*g_env)->IsInstanceOf(g_env, event_item, mouse_class)) {
         keep_going = x_mouse_update(mouse_class, event_item);
+      } else if (joystick_class != NULL && (*g_env)->IsInstanceOf(g_env, event_item, joystick_class)) {
+        keep_going = x_joystick_update(joystick_class, event_item);
       } else if (key_class != NULL && (*g_env)->IsInstanceOf(g_env, event_item, key_class)) {
         keep_going = x_key_update(key_class, event_item);
       }
       (*g_env)->DeleteLocalRef(g_env, mouse_class);
+      (*g_env)->DeleteLocalRef(g_env, joystick_class);
       (*g_env)->DeleteLocalRef(g_env, key_class);
       (*g_env)->DeleteLocalRef(g_env, event_item);
     }
