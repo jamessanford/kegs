@@ -57,9 +57,9 @@ class KegsKeyboard {
     key_id -= 0x20;
     final KeyTable.A2Key a2key = KeyTable.ascii.get(key_id);
     if (a2key.use_shift) {
-      mEventQueue.add(new KegsView.KeyKegsEvent(KEY_SHIFT, false));
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_SHIFT, false));
       keyDownUp(a2key.keycode);
-      mEventQueue.add(new KegsView.KeyKegsEvent(KEY_SHIFT, true));
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_SHIFT, true));
     } else {
       keyDownUp(a2key.keycode);
     }
@@ -67,6 +67,11 @@ class KegsKeyboard {
   }
 
   public boolean keyEvent(KeyEvent event) {
+    if (event.getAction() == KeyEvent.ACTION_MULTIPLE && event.getKeyCode() == KeyEvent.KEYCODE_UNKNOWN) {
+      // TODO: support event.getCharacters(), but we may need to use InputConnection instead of key events.
+      // Log.w("kegs", "key CHARACTERS " + event.getCharacters());
+      // return true;
+    }
     if (event.getAction() == KeyEvent.ACTION_DOWN) {
       int keyCode = event.getKeyCode();
       if (keyCode == KeyEvent.KEYCODE_ENTER) {
@@ -94,13 +99,13 @@ class KegsKeyboard {
   private void resetStickyKeys() {
     if (mSticky != 0) {
       if ((mSticky & STICKY_CONTROL) != 0) {
-        mEventQueue.add(new KegsView.KeyKegsEvent(KEY_CONTROL, true));
+        mEventQueue.add(new Event.KeyKegsEvent(KEY_CONTROL, true));
       }
       if ((mSticky & STICKY_OPEN_APPLE) != 0) {
-        mEventQueue.add(new KegsView.KeyKegsEvent(KEY_OPEN_APPLE, true));
+        mEventQueue.add(new Event.KeyKegsEvent(KEY_OPEN_APPLE, true));
       }
       if ((mSticky & STICKY_CLOSED_APPLE) != 0) {
-        mEventQueue.add(new KegsView.KeyKegsEvent(KEY_CLOSED_APPLE, true));
+        mEventQueue.add(new Event.KeyKegsEvent(KEY_CLOSED_APPLE, true));
       }
       mSticky = 0;
       if (mNotify != null) {
@@ -112,13 +117,13 @@ class KegsKeyboard {
   public void keyDownSticky(int key_id, boolean key_up) {
     int mask = 0;
     if (key_id == KEY_CONTROL) {
-      mEventQueue.add(new KegsView.KeyKegsEvent(KEY_CONTROL, key_up));
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_CONTROL, key_up));
       mask = STICKY_CONTROL;
     } else if (key_id == KEY_OPEN_APPLE) {
-      mEventQueue.add(new KegsView.KeyKegsEvent(KEY_OPEN_APPLE, key_up));
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_OPEN_APPLE, key_up));
       mask = STICKY_OPEN_APPLE;
     } else if (key_id == KEY_CLOSED_APPLE) {
-      mEventQueue.add(new KegsView.KeyKegsEvent(KEY_CLOSED_APPLE, key_up));
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_CLOSED_APPLE, key_up));
       mask = STICKY_CLOSED_APPLE;
     }
     if (key_up) {
@@ -129,8 +134,8 @@ class KegsKeyboard {
   }
 
   public void keyDownUp(int key_id) {
-    mEventQueue.add(new KegsView.KeyKegsEvent(key_id, false));  // key down
-    mEventQueue.add(new KegsView.KeyKegsEvent(key_id, true));   // key up
+    mEventQueue.add(new Event.KeyKegsEvent(key_id, false));  // key down
+    mEventQueue.add(new Event.KeyKegsEvent(key_id, true));   // key up
     resetStickyKeys();
   }
 }

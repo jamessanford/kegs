@@ -25,12 +25,7 @@ class KegsTouch extends GestureDetector.SimpleOnGestureListener {
                           float distanceX, float distanceY) {
     int changeX = (int)distanceX * -1;
     int changeY = (int)distanceY * -1;
-    mEventQueue.add(
-        new KegsView.MouseKegsEvent(changeX, changeY, mButton1, 1));
-//    if (mButton1 == 1 && e2.getAction() == MotionEvent.ACTION_UP) {
-//      mButton1 = 0;
-//      mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
-//    }
+    mEventQueue.add(new Event.MouseKegsEvent(changeX, changeY, mButton1, 1));
     return true;
   }
 
@@ -39,29 +34,30 @@ class KegsTouch extends GestureDetector.SimpleOnGestureListener {
 // press mouse button down
 //    Log.e("kegs", "onlongpress");
     mButton1 = 1;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
   }
 
+// TODO: replace this with onSingleTapUp and alter onDoubleTap
   @Override
   public boolean onSingleTapConfirmed(MotionEvent e) {
 // press mouse button down, then up
     mButton1 = 1;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
     mButton1 = 0;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
     return true;
   }
 
   @Override
   public boolean onDoubleTap(MotionEvent e) {
     mButton1 = 1;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
     mButton1 = 0;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
     mButton1 = 1;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
     mButton1 = 0;
-    mEventQueue.add(new KegsView.MouseKegsEvent(0, 0, mButton1, 1));
+    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
     return true;
   }
 }

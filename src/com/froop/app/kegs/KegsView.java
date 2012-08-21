@@ -23,32 +23,8 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
   private boolean mPaused = false;
   private boolean mReady = false;
 
-  static class KegsEvent {}
+  protected ConcurrentLinkedQueue<Event.KegsEvent> mEventQueue = new ConcurrentLinkedQueue<Event.KegsEvent>();
 
-  static class KeyKegsEvent extends KegsEvent {
-    public KeyKegsEvent(int key_id, boolean up) {
-      this.key_id = key_id;
-      this.up = up;
-    }
-    public int key_id;
-    public boolean up;
-  }
-
-  static class MouseKegsEvent extends KegsEvent {
-    public MouseKegsEvent(int x, int y, int buttons, int buttons_valid) {
-      this.x = x;
-      this.y = y;
-      this.buttons = buttons;
-      this.buttons_valid = buttons_valid;
-    }
-    public int x;
-    public int y;
-    public int buttons;
-    public int buttons_valid;
-  }
-
-  protected ConcurrentLinkedQueue<KegsEvent> mEventQueue = new ConcurrentLinkedQueue<KegsEvent>();
-  
   class KegsThread extends Thread {
     private Bitmap mBitmap;
     private Canvas mCanvas;
@@ -57,7 +33,6 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     private final ReentrantLock mSurfaceLock = new ReentrantLock();
     private final ReentrantLock mPauseLock = new ReentrantLock();
     private final Rect mRect = new Rect(0, 0, mA2Width, mA2Height);
-//    private final Rect mDestRect = new Rect(0, 0, 800, 600);
 
     public KegsThread(SurfaceHolder surfaceHolder, Context context) {
       mSurfaceHolder = surfaceHolder;
@@ -68,15 +43,17 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     // Called by surfaceCreated also!
-    public void updateScreen() {
+    protected void updateScreen() {
       mSurfaceLock.lock();
       mCanvas = mSurfaceHolder.lockCanvas();  // Use mRect ?
       try {
         if(mCanvas != null) {
+// Scaling tests: save/scale/restore, or drawBitmap into a destination rect.
+//          mCanvas.save();
           mCanvas.drawARGB(255, 0, 0, 0);
+//          mCanvas.scale(1.8f, 1.8f);
           mCanvas.drawBitmap(mBitmap, 0, 0, null);
-// scaling tests:
-//          mCanvas.drawBitmap(mBitmap, mRect, mDestRect, null);
+//          mCanvas.restore();
 // Doesn't work well, but consider eliminating the border instead, for phones.
           mSurfaceHolder.unlockCanvasAndPost(mCanvas);
           mCanvas = null;
@@ -94,7 +71,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       }
     }
 
-    public native void mainLoop(Bitmap b, ConcurrentLinkedQueue q);
+    private native void mainLoop(Bitmap b, ConcurrentLinkedQueue q);
 
     @Override
     public void run() {
@@ -102,7 +79,8 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
 // For TESTING:
 //      while (true) {
 //        try {
-//          Thread.sleep(100);
+//          Thread.sleep(500);
+//          checkForPause();
 //        } catch (InterruptedException e) {}
 //      }
     }
@@ -151,6 +129,15 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     thread = new KegsThread(holder, context);
 
     setFocusable(true);
+    setFocusableInTouchMode(true);
+    requestFocus();
+  }
+
+  public void setEmulationSpeed(int speed) {
+    // Speed matches g_limit_speed inside KEGS.
+    // Instead of a separate "control" event, key ids with bit 8 high are
+    // special events.  See android_driver.c:x_key_special()
+    mEventQueue.add(new Event.KeyKegsEvent(speed + 0x80, true));
   }
 
   public KegsThread getThread() {

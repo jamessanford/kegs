@@ -5,31 +5,41 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
 import android.view.GestureDetector;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.ToggleButton;
 
 public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private static final String FRAGMENT_ROM = "rom";
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
+  private static final String FRAGMENT_SPEED = "speed";
 
-  private KegsView mKegsView;
+  protected KegsView mKegsView;
   private KegsTouch mKegsTouch;
   private KegsKeyboard mKegsKeyboard;
+  private TouchJoystick mJoystick;
+
+  private PopupMenu mSettingsMenu;
+  private boolean mModeMouse = true;
 
   private View.OnClickListener mButtonClick = new View.OnClickListener() {
     public void onClick(View v) {
 //      Log.e("kegs", "button clicked");
-      int click_id = v.getId();
+      final int click_id = v.getId();
       int key_id = -1;
       boolean sticky = false;
       if (click_id == R.id.key_escape) {
@@ -69,6 +79,52 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       }
     }
   };
+
+  private PopupMenu.OnMenuItemClickListener mSettingsClick = new PopupMenu.OnMenuItemClickListener() {
+    public boolean onMenuItemClick(MenuItem item) {
+      final int item_id = item.getItemId();
+      if (item_id == R.id.input_mouse) {
+        mModeMouse = !mModeMouse;
+        return true;
+      } else if (item_id == R.id.input_keyboard) {
+        // There doesn't seem to be a reliable way to determine the current state, so we have to just toggle it.
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+          imm.toggleSoftInput(0, 0);
+        }
+        return true;
+      } else if (item_id == R.id.input_controls) {
+        final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
+        findViewById(R.id.b1).setVisibility(vis);
+        findViewById(R.id.b2).setVisibility(vis);
+        return true;
+      } else if (item_id == R.id.emulation_speed) {
+        new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
+        return true;
+      }
+      return false;
+    }
+  };
+
+  private boolean areControlsVisible() {
+    return findViewById(R.id.b1).getVisibility() == View.VISIBLE;
+  }
+
+  // Adjust items to say "Use Joystick" vs "Use Mouse", etc.
+  private void updateSettingsMenu() {
+    final Menu m = mSettingsMenu.getMenu();
+    MenuItem item;
+    item = m.findItem(R.id.input_mouse);
+    item.setTitle(mModeMouse ? R.string.input_joystick : R.string.input_mouse);
+
+    item = m.findItem(R.id.input_controls);
+    item.setTitle(areControlsVisible() ? R.string.input_controls_hide : R.string.input_controls_show);
+  }
+
+  public void showPopup(View v) {
+    updateSettingsMenu();
+    mSettingsMenu.show();
+  }
 
   public void onStickyReset() {
     ((ToggleButton)findViewById(R.id.key_control)).setChecked(false);
@@ -134,13 +190,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
   @Override
   public boolean dispatchKeyEvent(KeyEvent event) {
-// TODO: verify that this is all OK, and even Return works immediately.
-    return executeKeyEvent(event) || super.dispatchKeyEvent(event);
-//    return super.dispatchKeyEvent(event) || executeKeyEvent(event);
-  }
-
-  public boolean executeKeyEvent(KeyEvent event) {
-    return mKegsKeyboard.keyEvent(event);
+    return mKegsKeyboard.keyEvent(event) || super.dispatchKeyEvent(event);
   }
 
 //  @Override
@@ -160,17 +210,28 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     mKegsTouch = new KegsTouch(mKegsView.getEventQueue());
     final GestureDetector inputDetect = new GestureDetector(this, mKegsTouch);
 
+    mJoystick = new TouchJoystick(mKegsView.getEventQueue());
+
     final View mainView = findViewById(R.id.mainview);
     mainView.setClickable(true);
     mainView.setLongClickable(true);
     mainView.setOnTouchListener(new OnTouchListener() {
       public boolean onTouch(View v, MotionEvent event) {
-        return inputDetect.onTouchEvent(event);
+        // TODO: consider using two listeners and setOnTouchListener them
+        if (mModeMouse) {
+          return inputDetect.onTouchEvent(event);
+        } else {
+          return mJoystick.onTouchEvent(event);
+        }
       }
     });
 
     mKegsKeyboard = new KegsKeyboard(mKegsView.getEventQueue());
     mKegsKeyboard.setOnStickyReset(this);
+
+    mSettingsMenu = new PopupMenu(this, findViewById(R.id.key_settings));
+    mSettingsMenu.inflate(R.menu.options);
+    mSettingsMenu.setOnMenuItemClickListener(mSettingsClick);
 
     findViewById(R.id.key_escape).setOnClickListener(mButtonClick);
     findViewById(R.id.key_return).setOnClickListener(mButtonClick);

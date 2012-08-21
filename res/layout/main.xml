@@ -11,9 +11,12 @@
     android:layout_centerHorizontal="true"
   />
 
+<Button android:id="@+id/key_settings" android:drawableStart="@drawable/settings" android:drawablePadding="0px" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" android:layout_below="@id/kegsview" android:onClick="showPopup" />
+
 <LinearLayout android:id="@+id/b1" android:layout_below="@id/kegsview"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
     android:gravity="center">
 
 <Button android:id="@+id/key_escape" android:text="Esc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="left|bottom" android:layout_below="@id/kegsview" />

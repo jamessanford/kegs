@@ -12,4 +12,20 @@
     <item>I have a ROM 01</item>
     <item>I have a ROM 03</item>
   </string-array>
+
+  <string name="speed_title">Emulation Speed</string>
+  <string-array name="speed_choices">
+    <item>1.0 megahertz</item>
+    <item>2.8 megahertz</item>
+    <item>8.0 megahertz</item>
+    <item>Unlimited</item>
+  </string-array>
+
+  <!-- R.menu.options -->
+  <string name="input_joystick">Use Joystick</string>
+  <string name="input_mouse">Use Mouse</string>
+  <string name="input_keyboard">Keyboard</string>
+  <string name="input_controls_hide">Hide Controls</string>
+  <string name="input_controls_show">Show Controls</string>
+  <string name="emulation_speed">Emulation Speed</string>
 </resources>
