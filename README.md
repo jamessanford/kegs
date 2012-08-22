@@ -9,7 +9,6 @@ The touch screen acts as a big trackpad for the mouse.  To click and drag,
 for example to pull down GS/OS menus, you need to Long Press first.
 
 What's not ready yet:
-- No joystick.
 - Screen scaling to fit your device.
 - Native UI configuration options.
 
