@@ -42,11 +42,15 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
                                     Bitmap.Config.ARGB_8888);
     }
 
-    // Called by surfaceCreated also!
+    // Typically called by the native thread, but this can also be
+    // called on the UI thread via setHaveSurface.
     protected void updateScreen() {
+      if (!mHaveSurface) {
+        return;
+      }
       mSurfaceLock.lock();
-      mCanvas = mSurfaceHolder.lockCanvas();  // Use mRect ?
       try {
+        mCanvas = mSurfaceHolder.lockCanvas();  // Use mRect ?
         if(mCanvas != null) {
 // Scaling tests: save/scale/restore, or drawBitmap into a destination rect.
 //          mCanvas.save();
@@ -63,7 +67,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       }
     }
 
-    void checkForPause() {
+    private void checkForPause() {
       if (mPaused) {
         mPauseLock.lock();
         // deadlock here until onResume.  Maybe not efficient.
@@ -99,16 +103,29 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       if (!mReady) {
         return;  // bail out, we haven't started doing anything yet
       }
-      if (mHaveSurface && mPaused) {
+      thread.updateScreen();
+      if (mPaused) {
         mPaused = false;
         mPauseLock.unlock();
+      } else if (!thread.isAlive()) {
+        thread.start();
       }
-      // otherwise, wait for the surface...
     }
 
     // Has the thread itself actually paused waiting to acquire the lock?
     public boolean nowPaused() {
       return mPauseLock.hasQueuedThreads();
+    }
+
+    public void setHaveSurface(boolean haveSurface) {
+      mSurfaceLock.lock();
+      mHaveSurface = haveSurface;
+      mSurfaceLock.unlock();
+
+      if (haveSurface) {
+        // Refresh the canvas when we obtain a surface.
+        updateScreen();
+      }
     }
 
     public void setSurfaceSize(int width, int height) {
@@ -166,40 +183,22 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
   public native String stringFromJNI();
 
   public void setReady(boolean ready) {
-    if (ready && !mReady && mHaveSurface) {
-      thread.start();
-    }
+    final boolean wasReady = mReady;
     mReady = ready;
+
+    if (ready && !wasReady) {
+      // Will start the thread if not already started.
+      thread.onResume();
+    }
   }
 
+  // The surface callbacks are occasionally called in between pause and resume.
+
   public void surfaceCreated(SurfaceHolder holder) {
-    mHaveSurface = true;
-    if (!mReady) {
-      return;  // bail out, start the thread later
-    }
-    thread.updateScreen();
-    if (mPaused) {
-      thread.onResume();
-    } else {
-      thread.start();
-    }
+    thread.setHaveSurface(true);
   }
 
   public void surfaceDestroyed(SurfaceHolder holder) {
-    Log.w("kegs", "surfaceDestroyed");
-    mHaveSurface = false;
-    if (!mReady) {
-      return;  // bail out, we never actually started
-    }
-    if (!mPaused) {
-      thread.onPause();
-    }
-    while (!thread.nowPaused()) {
-      // We are waiting for the thread to actually pause itself,
-      // so that it won't be updating the canvas.
-      try {
-        Thread.sleep(18);  // 18ms == just over 1/60th of a second
-      } catch (InterruptedException e) {}
-    }
+    thread.setHaveSurface(false);
   }
 }
