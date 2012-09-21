@@ -23,6 +23,11 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
   private boolean mPaused = false;
   private boolean mReady = false;
 
+  // Bitmap draw options.
+  private boolean mScaled = false;
+  private float mScaleFactorX = 1.0f;
+  private float mScaleFactorY = 1.0f;
+
   protected ConcurrentLinkedQueue<Event.KegsEvent> mEventQueue = new ConcurrentLinkedQueue<Event.KegsEvent>();
 
   class KegsThread extends Thread {
@@ -32,7 +37,8 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     private Context mContext;
     private final ReentrantLock mSurfaceLock = new ReentrantLock();
     private final ReentrantLock mPauseLock = new ReentrantLock();
-    private final Rect mRect = new Rect(0, 0, mA2Width, mA2Height);
+    private Rect mRectSrc = new Rect(0, 0, mA2Width, mA2Height);
+    private Rect mRectDst = new Rect(0, 0, mA2Width, mA2Height);
 
     public KegsThread(SurfaceHolder surfaceHolder, Context context) {
       mSurfaceHolder = surfaceHolder;
@@ -45,20 +51,22 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     // Typically called by the native thread, but this can also be
     // called on the UI thread via setHaveSurface.
     protected void updateScreen() {
-      if (!mHaveSurface) {
-        return;
-      }
       mSurfaceLock.lock();
       try {
-        mCanvas = mSurfaceHolder.lockCanvas();  // Use mRect ?
+        if (!mHaveSurface) {
+          return;  // unlock with finally
+        }
+        mCanvas = mSurfaceHolder.lockCanvas();  // Use Rect ?
         if(mCanvas != null) {
-// Scaling tests: save/scale/restore, or drawBitmap into a destination rect.
-//          mCanvas.save();
-          mCanvas.drawARGB(255, 0, 0, 0);
-//          mCanvas.scale(1.8f, 1.8f);
-          mCanvas.drawBitmap(mBitmap, 0, 0, null);
-//          mCanvas.restore();
-// Doesn't work well, but consider eliminating the border instead, for phones.
+          mCanvas.drawARGB(255, 0, 0, 0);  // TODO: Figure out why necessary.
+          if (!mScaled) {
+            mCanvas.drawBitmap(mBitmap, mRectSrc, mRectDst, null);
+          } else {
+            mCanvas.save();
+            mCanvas.scale(mScaleFactorX, mScaleFactorY);
+            mCanvas.drawBitmap(mBitmap, mRectSrc, mRectDst, null);
+            mCanvas.restore();
+          }
           mSurfaceHolder.unlockCanvasAndPost(mCanvas);
           mCanvas = null;
         }
@@ -117,6 +125,26 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       return mPauseLock.hasQueuedThreads();
     }
 
+    public void setScale(float scaleFactorX, float scaleFactorY, boolean cropBorder) {
+      mSurfaceLock.lock();
+      if (scaleFactorX == 1.0f && scaleFactorY == 1.0f) {
+        mScaled = false;
+      } else {
+        mScaled = true;
+      }
+      mScaleFactorX = scaleFactorX;
+      mScaleFactorY = scaleFactorY;
+      if (cropBorder) {
+        mRectSrc = new Rect(0, 32, mA2Width, mA2Height);
+        mRectDst = new Rect(0, 0, mA2Width, mA2Height - 32);
+      } else {
+        mRectSrc = new Rect(0, 0, mA2Width, mA2Height);
+        mRectDst = new Rect(0, 0, mA2Width, mA2Height);
+      }
+      mSurfaceLock.unlock();
+      updateScreen();
+    }
+
     public void setHaveSurface(boolean haveSurface) {
       mSurfaceLock.lock();
       mHaveSurface = haveSurface;
@@ -127,11 +155,6 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
         updateScreen();
       }
     }
-
-    public void setSurfaceSize(int width, int height) {
-// consider..     mSurfaceLock.lock(); update sizes and bitmap; unlock
-    }
-
   }
 
   private Context mContext;
@@ -175,9 +198,10 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
 //    }
   }
 
-  public void surfaceChanged(SurfaceHolder holder,
-                             int format, int width, int height) {
-    thread.setSurfaceSize(width, height);
+  @Override
+  protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    setMeasuredDimension((int)(mA2Width * mScaleFactorX),
+                         (int)(mA2Height * mScaleFactorY));
   }
 
   public native String stringFromJNI();
@@ -190,6 +214,15 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       // Will start the thread if not already started.
       thread.onResume();
     }
+  }
+
+  public void setScale(float scaleFactorX, float scaleFactorY, boolean cropBorder) {
+    thread.setScale(scaleFactorX, scaleFactorY, cropBorder);
+    requestLayout();
+  }
+
+  public void surfaceChanged(SurfaceHolder holder,
+                             int format, int width, int height) {
   }
 
   // The surface callbacks are occasionally called in between pause and resume.
