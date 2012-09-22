@@ -3512,8 +3512,9 @@ video_update_color_raw(int col_num, int a2_color)
 	tmp = ((newred & g_red_mask) << g_red_left_shift) +
 			((newgreen & g_green_mask) << g_green_left_shift) +
 			((newblue & g_blue_mask) << g_blue_left_shift);
-
-	
+#ifdef __ANDROID__
+        tmp |= 0xFF000000;  // Alpha FF.
+#endif
 	
 	g_palette_8to1624[col_num] = tmp;
 
