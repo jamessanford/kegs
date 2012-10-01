@@ -186,6 +186,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
       builder.setMessage(getResources().getText(R.string.rom_error));
 // TODO do getActivity().finish() on button clicks
+// TODO setCanceledOnTouchOutside(false) ?  otherwise can accidentally dismiss the error.
       return builder.create();
     }
   }
@@ -193,46 +194,23 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private void setScreenSize() {
     final int width = getResources().getDisplayMetrics().widthPixels;
     final int height = getResources().getDisplayMetrics().heightPixels;
+    final BitmapSize bitmapSize = new BitmapSize(width, height);
 
-// If we can fit at least 90% of a scaled screen into the display area, do it.
-// If we hit less than 100% height, turn off system action bar and title.
-// If ((400 + 32) * scale) > height, then crop border.
+    mKegsView.updateScreenSize(bitmapSize);
 
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
-    boolean crop = false;
-
-    // Force integer scaling on X axis.
-    scaleX = (float)Math.round((width * 0.9) / 640);
-    // TODO: Fix '48' hack being used for system buttons or soft buttons.
-    scaleY = Math.min(scaleX, (height - 48) / 400.0f);
-
-    // If Y would be compressed in a weird way, reduce the scale and use 1:1.
-    if ((scaleX - scaleY) > 0.5) {
-      scaleX = Math.max(1, scaleX - 1);
-      scaleY = scaleX;
-    }
-
-    if (height < ((400 + 64) * scaleY)) {
-      ActionBar actionBar = getActionBar();
-      if (actionBar != null && actionBar.isShowing()) {
-        actionBar.hide();
-      }
-    } else {
-      ActionBar actionBar = getActionBar();
+    final ActionBar actionBar = getActionBar();
+    if (bitmapSize.showActionBar()) {
       if (actionBar != null && !actionBar.isShowing()) {
         actionBar.show();
       }
+    } else {
+      if (actionBar != null && actionBar.isShowing()) {
+        actionBar.hide();
+      }
     }
 
-    // TODO: Fix '32' and '64' for software buttons and window decorations.
-    if (height < ((400 + 32 + 64) * scaleY)) {
-      crop = true;
-    }
-
-    Log.w("kegs", "using scale " + scaleX + ":" + scaleY + " " + crop);
-
-    mKegsView.setScale(scaleX, scaleY, crop);
+    // Force another redraw of the bitmap into the canvas.  Bug workaround.
+    mKegsView.getThread().updateScreen();
   }
 
   @Override
@@ -259,7 +237,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     setContentView(R.layout.main);
 
     mKegsView = (KegsView)findViewById(R.id.kegsview);
-    setScreenSize();  // This causes an unnecessary requestLayout of KegsView.
+
+    setScreenSize();  // TODO This causes an unnecessary requestLayout of KegsView.
 
     mKegsTouch = new KegsTouch(mKegsView.getEventQueue());
     final GestureDetector inputDetect = new GestureDetector(this, mKegsTouch);

@@ -5,7 +5,8 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -14,65 +15,64 @@ import android.view.View;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+// This is the primary interface into the native KEGS thread, and also
+// where the native KEGS thread calls back into Java.
+
 class KegsView extends SurfaceView implements SurfaceHolder.Callback {
-  private static final int mA2Width = 640 + 32 + 32;   // kegs defcomm.h
-  private static final int mA2Height = 400 + 32 + 30;  // kegs defcomm.h
+  // Reported area of this view, see updateScreenSize()
+  private int mWidth = 0;
+  private int mHeight = 0;
 
   // Look also at mPauseLock.
-  private boolean mHaveSurface = false;
   private boolean mPaused = false;
-  private boolean mReady = false;
-
-  // Bitmap draw options.
-  private boolean mScaled = false;
-  private float mScaleFactorX = 1.0f;
-  private float mScaleFactorY = 1.0f;
+  private boolean mReady = false;     // 'true' will begin the native thread.
 
   protected ConcurrentLinkedQueue<Event.KegsEvent> mEventQueue = new ConcurrentLinkedQueue<Event.KegsEvent>();
 
+  private BitmapThread mBitmapThread;
+
   class KegsThread extends Thread {
+    private Handler mHandler;
     private Bitmap mBitmap;
     private Canvas mCanvas;
     private SurfaceHolder mSurfaceHolder;
     private Context mContext;
     private final ReentrantLock mSurfaceLock = new ReentrantLock();
     private final ReentrantLock mPauseLock = new ReentrantLock();
-    private Rect mRectSrc = new Rect(0, 0, mA2Width, mA2Height);
-    private Rect mRectDst = new Rect(0, 0, mA2Width, mA2Height);
 
     public KegsThread(SurfaceHolder surfaceHolder, Context context) {
       mSurfaceHolder = surfaceHolder;
       mContext = context;
 
-      mBitmap = Bitmap.createBitmap(mA2Width, mA2Height,
+      mBitmap = Bitmap.createBitmap(BitmapSize.Const.A2Width,
+                                    BitmapSize.Const.A2Height,
                                     Bitmap.Config.ARGB_8888);
+      mBitmap.setHasAlpha(false);
+
+      mBitmapThread = new BitmapThread();
+      mHandler = mBitmapThread.getHandler();
+
+      mBitmapThread.setBitmap(surfaceHolder, mBitmap, mSurfaceLock);
     }
 
-    // Typically called by the native thread, but this can also be
-    // called on the UI thread via setHaveSurface.
+    private FpsCounter fpsCount = new FpsCounter("kegs", "native");
+
+    // Typically updateScreen is called by the native thread,
+    // but it may also be run on the UI thread.
+    //
+    // We use a Handler to tell the bitmap thread to actually draw
+    // on the canvas.  No locking is involved, so it is possible for
+    // the canvas to get a bitmap that is in the process of being updated
+    // by the native thread.  This should be relatively uncommon.
+    //
+    // If you wish to draw to the canvas in the native thread, it should
+    // be safe to bypass the Handler and call mBitmapThread.updateScreen()
+    // here instead.
     protected void updateScreen() {
-      mSurfaceLock.lock();
-      try {
-        if (!mHaveSurface) {
-          return;  // unlock with finally
-        }
-        mCanvas = mSurfaceHolder.lockCanvas();  // Use Rect ?
-        if(mCanvas != null) {
-          mCanvas.drawARGB(255, 0, 0, 0);  // TODO: Figure out why necessary.
-          if (!mScaled) {
-            mCanvas.drawBitmap(mBitmap, mRectSrc, mRectDst, null);
-          } else {
-            mCanvas.save();
-            mCanvas.scale(mScaleFactorX, mScaleFactorY);
-            mCanvas.drawBitmap(mBitmap, mRectSrc, mRectDst, null);
-            mCanvas.restore();
-          }
-          mSurfaceHolder.unlockCanvasAndPost(mCanvas);
-          mCanvas = null;
-        }
-      } finally {
-        mSurfaceLock.unlock();
-      }
+      // Empty the queue first in case bitmap thread is lagging behind.
+      mHandler.removeMessages(0);
+      mHandler.sendEmptyMessage(0);
+      fpsCount.fps();
     }
 
     private void checkForPause() {
@@ -83,6 +83,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       }
     }
 
+    // See jni/android_driver.c:mainLoop()
     private native void mainLoop(Bitmap b, ConcurrentLinkedQueue q);
 
     @Override
@@ -111,12 +112,13 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       if (!mReady) {
         return;  // bail out, we haven't started doing anything yet
       }
-      thread.updateScreen();
+      updateScreen();
       if (mPaused) {
         mPaused = false;
         mPauseLock.unlock();
       } else if (!thread.isAlive()) {
         thread.start();
+        mBitmapThread.start();
       }
     }
 
@@ -124,40 +126,8 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     public boolean nowPaused() {
       return mPauseLock.hasQueuedThreads();
     }
-
-    public void setScale(float scaleFactorX, float scaleFactorY, boolean cropBorder) {
-      mSurfaceLock.lock();
-      if (scaleFactorX == 1.0f && scaleFactorY == 1.0f) {
-        mScaled = false;
-      } else {
-        mScaled = true;
-      }
-      mScaleFactorX = scaleFactorX;
-      mScaleFactorY = scaleFactorY;
-      if (cropBorder) {
-        mRectSrc = new Rect(0, 32, mA2Width, mA2Height);
-        mRectDst = new Rect(0, 0, mA2Width, mA2Height - 32);
-      } else {
-        mRectSrc = new Rect(0, 0, mA2Width, mA2Height);
-        mRectDst = new Rect(0, 0, mA2Width, mA2Height);
-      }
-      mSurfaceLock.unlock();
-      updateScreen();
-    }
-
-    public void setHaveSurface(boolean haveSurface) {
-      mSurfaceLock.lock();
-      mHaveSurface = haveSurface;
-      mSurfaceLock.unlock();
-
-      if (haveSurface) {
-        // Refresh the canvas when we obtain a surface.
-        updateScreen();
-      }
-    }
   }
 
-  private Context mContext;
   private KegsThread thread;
 
   public KegsView(Context context, AttributeSet attrs) {
@@ -189,19 +159,8 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
   }
 
   @Override
-  public void onWindowFocusChanged(boolean hasWindowFocus) {
-// TODO: check to see if this is necessary, for example during alarms or phone calls.
-//    if (!hasWindowFocus) {
-//     thread.onPause();
-//    } else {
-//     thread.onResume();
-//    }
-  }
-
-  @Override
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    setMeasuredDimension((int)(mA2Width * mScaleFactorX),
-                         (int)(mA2Height * mScaleFactorY));
+    setMeasuredDimension(mWidth, mHeight);
   }
 
   public native String stringFromJNI();
@@ -216,9 +175,11 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     }
   }
 
-  public void setScale(float scaleFactorX, float scaleFactorY, boolean cropBorder) {
-    thread.setScale(scaleFactorX, scaleFactorY, cropBorder);
+  public void updateScreenSize(BitmapSize bitmapSize) {
+    mWidth = bitmapSize.getViewWidth();
+    mHeight = bitmapSize.getViewHeight();
     requestLayout();
+    mBitmapThread.updateScreenSize(bitmapSize);
   }
 
   public void surfaceChanged(SurfaceHolder holder,
@@ -228,10 +189,10 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
   // The surface callbacks are occasionally called in between pause and resume.
 
   public void surfaceCreated(SurfaceHolder holder) {
-    thread.setHaveSurface(true);
+    mBitmapThread.setHaveSurface(true);
   }
 
   public void surfaceDestroyed(SurfaceHolder holder) {
-    thread.setHaveSurface(false);
+    mBitmapThread.setHaveSurface(false);
   }
 }
