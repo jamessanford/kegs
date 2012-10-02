@@ -11,15 +11,15 @@ import android.view.SurfaceHolder;
 import java.util.concurrent.locks.ReentrantLock;
 
 class BitmapThread extends Thread {
-  public Handler mHandler = new Handler() {
+  private Handler mHandler = new Handler() {
     public void handleMessage(Message msg) {
       updateScreen();
     }
   };
 
   private SurfaceHolder mSurfaceHolder;
+  private final ReentrantLock mSurfaceLock = new ReentrantLock();
   private Bitmap mBitmap;
-  private ReentrantLock mSurfaceLock;
   private Canvas mCanvas;
   private boolean mHaveSurface = false;
   private boolean mScaled = false;
@@ -30,10 +30,9 @@ class BitmapThread extends Thread {
 
   private FpsCounter fpsCount = new FpsCounter("kegs", "thread");
 
-  public void setBitmap(SurfaceHolder surfaceHolder, Bitmap bitmap, ReentrantLock surfaceLock) {
+  public void setBitmap(SurfaceHolder surfaceHolder, Bitmap bitmap) {
     mSurfaceHolder = surfaceHolder;
     mBitmap = bitmap;
-    mSurfaceLock = surfaceLock;
   }
 
   public void run() {

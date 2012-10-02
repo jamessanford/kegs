@@ -29,7 +29,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
 
   protected ConcurrentLinkedQueue<Event.KegsEvent> mEventQueue = new ConcurrentLinkedQueue<Event.KegsEvent>();
 
-  private BitmapThread mBitmapThread;
+  private final BitmapThread mBitmapThread = new BitmapThread();
 
   class KegsThread extends Thread {
     private Handler mHandler;
@@ -37,7 +37,6 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     private Canvas mCanvas;
     private SurfaceHolder mSurfaceHolder;
     private Context mContext;
-    private final ReentrantLock mSurfaceLock = new ReentrantLock();
     private final ReentrantLock mPauseLock = new ReentrantLock();
 
     public KegsThread(SurfaceHolder surfaceHolder, Context context) {
@@ -49,10 +48,8 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
                                     Bitmap.Config.ARGB_8888);
       mBitmap.setHasAlpha(false);
 
-      mBitmapThread = new BitmapThread();
+      mBitmapThread.setBitmap(surfaceHolder, mBitmap);
       mHandler = mBitmapThread.getHandler();
-
-      mBitmapThread.setBitmap(surfaceHolder, mBitmap, mSurfaceLock);
     }
 
     private FpsCounter fpsCount = new FpsCounter("kegs", "native");
