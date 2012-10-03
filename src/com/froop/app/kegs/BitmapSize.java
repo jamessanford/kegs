@@ -85,6 +85,7 @@ class BitmapSize {
 
     // Force integer scaling on X axis.
     scaleX = (float)Math.round((width * 0.9) / 640);
+    scaleX = Math.max(1, scaleX);
     // TODO: Fix '48' hack being used for system buttons or soft buttons.
     scaleY = Math.min(scaleX, (height - 48) / 400.0f);
 
