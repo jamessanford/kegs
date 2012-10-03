@@ -24,7 +24,12 @@ class BitmapSize {
   }
 
   public boolean showActionBar() {
-    if (mHeight < ((400 + 64) * mScaleFactorY)) {
+    if (mScaleFactorY != 1.0f && mScaleFactorX != mScaleFactorY) {
+      return false;
+    } else if (mHeight < getViewHeight()) {
+      // TODO: FIXME: This could possibly cause the action bar to turn on and off repeatedly, so be careful about when saying it's safe to turn on or off.
+      // One way would be if we have turned it off for a certain height,
+      // and a new height is within 20% of that height, keep it off.
       return false;
     } else {
       return true;
@@ -86,8 +91,7 @@ class BitmapSize {
     // Force integer scaling on X axis.
     scaleX = (float)Math.round((width * 0.9) / 640);
     scaleX = Math.max(1, scaleX);
-    // TODO: Fix '48' hack being used for system buttons or soft buttons.
-    scaleY = Math.min(scaleX, (height - 48) / 400.0f);
+    scaleY = Math.min(scaleX, height / 400.0f);
 
     // If Y would be compressed in a weird way, reduce the scale and use 1:1.
     if ((scaleX - scaleY) > 0.5) {
@@ -95,15 +99,16 @@ class BitmapSize {
       scaleY = scaleX;
     }
 
-    // TODO: Fix '32' and '64' for software buttons and window decorations.
-    if (height < ((400 + 32 + 64) * scaleY)) {
+    // If the 32 line border and the 400 pixel display do not fit, try
+    // cropping out the 32 line border.
+    if (height < 432 * scaleY) {
       crop = true;
     }
 
     mCropped = crop;
     mScaleFactorX = scaleX;
     mScaleFactorY = scaleY;
-    Log.w("kegs", "using scale " + scaleX + ":" + scaleY + " " + crop + " from screen " + width + "x" + height);
+    Log.w("kegs", "using scale " + scaleX + ":" + scaleY + " crop=" + crop + " from screen " + width + "x" + height);
   }
 
 // call us when you update your screen size/configuration

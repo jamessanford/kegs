@@ -9,6 +9,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -172,7 +173,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
       dialog.setMessage(getResources().getText(R.string.rom_check));
       dialog.setProgressNumberFormat(null);
-      dialog.setProgressPercentFormat(null);
+      if (android.os.Build.VERSION.SDK_INT >= 11) {
+        dialog.setProgressPercentFormat(null);
+      }
       dialog.setIndeterminate(true);
       dialog.setCancelable(false);
       dialog.setCanceledOnTouchOutside(false);  // lame
@@ -191,9 +194,24 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     }
   }
 
-  private void setScreenSize() {
-    final int width = getResources().getDisplayMetrics().widthPixels;
-    final int height = getResources().getDisplayMetrics().heightPixels;
+  private void setScreenSize(boolean quick) {
+    int width;
+    int height;
+
+    if (quick) {
+      width = getResources().getDisplayMetrics().widthPixels;
+      height = getResources().getDisplayMetrics().heightPixels;
+      if (android.os.Build.VERSION.SDK_INT >= 11) {
+        // NOTE: 48 is a guess at the System Bar obstruction.
+        // These are 'visible insets' into the display from the window manager.
+        height -= 48;
+      }
+    } else {
+      Rect displaySize = new Rect();
+      mKegsView.getWindowVisibleDisplayFrame(displaySize);
+      width = displaySize.width();
+      height = displaySize.height();
+    }
     final BitmapSize bitmapSize = new BitmapSize(width, height);
 
     mKegsView.updateScreenSize(bitmapSize);
@@ -213,10 +231,23 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     mKegsView.getThread().updateScreen();
   }
 
+  private void workaroundScreenSize() {
+    // First use displayMetrics.
+    setScreenSize(true);
+
+    // Then update with getWindowVisibleDisplayFrame in 250ms.
+    //
+    // We want to use getWindowVisibleDisplayFrame, but it's not
+    // always immediately available.  Bug workaround.
+    mKegsView.postDelayed(new Runnable() {
+                           public void run() { setScreenSize(false); }
+                         }, 250);
+  }
+
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
-    setScreenSize();
+    workaroundScreenSize();
   }
 
   @Override
@@ -238,7 +269,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
     mKegsView = (KegsView)findViewById(R.id.kegsview);
 
-    setScreenSize();  // TODO This causes an unnecessary requestLayout of KegsView.
+    workaroundScreenSize();
 
     mKegsTouch = new KegsTouch(mKegsView.getEventQueue());
     final GestureDetector inputDetect = new GestureDetector(this, mKegsTouch);
