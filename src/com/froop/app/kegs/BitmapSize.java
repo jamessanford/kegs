@@ -27,9 +27,8 @@ class BitmapSize {
     if (mScaleFactorY != 1.0f && mScaleFactorX != mScaleFactorY) {
       return false;
     } else if (mHeight < getViewHeight()) {
-      // TODO: FIXME: This could possibly cause the action bar to turn on and off repeatedly, so be careful about when saying it's safe to turn on or off.
-      // One way would be if we have turned it off for a certain height,
-      // and a new height is within 20% of that height, keep it off.
+      // However, beware that disabling the action bar may increase
+      // the space enough to think that we should reenable it.
       return false;
     } else {
       return true;

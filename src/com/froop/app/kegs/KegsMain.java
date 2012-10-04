@@ -38,6 +38,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
   private PopupMenu mSettingsMenu;
   private boolean mModeMouse = true;
+  private int mLastActionBar = 0;  // window height at last ActionBar change.
 
   private View.OnClickListener mButtonClick = new View.OnClickListener() {
     public void onClick(View v) {
@@ -194,6 +195,19 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     }
   }
 
+  private void updateActionBar(boolean showActionBar) {
+    final ActionBar actionBar = getActionBar();
+    if (showActionBar) {
+      if (actionBar != null && !actionBar.isShowing()) {
+        actionBar.show();
+      }
+    } else {
+      if (actionBar != null && actionBar.isShowing()) {
+        actionBar.hide();
+      }
+    }
+  }
+
   private void setScreenSize(boolean quick) {
     int width;
     int height;
@@ -216,15 +230,11 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
     mKegsView.updateScreenSize(bitmapSize);
 
-    final ActionBar actionBar = getActionBar();
-    if (bitmapSize.showActionBar()) {
-      if (actionBar != null && !actionBar.isShowing()) {
-        actionBar.show();
-      }
-    } else {
-      if (actionBar != null && actionBar.isShowing()) {
-        actionBar.hide();
-      }
+    // Only change action bar if the window height is significantly
+    // different from the last time we changed the action bar.
+    if (height < (mLastActionBar * 0.85) || height > (mLastActionBar * 1.15)) {
+      mLastActionBar = height;
+      updateActionBar(bitmapSize.showActionBar());
     }
 
     // Force another redraw of the bitmap into the canvas.  Bug workaround.
