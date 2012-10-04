@@ -249,6 +249,12 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     //
     // We want to use getWindowVisibleDisplayFrame, but it's not
     // always immediately available.  Bug workaround.
+    //
+    // BUG: Sometimes if the device rotates as the soft keyboard
+    //      is becoming visible for the first time, the reported
+    //      window size is reduced and we don't scale to full screen.
+    //      The user can fix this by rotating the screen again.
+    //      We may want to trap IME visible/hidden events and update the size.
     mKegsView.postDelayed(new Runnable() {
                            public void run() { setScreenSize(false); }
                          }, 250);
