@@ -92,6 +92,9 @@ class BitmapSize {
     scaleX = Math.max(1, scaleX);
     scaleY = Math.min(scaleX, height / 400.0f);
 
+    // NOTE: scaleY should really never be less than '1',
+    // although theoretically 0.5-1 would look OK, it causes poor performance
+
     // If Y would be compressed in a weird way, reduce the scale and use 1:1.
     if ((scaleX - scaleY) > 0.5) {
       scaleX = Math.max(1, scaleX - 1);

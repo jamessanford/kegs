@@ -279,6 +279,48 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 //  }
 
   @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    // BUG: no overflow menu on devices with menu button
+    // BUG: when action bar is hidden, menu bar only shows overflow items
+    getMenuInflater().inflate(R.menu.actions, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    // TODO: add code to adjust anything that might change
+    return super.onPrepareOptionsMenu(menu);
+  }
+
+  // TODO: FIXME: Seriously in progress.
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    // Action bar was clicked.
+    final int item_id = item.getItemId();
+    if (item_id == R.id.action_keyboard) {
+      InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+      if (imm != null) {
+        imm.toggleSoftInput(0, 0);
+      }
+      return true;
+    } else if (item_id == R.id.action_speed) {
+      new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
+      return true;
+    } else if (item_id == R.id.action_joystick) {
+      mModeMouse = !mModeMouse;
+      // TOAST...'now using...joystick or mouse'
+      return true;
+    } else if (item_id == R.id.action_function) {
+// drop down menu for special keys...?
+      return true;
+    } else if (item_id == R.id.action_diskimage) {
+// start fragment for disk images
+      return true;
+    }
+    return false;
+  }
+
+  @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- ic_bt_keyboard_hid, ic_lockscreen_ime -->
+    <item android:id="@+id/action_keyboard"
+          android:icon="@drawable/ic_bt_keyboard_hid"
+          android:showAsAction="ifRoom"
+          android:title="Keyboard" />
+
+    <item android:id="@+id/action_joystick"
+          android:icon="@drawable/ic_bt_misc_hid"
+          android:showAsAction="ifRoom"
+          android:title="Use Joystick" />
+
+    <item android:id="@+id/action_speed"
+          android:icon="@drawable/dial"
+          android:showAsAction="ifRoom"
+          android:title="Emulation Speed" />
+
+    <item android:id="@+id/action_function"
+          android:icon="@drawable/ic_dialog_attach"
+          android:showAsAction="never"
+          android:title="Special Keys" />
+
+    <item android:id="@+id/action_diskimage"
+          android:icon="@drawable/ic_menu_save"
+          android:showAsAction="ifRoom"
+          android:title="Disk Images" />
+
+</menu>
