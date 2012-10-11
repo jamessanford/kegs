@@ -3508,18 +3508,11 @@ video_update_color_raw(int col_num, int a2_color)
 	newgreen = green >> g_green_right_shift;
 	newblue = blue >> g_blue_right_shift;
 
-#if 1
-// jsanford TESTING FIXME
-// can be even shorter, see above...
-        tmp = 0 + ((red & 0xF8) << (11 - 3)) + ((green & 0xFC) << (5 - 2)) + ((blue & 0xF8) >> 3);
-#else
-
 	tmp = ((newred & g_red_mask) << g_red_left_shift) +
 			((newgreen & g_green_mask) << g_green_left_shift) +
 			((newblue & g_blue_mask) << g_blue_left_shift);
-#ifdef __ANDROID__
+#if defined(__ANDROID__) && defined(ANDROID_ARGB_8888)
         tmp |= 0xFF000000;  // Alpha FF.
-#endif
 #endif
 	
 	g_palette_8to1624[col_num] = tmp;

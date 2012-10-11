@@ -188,8 +188,19 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
   int x, y;
 
   indata += (srcy * in_width) + srcx;
+#ifdef ANDROID_ARGB_8888
+  pixels = ((char *)pixels + (g_bitmap_info.stride * desty)) + (destx * 4);
+  for (y=0; y<height; y++) {
+    uint32_t *line = (uint32_t*)pixels;
+    inptr = indata;
+    for (x=0; x<width; x++) {
+      line++[0] = (uint32_t)(palptr[*inptr++]);
+    }
+    pixels = (char *)pixels + g_bitmap_info.stride;
+    indata += in_width;
+  }
+#else
   pixels = ((char *)pixels + (g_bitmap_info.stride * desty)) + (destx * 2);
-
   for (y=0; y<height; y++) {
     uint16_t *line = (uint16_t*)pixels;
     inptr = indata;
@@ -199,6 +210,7 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
     pixels = (char *)pixels + g_bitmap_info.stride;
     indata += in_width;
   }
+#endif
 
   AndroidBitmap_unlockPixels(g_env, g_bitmap);
 
@@ -294,10 +306,17 @@ Java_com_froop_app_kegs_KegsView_00024KegsThread_mainLoop( JNIEnv* env, jobject 
     return;
   }
 
+#ifdef ANDROID_ARGB_8888
+  if (g_bitmap_info.format != ANDROID_BITMAP_FORMAT_ARGB_8888) {
+    LOGE("Bitmap format must be ARGB_8888");
+    return;
+  }
+#else
   if (g_bitmap_info.format != ANDROID_BITMAP_FORMAT_RGB_565) {
     LOGE("Bitmap format must be RGB_565");
     return;
   }
+#endif
 
   kegsmain(0, NULL);
 }
@@ -310,13 +329,23 @@ dev_video_init()
         int     lores_col;
 // We tell KEGS we have an 8bit display,
 // but then when it asks us to push it, we transform the update area
-// into ARGB_8888.  There may be palette update bugs?
+// into ARGB_8888.
         g_screen_mdepth = 8;
         g_screen_depth = g_screen_mdepth;
 
+#ifdef ANDROID_ARGB_8888
         g_red_left_shift = 0;
         g_green_left_shift = 8;
         g_blue_left_shift = 16;
+#else
+// RGB_565
+        g_red_right_shift = 3;
+        g_green_right_shift = 2;
+        g_blue_right_shift = 3;
+        g_red_left_shift = 11;
+        g_green_left_shift = 5;
+        g_blue_left_shift = 0;
+#endif
 
         video_get_kimages();
 
