@@ -1910,7 +1910,13 @@ take_irq(int is_it_brk)
 }
 
 double	g_dtime_last_vbl = 0.0;
+#ifdef __ANDROID__
+// Fudge emulator screen updates a bit so that we
+// continuously drift away from the android vsync.
+double	g_dtime_expected = (1.0/59.8);
+#else
 double	g_dtime_expected = (1.0/60.0);
+#endif
 
 int g_scan_int_events = 0;
 
@@ -2195,7 +2201,11 @@ update_60hz(double dcycs, double dtime_now)
 	dadjcycs_this_vbl = g_dadjcycs - g_last_vbl_dadjcycs;
 	g_last_vbl_dadjcycs = g_dadjcycs;
 
+#ifdef __ANDROID__
+	g_dtime_expected += (1.0/59.8);
+#else
 	g_dtime_expected += (1.0/60.0);
+#endif
 
 	eff_pmhz = ((dadjcycs_this_vbl) / (dtime_this_vbl)) /
 							DCYCS_1_MHZ;
@@ -2205,7 +2215,11 @@ update_60hz(double dcycs, double dtime_now)
 
 	dtime_till_expected = g_dtime_expected - dtime_now;
 
+#ifdef __ANDROID__
+	dratio = 59.8 * dtime_till_expected;
+#else
 	dratio = 60.0 * dtime_till_expected;
+#endif
 
 	predicted_pmhz = eff_pmhz * dratio;
 
@@ -2250,10 +2264,17 @@ update_60hz(double dcycs, double dtime_now)
 		g_dtime_expected += dtime_diff;
 	}
 
+#ifdef __ANDROID__
+	if(dtime_till_expected > (2/59.8)) {
+		/* we're running fast, usleep */
+		micro_sleep(dtime_till_expected - (1/59.8));
+	}
+#else
 	if(dtime_till_expected > (3/60.0)) {
 		/* we're running fast, usleep */
 		micro_sleep(dtime_till_expected - (1/60.0));
 	}
+#endif
 
 	g_dtime_this_vbl_array[prev_vbl_index] = dtime_this_vbl;
 	g_dtime_exp_array[prev_vbl_index] = g_dtime_expected;
