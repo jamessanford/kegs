@@ -188,13 +188,13 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
   int x, y;
 
   indata += (srcy * in_width) + srcx;
-  pixels = ((char *)pixels + (g_bitmap_info.stride * desty)) + (destx * 4);
+  pixels = ((char *)pixels + (g_bitmap_info.stride * desty)) + (destx * 2);
 
   for (y=0; y<height; y++) {
-    uint32_t *line = (uint32_t*)pixels;
+    uint16_t *line = (uint16_t*)pixels;
     inptr = indata;
     for (x=0; x<width; x++) {
-      line++[0] = palptr[*inptr++];
+      line++[0] = (uint16_t)(palptr[*inptr++]);
     }
     pixels = (char *)pixels + g_bitmap_info.stride;
     indata += in_width;
@@ -294,8 +294,8 @@ Java_com_froop_app_kegs_KegsView_00024KegsThread_mainLoop( JNIEnv* env, jobject 
     return;
   }
 
-  if (g_bitmap_info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-    LOGE("Bitmap format must be RGBA_8888");
+  if (g_bitmap_info.format != ANDROID_BITMAP_FORMAT_RGB_565) {
+    LOGE("Bitmap format must be RGB_565");
     return;
   }
 

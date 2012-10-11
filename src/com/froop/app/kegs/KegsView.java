@@ -45,7 +45,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
 
       mBitmap = Bitmap.createBitmap(BitmapSize.Const.A2Width,
                                     BitmapSize.Const.A2Height,
-                                    Bitmap.Config.ARGB_8888);
+                                    Bitmap.Config.RGB_565);
       mBitmap.setHasAlpha(false);
 
       mBitmapThread.setBitmap(surfaceHolder, mBitmap);
