@@ -38,6 +38,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mSurfaceHolder;
     private Context mContext;
     private final ReentrantLock mPauseLock = new ReentrantLock();
+    private final ReentrantLock mPowerWait = new ReentrantLock();
 
     public KegsThread(SurfaceHolder surfaceHolder, Context context) {
       mSurfaceHolder = surfaceHolder;
@@ -85,7 +86,11 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void run() {
-      mainLoop(mBitmap, mEventQueue);
+      while(true) {
+        mPowerWait.lock();
+        mPowerWait.unlock();
+        mainLoop(mBitmap, mEventQueue);
+      }
 // For TESTING:
 //      while (true) {
 //        try {
@@ -123,6 +128,25 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     public boolean nowPaused() {
       return mPauseLock.hasQueuedThreads();
     }
+
+
+    public void doPowerOff() {
+      // Tell the native thread loop to wait before powering on again.
+      mPowerWait.lock();
+
+      // Special event, see android_driver.c:x_key_special()
+      mEventQueue.add(new Event.KeyKegsEvent(120 + 0x80, true));
+    }
+
+    public void allowPowerOn() {
+      // Intended to be called from the UI thread.
+      // As the native thread is allowed to loop by default,
+      // this is only useful after using doPowerOff().
+      if (mPowerWait.isHeldByCurrentThread()) {
+        mPowerWait.unlock();
+      }
+    }
+
   }
 
   private KegsThread thread;
@@ -147,11 +171,6 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     mEventQueue.add(new Event.KeyKegsEvent(speed + 0x80, true));
   }
 
-  public void doPowerOff() {
-    // Special event, see android_driver.c:x_key_special()
-    mEventQueue.add(new Event.KeyKegsEvent(120 + 0x80, true));
-  }
-
   public void doWarmReset() {
     // Press keys down.
     mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_OPEN_APPLE, false));
@@ -161,6 +180,14 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_RESET, true));
     mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_CONTROL, true));
     mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_OPEN_APPLE, true));
+  }
+
+  public void doPowerOff() {
+    thread.doPowerOff();
+  }
+
+  public void allowPowerOn() {
+    thread.allowPowerOn();
   }
 
   public KegsThread getThread() {

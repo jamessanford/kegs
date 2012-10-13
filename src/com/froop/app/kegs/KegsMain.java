@@ -108,8 +108,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       } else if (item_id == R.id.warm_reset) {
         mKegsView.doWarmReset();
         return true;
-      } else if (item_id == R.id.power_off) {
+      } else if (item_id == R.id.power_cycle) {
         mKegsView.doPowerOff();
+        mKegsView.allowPowerOn();
         return true;
       }
       return false;

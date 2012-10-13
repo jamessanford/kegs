@@ -29,5 +29,5 @@
   <string name="input_controls_show">Show Controls</string>
   <string name="emulation_speed">Emulation Speed</string>
   <string name="warm_reset">Warm Reset</string>
-  <string name="power_off">Power Off</string>
+  <string name="power_cycle">Power Cycle</string>
 </resources>
