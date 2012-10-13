@@ -174,6 +174,13 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     mEventQueue.add(new Event.KeyKegsEvent(speed + 0x80, true));
   }
 
+  public void setStartupSlot(int slot) {
+    if (slot >= 0 && slot <= 9) {
+      // Special event, see android_driver.c:x_key_special()
+      mEventQueue.add(new Event.KeyKegsEvent(slot + 10, true));
+    }
+  }
+
   public void doWarmReset() {
     // Press keys down.
     mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_OPEN_APPLE, false));
