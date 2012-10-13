@@ -129,7 +129,6 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       return mPauseLock.hasQueuedThreads();
     }
 
-
     public void doPowerOff() {
       // Tell the native thread loop to wait before powering on again.
       mPowerWait.lock();
@@ -147,6 +146,10 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
       }
     }
 
+    // Is native thread loop sitting around waiting for us to allow power on?
+    public boolean nowWaitingForPowerOn() {
+      return mPowerWait.hasQueuedThreads();
+    }
   }
 
   private KegsThread thread;
