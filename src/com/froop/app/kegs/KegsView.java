@@ -147,6 +147,17 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
     mEventQueue.add(new Event.KeyKegsEvent(speed + 0x80, true));
   }
 
+  public void doWarmReset() {
+    // Press keys down.
+    mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_OPEN_APPLE, false));
+    mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_CONTROL, false));
+    mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_RESET, false));
+    // Release reset key first, then the others.
+    mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_RESET, true));
+    mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_CONTROL, true));
+    mEventQueue.add(new Event.KeyKegsEvent(KegsKeyboard.KEY_OPEN_APPLE, true));
+  }
+
   public KegsThread getThread() {
     return thread;
   }

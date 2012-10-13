@@ -28,4 +28,5 @@
   <string name="input_controls_hide">Hide Controls</string>
   <string name="input_controls_show">Show Controls</string>
   <string name="emulation_speed">Emulation Speed</string>
+  <string name="warm_reset">Warm Reset</string>
 </resources>

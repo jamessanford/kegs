@@ -105,6 +105,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       } else if (item_id == R.id.emulation_speed) {
         new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
         return true;
+      } else if (item_id == R.id.warm_reset) {
+        mKegsView.doWarmReset();
+        return true;
       }
       return false;
     }
@@ -222,6 +225,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       }
     } else {
       Rect displaySize = new Rect();
+      // We use the mKegsView object here, but we could ask any view.
       mKegsView.getWindowVisibleDisplayFrame(displaySize);
       width = displaySize.width();
       height = displaySize.height();
