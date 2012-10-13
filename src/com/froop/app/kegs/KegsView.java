@@ -177,7 +177,7 @@ class KegsView extends SurfaceView implements SurfaceHolder.Callback {
   public void setStartupSlot(int slot) {
     if (slot >= 0 && slot <= 9) {
       // Special event, see android_driver.c:x_key_special()
-      mEventQueue.add(new Event.KeyKegsEvent(slot + 10, true));
+      mEventQueue.add(new Event.KeyKegsEvent(slot + 10 + 0x80, true));
     }
   }
 
