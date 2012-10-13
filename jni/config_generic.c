@@ -313,7 +313,7 @@ insert_disk(int slot, int drive, const char *name, int ejected, int force_size,
 	can_write = 1;
 
 //OG discard .GZ support
-#ifndef ACTIVEGS
+#if !defined(ACTIVEGS) && !defined(__ANDROID__)
 	if((name_len > 3) && (strcmp(&name_ptr[name_len - 3], ".gz") == 0)) {
 
 		/* it's gzip'ed, try to gunzip it, then unlink the */
