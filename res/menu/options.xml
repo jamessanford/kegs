@@ -10,4 +10,6 @@
           android:title="@string/emulation_speed" />
     <item android:id="@+id/warm_reset"
           android:title="@string/warm_reset" />
+    <item android:id="@+id/power_off"
+          android:title="@string/power_off" />
 </menu>

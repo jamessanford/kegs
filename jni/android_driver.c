@@ -471,7 +471,7 @@ int x_mouse_update(jclass mouse_class, jobject mouse_event) {
 }
 
 void x_key_special(int key_id) {
-  key_id = key_id & 0x7f;
+  key_id = key_id & 0x7f;  // only use lower 7 bits
   switch(key_id) {
     case 0:
     case 1:
@@ -479,6 +479,9 @@ void x_key_special(int key_id) {
     case 3:
       g_limit_speed = key_id;
       g_config_kegs_update_needed = 1;
+      break;
+    case 120:
+      set_halt(HALT_WANTTOQUIT);  // request kegsmain to exit
       break;
   }
 }
