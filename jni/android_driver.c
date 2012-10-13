@@ -44,15 +44,11 @@ extern int g_paddle_val[];
 
 extern Kimage g_mainwin_kimage;
 
-extern int g_send_sound_to_file;
-
 extern int g_config_kegs_update_needed;
 extern int g_limit_speed;
-extern int g_quit_sim_now;
 
 int	g_has_focus = 0;
 int	g_auto_repeat_on = -1;
-int	g_x_shift_control_state = 0;
 
 int	g_use_shmem = 0;
 
