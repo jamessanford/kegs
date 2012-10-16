@@ -22,7 +22,7 @@ public class SpeedFragment extends DialogFragment {
         if (item > 3) {
           item = 0;
         }
-        ((KegsMain)getActivity()).mKegsView.setEmulationSpeed(item);
+        ((KegsMain)getActivity()).getThread().setEmulationSpeed(item);
       }
     });
     return builder.create();

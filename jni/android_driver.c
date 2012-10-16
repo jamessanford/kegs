@@ -283,8 +283,9 @@ x_update_color(int col_num, int red, int green, int blue, word32 rgb)
 
 
 // Instead of 'KegsView$KegsThread', the $ is encoded as _00024.
+// (not any more, but it was KegsView_00024KegsThread_mainLoop)
 JNIEXPORT void JNICALL
-Java_com_froop_app_kegs_KegsView_00024KegsThread_mainLoop( JNIEnv* env, jobject thiz, jobject bitmap, jobject eventqueue )
+Java_com_froop_app_kegs_KegsThread_mainLoop( JNIEnv* env, jobject thiz, jobject bitmap, jobject eventqueue )
 {
   int ret;
 

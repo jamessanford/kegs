@@ -30,6 +30,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
   private static final String FRAGMENT_SPEED = "speed";
+  private static final String FRAGMENT_DISKIMAGE = "diskimage";
+
+  private KegsThread mKegsThread;
 
   protected KegsView mKegsView;
   private KegsTouch mKegsTouch;
@@ -106,11 +109,11 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
         new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
         return true;
       } else if (item_id == R.id.warm_reset) {
-        mKegsView.doWarmReset();
+        getThread().doWarmReset();
         return true;
       } else if (item_id == R.id.power_cycle) {
-        mKegsView.doPowerOff();
-        mKegsView.allowPowerOn();
+        getThread().doPowerOff();
+        getThread().allowPowerOn();
         return true;
       }
       return false;
@@ -168,7 +171,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
         }
       } else {
         Config.checkConfig(mRomfile);
-        mKegsView.setReady(true);
+        getThread().setReady(true);
       }
     }
   }
@@ -200,6 +203,10 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 // TODO setCanceledOnTouchOutside(false) ?  otherwise can accidentally dismiss the error.
       return builder.create();
     }
+  }
+
+  public KegsThread getThread() {
+    return mKegsThread;
   }
 
   private void updateActionBar(boolean showActionBar) {
@@ -246,7 +253,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     }
 
     // Force another redraw of the bitmap into the canvas.  Bug workaround.
-    mKegsView.getThread().updateScreen();
+    getThread().updateScreen();
   }
 
   private void workaroundScreenSize() {
@@ -322,7 +329,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 // drop down menu for special keys...?
       return true;
     } else if (item_id == R.id.action_diskimage) {
-// start fragment for disk images
+// FIXME
+//      new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
       return true;
     }
     return false;
@@ -335,12 +343,15 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
     mKegsView = (KegsView)findViewById(R.id.kegsview);
 
+    mKegsThread = new KegsThread(mKegsView.getBitmap());
+    mKegsThread.registerUpdateScreenInterface(mKegsView);
+
     workaroundScreenSize();
 
-    mKegsTouch = new KegsTouch(mKegsView.getEventQueue());
+    mKegsTouch = new KegsTouch(getThread().getEventQueue());
     final GestureDetector inputDetect = new GestureDetector(this, mKegsTouch);
 
-    mJoystick = new TouchJoystick(mKegsView.getEventQueue());
+    mJoystick = new TouchJoystick(getThread().getEventQueue());
 
     final View mainView = findViewById(R.id.mainview);
     mainView.setClickable(true);
@@ -356,7 +367,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       }
     });
 
-    mKegsKeyboard = new KegsKeyboard(mKegsView.getEventQueue());
+    mKegsKeyboard = new KegsKeyboard(getThread().getEventQueue());
     mKegsKeyboard.setOnStickyReset(this);
 
     mSettingsMenu = new PopupMenu(this, findViewById(R.id.key_settings));
@@ -380,20 +391,20 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       chooseRom.show(getFragmentManager(), FRAGMENT_ROM);
     } else {
       Config.checkConfig(romfile);
-      mKegsView.setReady(true);
+      getThread().setReady(true);
     }
   }
 
   @Override
   protected void onPause() {
     super.onPause();
-    mKegsView.getThread().onPause();
+    getThread().onPause();
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    mKegsView.getThread().onResume();
+    getThread().onResume();
   }
 
   @Override
