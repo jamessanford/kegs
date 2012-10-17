@@ -34,7 +34,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
   private KegsThread mKegsThread;
 
-  protected KegsView mKegsView;
+  // For the software renderer, use 'KegsView' here and in res/layout/main.xml
+  //   Also consider undef ANDROID_GL in jni/android_driver.c
+  protected KegsViewGL mKegsView;
   private KegsTouch mKegsTouch;
   private KegsKeyboard mKegsKeyboard;
   private TouchJoystick mJoystick;
@@ -341,7 +343,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
 
-    mKegsView = (KegsView)findViewById(R.id.kegsview);
+    mKegsView = (KegsViewGL)findViewById(R.id.kegsview);
 
     mKegsThread = new KegsThread(mKegsView.getBitmap());
     mKegsThread.registerUpdateScreenInterface(mKegsView);
@@ -399,12 +401,18 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   protected void onPause() {
     super.onPause();
     getThread().onPause();
+    if (mKegsView instanceof KegsViewGL) {
+      mKegsView.onPause();
+    }
   }
 
   @Override
   protected void onResume() {
     super.onResume();
     getThread().onResume();
+    if (mKegsView instanceof KegsViewGL) {
+      mKegsView.onResume();
+    }
   }
 
   @Override

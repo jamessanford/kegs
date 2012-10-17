@@ -217,7 +217,10 @@ class KegsRenderer implements GLSurfaceView.Renderer {
   }
 
   public void updateScreenSize(BitmapSize bitmapSize) {
-    // FIXME: TODO!: FIXME: lock here between use of these values...
-    // mWidth, mHeight, mSizeChange, mScaleX, mScaleY, crop, ...
+    mWidth = bitmapSize.getViewWidth();
+    mHeight = bitmapSize.getViewHeight();
+    mScaleX = bitmapSize.getScaleX();
+    mScaleY = bitmapSize.getScaleY();
+    mSizeChange = true;
   }
 }

@@ -22,6 +22,9 @@
 
 #include "defc.h"
 
+// KegsViewGL, when defined lock pixels only once per mainLoop.
+#define ANDROID_GL
+
 JNIEnv *g_env;
 jobject g_thiz;
 jobject g_bitmap;
@@ -29,6 +32,8 @@ AndroidBitmapInfo g_bitmap_info;
 jobject g_eventqueue;
 
 extern int Verbose;
+
+void *g_android_pixels;
 
 extern int g_warp_pointer;
 extern int g_screen_depth;
@@ -159,10 +164,14 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
   }
 #endif
 
+#ifndef ANDROID_GL
   if ((ret = AndroidBitmap_lockPixels(g_env, g_bitmap, &pixels)) < 0) {
     LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
     return;
   }
+#else
+  pixels = g_android_pixels;
+#endif
 
 // FILL PIXELS
 
@@ -208,7 +217,9 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
   }
 #endif
 
+#ifndef ANDROID_GL
   AndroidBitmap_unlockPixels(g_env, g_bitmap);
+#endif
 
 #if 0
   if (pushed == 0) {
@@ -315,7 +326,19 @@ Java_com_froop_app_kegs_KegsThread_mainLoop( JNIEnv* env, jobject thiz, jobject 
   }
 #endif
 
+#ifdef ANDROID_GL
+  if ((ret = AndroidBitmap_lockPixels(g_env, g_bitmap, &g_android_pixels)) < 0) {
+    LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+    return;
+  }
+#endif
+
   kegsmain(0, NULL);
+
+#ifdef ANDROID_GL
+  AndroidBitmap_unlockPixels(g_env, g_bitmap);
+  g_android_pixels = NULL;
+#endif
 }
 
 void
