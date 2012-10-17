@@ -288,8 +288,16 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
-    // TODO: add code to adjust anything that might change
-    return super.onPrepareOptionsMenu(menu);
+    super.onPrepareOptionsMenu(menu);
+
+    // remember to call invalidateOptionsMenu() for this to be run
+    MenuItem item;
+    item = menu.findItem(R.id.action_joystick);
+    if (item != null) {
+      item.setIcon(mModeMouse ? R.drawable.ic_bt_misc_hid : R.drawable.ic_bt_pointing_hid);
+      item.setTitle(mModeMouse ? R.string.input_joystick : R.string.input_mouse);
+    }
+    return true;
   }
 
   // TODO: FIXME: Seriously in progress.
@@ -308,7 +316,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       return true;
     } else if (item_id == R.id.action_joystick) {
       mModeMouse = !mModeMouse;
-      // TOAST...'now using...joystick or mouse'
+      invalidateOptionsMenu();  // update icon
       return true;
     } else if (item_id == R.id.action_function) {
 // drop down menu for special keys...?
