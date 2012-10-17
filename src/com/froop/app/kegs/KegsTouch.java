@@ -23,6 +23,9 @@ class KegsTouch {
   private int mPrimaryLastX = -1;  // last seen X
   private int mPrimaryLastY = -1;  // last seen Y
 
+  private int mSecondaryX = -1;  // in case of promotion to primary
+  private int mSecondaryY = -1;  // in case of promotion to primary
+
   private static final int LONG_PRESS = 1;
   private static final int LONG_PRESS_TIMEOUT = ViewConfiguration.getLongPressTimeout();
 
@@ -37,12 +40,26 @@ class KegsTouch {
   private Handler mHandler = new Handler() {
     public void handleMessage(Message msg) {
       if (msg.what == LONG_PRESS) {
-        mPrimaryLongPress = true;
-        mButton1 = 1;
-        mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+        if (mPrimaryId != -1) {
+          mPrimaryLongPress = true;
+          mButton1 = 1;
+          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+        }
       }
     }
   };
+
+  // For promotion of secondary to primary.  Crazy stuff.
+  private boolean checkSecondarySlop(MotionEvent newPoint, int index) {
+    final int deltaX = (int)newPoint.getX(index) - mSecondaryX;
+    final int deltaY = (int)newPoint.getY(index) - mSecondaryY;
+    final int distance = (deltaX * deltaX) + (deltaY * deltaY);
+    if (distance > mTouchSlopSquare) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   private boolean checkPrimarySlop(MotionEvent newPoint, int index) {
     if (mPrimaryPastSlop) {
@@ -83,6 +100,8 @@ class KegsTouch {
       } else {
         // Any subequent fingers become the mouse button.
         mSecondaryId = pointerId;
+        mSecondaryX = (int)event.getX(pointerIndex);
+        mSecondaryY = (int)event.getY(pointerIndex);
         mButton1 = 1;
         mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
       }
@@ -113,6 +132,8 @@ class KegsTouch {
         mButton1 = 0;
         mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
         mSecondaryId = -1;
+        mSecondaryX = -1;
+        mSecondaryY = -1;
         return true;
       }
     } else if (action == MotionEvent.ACTION_CANCEL) {
@@ -128,6 +149,8 @@ class KegsTouch {
         return true;
       } else if (pointerId == mSecondaryId) {
         mSecondaryId = -1;
+        mSecondaryX = -1;
+        mSecondaryY = -1;
         if ((mButton1 & 1) == 1) {
           mButton1 = 0;
           mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
@@ -135,19 +158,47 @@ class KegsTouch {
         return true;
       }
     } else if (action == MotionEvent.ACTION_MOVE) {
-      if (pointerId == mPrimaryId) {
-        if (checkPrimarySlop(event, pointerIndex)) {
-          mHandler.removeMessages(LONG_PRESS);
-          final int currentX = (int)event.getX(pointerIndex);
-          final int currentY = (int)event.getY(pointerIndex);
-          final int changeX = currentX - mPrimaryLastX;
-          final int changeY = currentY - mPrimaryLastY;
-          mPrimaryLastX = currentX;
-          mPrimaryLastY = currentY;
-          mEventQueue.add(new Event.MouseKegsEvent(changeX, changeY, mButton1, 1));
+      // This doesn't use getActionIndex(), we need to check the entire event.
+      int moveIndex;
+      int moveId;
+      for(moveIndex = 0; moveIndex < event.getPointerCount(); moveIndex++) {
+        moveId = event.getPointerId(moveIndex);
+
+        if (moveId == mSecondaryId && mPrimaryId != -1 && !mPrimaryPastSlop && mSecondaryX != -1 && mSecondaryY != -1) {
+          // If the secondary goes past slop now, swap primary and secondary...
+          // This allows you to click with one finger, and then drag the next
+          // and that drag becomes the primary finger.
+          if (checkSecondarySlop(event, moveIndex)) {
+            final int oldPrimary = mPrimaryId;
+            mPrimaryId = mSecondaryId;
+            mSecondaryId = oldPrimary;
+            mPrimaryPastSlop = true;
+            mPrimaryX = mSecondaryX;
+            mPrimaryY = mSecondaryY;
+            mPrimaryLastX = mSecondaryX;
+            mPrimaryLastY = mSecondaryY;
+            mSecondaryX = -1;
+            mSecondaryY = -1;
+          }
+          // Let this fall through to process the event.
         }
-        return true;
+        if (moveId == mPrimaryId) {
+          if (checkPrimarySlop(event, moveIndex)) {
+            mHandler.removeMessages(LONG_PRESS);
+            final int currentX = (int)event.getX(moveIndex);
+            final int currentY = (int)event.getY(moveIndex);
+            final int changeX = currentX - mPrimaryLastX;
+            final int changeY = currentY - mPrimaryLastY;
+            mPrimaryLastX = currentX;
+            mPrimaryLastY = currentY;
+            mEventQueue.add(new Event.MouseKegsEvent(changeX, changeY, mButton1, 1));
+            // Once we have had an active primary, don't allow promotions.
+            mSecondaryX = -1;
+            mSecondaryY = -1;
+          }
+        }
       }
+      return true;  // ACTION_MOVE
     }
     return false;
   }
