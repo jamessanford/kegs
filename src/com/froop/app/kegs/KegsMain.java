@@ -14,7 +14,6 @@ import android.os.Bundle;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
-import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -350,9 +349,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
     workaroundScreenSize();
 
-    mKegsTouch = new KegsTouch(getThread().getEventQueue());
-    final GestureDetector inputDetect = new GestureDetector(this, mKegsTouch);
-
+    mKegsTouch = new KegsTouch(this, getThread().getEventQueue());
     mJoystick = new TouchJoystick(getThread().getEventQueue());
 
     final View mainView = findViewById(R.id.mainview);
@@ -362,7 +359,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       public boolean onTouch(View v, MotionEvent event) {
         // TODO: consider using two listeners and setOnTouchListener them
         if (mModeMouse) {
-          return inputDetect.onTouchEvent(event);
+          return mKegsTouch.onTouchEvent(event);
         } else {
           return mJoystick.onTouchEvent(event);
         }

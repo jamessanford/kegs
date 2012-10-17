@@ -1,63 +1,154 @@
 package com.froop.app.kegs;
 
+import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-class KegsTouch extends GestureDetector.SimpleOnGestureListener {
+class KegsTouch {
   private ConcurrentLinkedQueue mEventQueue;
   private int mButton1 = 0;
+  private int mTouchSlopSquare;
 
-  public KegsTouch(ConcurrentLinkedQueue q) {
+  private int mPrimaryId = -1;    // mouse movement
+  private int mSecondaryId = -1;  // button presses
+
+  private boolean mPrimaryPastSlop = false;
+  private boolean mPrimaryLongPress = false;
+  private int mPrimaryX = -1;  // original X
+  private int mPrimaryY = -1;  // original Y
+  private int mPrimaryLastX = -1;  // last seen X
+  private int mPrimaryLastY = -1;  // last seen Y
+
+  private static final int LONG_PRESS = 1;
+  private static final int LONG_PRESS_TIMEOUT = ViewConfiguration.getLongPressTimeout();
+
+  public KegsTouch(Context context, ConcurrentLinkedQueue q) {
     mEventQueue = q;
+
+    final ViewConfiguration configuration = ViewConfiguration.get(context);
+    int touchSlop = configuration.getScaledTouchSlop();
+    mTouchSlopSquare = touchSlop * touchSlop;
   }
 
-  @Override
-  public boolean onFling(MotionEvent e1, MotionEvent e2,
-                         float velocityX, float velocityY) {
-// move mouse cursor
+  private Handler mHandler = new Handler() {
+    public void handleMessage(Message msg) {
+      if (msg.what == LONG_PRESS) {
+        mPrimaryLongPress = true;
+        mButton1 = 1;
+        mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+      }
+    }
+  };
+
+  private boolean checkPrimarySlop(MotionEvent newPoint, int index) {
+    if (mPrimaryPastSlop) {
+      return true;
+    }
+
+    final int deltaX = (int)newPoint.getX(index) - mPrimaryX;
+    final int deltaY = (int)newPoint.getY(index) - mPrimaryY;
+    final int distance = (deltaX * deltaX) + (deltaY * deltaY);
+    if (distance > mTouchSlopSquare) {
+      mPrimaryPastSlop = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean onTouchEvent(MotionEvent event) {
+    final int action = event.getActionMasked();
+    final int pointerIndex = event.getActionIndex();
+    final int pointerId = event.getPointerId(pointerIndex);
+
+    if (action == MotionEvent.ACTION_DOWN ||
+        action == MotionEvent.ACTION_POINTER_DOWN) {
+      if (mPrimaryId == -1 && mSecondaryId != pointerId) {
+        // First new finger down becomes movement.
+        mPrimaryId = pointerId;
+        mPrimaryX = (int)event.getX(pointerIndex);
+        mPrimaryY = (int)event.getY(pointerIndex);
+        mPrimaryLastX = mPrimaryX;
+        mPrimaryLastY = mPrimaryY;
+        mPrimaryPastSlop = false;
+        mPrimaryLongPress = false;
+
+        // Track for long presses.
+        mHandler.removeMessages(LONG_PRESS);
+        mHandler.sendEmptyMessageDelayed(LONG_PRESS, LONG_PRESS_TIMEOUT);
+      } else {
+        // Any subequent fingers become the mouse button.
+        mSecondaryId = pointerId;
+        mButton1 = 1;
+        mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+      }
+      return true;
+    } else if (action == MotionEvent.ACTION_UP ||
+               action == MotionEvent.ACTION_POINTER_UP) {
+      if (mPrimaryId == pointerId) {
+        mHandler.removeMessages(LONG_PRESS);
+        if (mPrimaryLongPress) {
+          if (mSecondaryId == -1) {
+            // If the other finger is down, let it take over the mouse button.
+            mButton1 = 0;
+            mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+          }
+        } else if (!checkPrimarySlop(event, pointerIndex)) {
+          // It didn't move while it was down, so send a click event.
+          mButton1 = 1;
+          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+          mButton1 = 0;
+          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+        }
+        mPrimaryId = -1;
+        mPrimaryPastSlop = false;
+        mPrimaryLongPress = false;
+        return true;
+      } else if (mSecondaryId == pointerId) {
+        // Release mouse button.
+        mButton1 = 0;
+        mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+        mSecondaryId = -1;
+        return true;
+      }
+    } else if (action == MotionEvent.ACTION_CANCEL) {
+      if (pointerId == mPrimaryId) {
+        mHandler.removeMessages(LONG_PRESS);
+        if (mPrimaryLongPress && mSecondaryId == -1 && (mButton1 & 1) == 1) {
+          mButton1 = 0;
+          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+        }
+        mPrimaryId = -1;
+        mPrimaryPastSlop = false;
+        mPrimaryLongPress = false;
+        return true;
+      } else if (pointerId == mSecondaryId) {
+        mSecondaryId = -1;
+        if ((mButton1 & 1) == 1) {
+          mButton1 = 0;
+          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+        }
+        return true;
+      }
+    } else if (action == MotionEvent.ACTION_MOVE) {
+      if (pointerId == mPrimaryId) {
+        if (checkPrimarySlop(event, pointerIndex)) {
+          mHandler.removeMessages(LONG_PRESS);
+          final int currentX = (int)event.getX(pointerIndex);
+          final int currentY = (int)event.getY(pointerIndex);
+          final int changeX = currentX - mPrimaryLastX;
+          final int changeY = currentY - mPrimaryLastY;
+          mPrimaryLastX = currentX;
+          mPrimaryLastY = currentY;
+          mEventQueue.add(new Event.MouseKegsEvent(changeX, changeY, mButton1, 1));
+        }
+        return true;
+      }
+    }
     return false;
-  }
-
-  @Override
-  public boolean onScroll(MotionEvent e1, MotionEvent e2,
-                          float distanceX, float distanceY) {
-    int changeX = (int)distanceX * -1;
-    int changeY = (int)distanceY * -1;
-    mEventQueue.add(new Event.MouseKegsEvent(changeX, changeY, mButton1, 1));
-    return true;
-  }
-
-  @Override
-  public void onLongPress(MotionEvent e) {
-// press mouse button down
-//    Log.e("kegs", "onlongpress");
-    mButton1 = 1;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-  }
-
-// TODO: replace this with onSingleTapUp and alter onDoubleTap
-  @Override
-  public boolean onSingleTapConfirmed(MotionEvent e) {
-// press mouse button down, then up
-    mButton1 = 1;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-    mButton1 = 0;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-    return true;
-  }
-
-  @Override
-  public boolean onDoubleTap(MotionEvent e) {
-    mButton1 = 1;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-    mButton1 = 0;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-    mButton1 = 1;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-    mButton1 = 0;
-    mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-    return true;
   }
 }
