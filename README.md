@@ -18,7 +18,7 @@ Source code:
 To build from source:
 <pre>
   android update project -p . -s
-  (cd jni && ndk-build)
+  ndk-build
   ant debug install
 </pre>
 
@@ -44,3 +44,4 @@ Android NDK samples were used as a base for this:
 - bitmap-plasma
 - JetBoy
 - native-audio
+- FireflyRenderer
