@@ -18,7 +18,6 @@
           android:title="@string/emulation_speed" />
 
     <item android:id="@+id/action_function"
-          android:icon="@drawable/ic_dialog_attach"
           android:showAsAction="never"
           android:title="@string/more_keys" />
 
