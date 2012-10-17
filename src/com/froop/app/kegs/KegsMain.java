@@ -91,23 +91,10 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private PopupMenu.OnMenuItemClickListener mSettingsClick = new PopupMenu.OnMenuItemClickListener() {
     public boolean onMenuItemClick(MenuItem item) {
       final int item_id = item.getItemId();
-      if (item_id == R.id.input_mouse) {
-        mModeMouse = !mModeMouse;
-        return true;
-      } else if (item_id == R.id.input_keyboard) {
-        // There doesn't seem to be a reliable way to determine the current state, so we have to just toggle it.
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) {
-          imm.toggleSoftInput(0, 0);
-        }
-        return true;
-      } else if (item_id == R.id.input_controls) {
+      if (item_id == R.id.input_controls) {
         final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
         findViewById(R.id.b1).setVisibility(vis);
         findViewById(R.id.b2).setVisibility(vis);
-        return true;
-      } else if (item_id == R.id.emulation_speed) {
-        new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
         return true;
       } else if (item_id == R.id.warm_reset) {
         getThread().doWarmReset();
@@ -129,9 +116,6 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private void updateSettingsMenu() {
     final Menu m = mSettingsMenu.getMenu();
     MenuItem item;
-    item = m.findItem(R.id.input_mouse);
-    item.setTitle(mModeMouse ? R.string.input_joystick : R.string.input_mouse);
-
     item = m.findItem(R.id.input_controls);
     item.setTitle(areControlsVisible() ? R.string.input_controls_hide : R.string.input_controls_show);
   }

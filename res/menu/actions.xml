@@ -5,26 +5,26 @@
     <item android:id="@+id/action_keyboard"
           android:icon="@drawable/ic_bt_keyboard_hid"
           android:showAsAction="ifRoom"
-          android:title="Keyboard" />
+          android:title="@+id/input_keyboard" />
 
     <item android:id="@+id/action_joystick"
           android:icon="@drawable/ic_bt_misc_hid"
           android:showAsAction="ifRoom"
-          android:title="Use Joystick" />
+          android:title="@+id/input_joystick" />
 
     <item android:id="@+id/action_speed"
           android:icon="@drawable/dial"
           android:showAsAction="ifRoom"
-          android:title="Emulation Speed" />
+          android:title="@+id/emulation_speed" />
 
     <item android:id="@+id/action_function"
           android:icon="@drawable/ic_dialog_attach"
           android:showAsAction="never"
-          android:title="Special Keys" />
+          android:title="@+id/more_keys" />
 
     <item android:id="@+id/action_diskimage"
           android:icon="@drawable/ic_menu_save"
           android:showAsAction="ifRoom"
-          android:title="Disk Images" />
+          android:title="@+id/diskimage" />
 
 </menu>

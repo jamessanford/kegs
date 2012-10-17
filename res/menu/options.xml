@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/input_mouse"
-          android:title="@string/input_joystick" />
-    <item android:id="@+id/input_keyboard"
-          android:title="@string/input_keyboard" />
     <item android:id="@+id/input_controls"
           android:title="@string/input_controls_hide" />
-    <item android:id="@+id/emulation_speed"
-          android:title="@string/emulation_speed" />
     <item android:id="@+id/warm_reset"
           android:title="@string/warm_reset" />
     <item android:id="@+id/power_cycle"
