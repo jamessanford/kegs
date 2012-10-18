@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
+    android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
+    android:paddingRight="?android:attr/listPreferredItemPaddingRight" >
+
+<ImageView android:id="@+id/icon"
+  android:layout_width="64dip"
+  android:layout_height="64dip"
+  android:scaleType="fitCenter" />
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@android:id/text1"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:layout_gravity="center_vertical"
+  android:paddingLeft="8dip"
+  android:textAppearance="?android:attr/textAppearanceListItemSmall"
+/>
+
+</LinearLayout>
+
+<ImageView android:id="@+id/cached"
+  android:layout_width="32dip"
+  android:layout_height="32dip"
+  android:layout_gravity="right|center_vertical"
+  android:scaleType="fitCenter"
+  android:paddingRight="?android:attr/listPreferredItemPaddingRight" />
+
+</FrameLayout>
