@@ -4,9 +4,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.opengl.GLSurfaceView;
-
-// FIXME: before use, make sure KegsMain calls our onPause and onResume funcs
 
 class KegsViewGL extends GLSurfaceView implements KegsThread.UpdateScreen {
   // Reported area of this view, see updateScreenSize()
@@ -35,6 +35,12 @@ class KegsViewGL extends GLSurfaceView implements KegsThread.UpdateScreen {
   @Override
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setMeasuredDimension(mWidth, mHeight);
+  }
+
+  @Override
+  public InputConnection onCreateInputConnection(EditorInfo attrs) {
+    // Bug workaround to force KEYCODE_DEL.
+    return InputFix.getInputConnection(this, attrs);
   }
 
   public Bitmap getBitmap() {

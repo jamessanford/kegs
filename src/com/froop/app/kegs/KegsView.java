@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -41,6 +43,12 @@ class KegsView extends SurfaceView implements KegsThread.UpdateScreen, SurfaceHo
   @Override
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setMeasuredDimension(mWidth, mHeight);
+  }
+
+  @Override
+  public InputConnection onCreateInputConnection(EditorInfo attrs) {
+    // Bug workaround to force KEYCODE_DEL.
+    return InputFix.getInputConnection(this, attrs);
   }
 
   private FpsCounter fpsCount = new FpsCounter("kegs", "native");
