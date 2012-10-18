@@ -43,7 +43,7 @@ class BitmapSize {
     if (!doCropBorder()) {
       return (int)(Const.A2Height * mScaleFactorY);
     } else {
-      return (int)((Const.A2Height - 32) * mScaleFactorY);
+      return (int)((Const.A2Height - 32 - 30) * mScaleFactorY);
     }
   }
 

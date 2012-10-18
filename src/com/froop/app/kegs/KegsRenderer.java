@@ -88,12 +88,9 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     gl.glLoadIdentity();
     // 50.0f is 512-(400+32+30)  (the distance from the bottom of the texture to our actual bitmap)
     float cropBorder = 50.0f;
-    float fudge = 0.0f;
-    if (mCropBorder > 0.0f) {
-      cropBorder += mCropBorder;
-      fudge = 14.0f;  // Bug workaround to view the entire image better...
-    }
-    gl.glOrthof(0.0f, (float)mWidth, cropBorder, mHeight + cropBorder + fudge, 0.0f, 1.0f);
+    cropBorder *= mScaleY;
+    cropBorder += mCropBorder * mScaleY;  // likely zero
+    gl.glOrthof(0.0f, (float)mWidth, cropBorder, mHeight + cropBorder, 0.0f, 1.0f);
     gl.glMatrixMode(GL10.GL_MODELVIEW);
     gl.glLoadIdentity();
   }
