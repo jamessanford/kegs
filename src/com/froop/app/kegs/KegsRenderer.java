@@ -14,9 +14,6 @@ import javax.microedition.khronos.opengles.GL10;
 import android.opengl.GLUtils;
 import android.opengl.GLSurfaceView;
 
-// FIXME: Before use, make sure JNI locks bitmap at beginning
-//        (instead of per frame)
-
 class KegsRenderer implements GLSurfaceView.Renderer {
   private Bitmap mBitmap;
   private static final int mTexWidth = 1024;
@@ -50,11 +47,12 @@ class KegsRenderer implements GLSurfaceView.Renderer {
   // Connecting order (draws a square)
   static final short[] mIndices = { 0, 1, 2, 0, 2, 3 };
 
-  // Oy.
-  public int mWidth = 0;
-  public int mHeight = 0;
-  public float mScaleX = 1.0f;
-  public float mScaleY = 1.0f;
+  private int mWidth = 0;
+  private int mHeight = 0;
+  private float mScaleX = 1.0f;
+  private float mScaleY = 1.0f;
+  private float mCropBorder = 0.0f;
+  private boolean mScaled = false;
   private boolean mSizeChange = false;
 
   private int mTexId;
@@ -85,23 +83,27 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     mTextureBuffer.position(0);
   }
 
-  public void onSurfaceChanged(GL10 gl, int width, int height) {
-    gl.glViewport(0, 0, width, height);
-  }
-
-  public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+  private void setupOrtho(GL10 gl) {
     gl.glMatrixMode(GL10.GL_PROJECTION);
     gl.glLoadIdentity();
     // 50.0f is 512-(400+32+30)  (the distance from the bottom of the texture to our actual bitmap)
     float cropBorder = 50.0f;
     float fudge = 0.0f;
-    if (mWidth > 1024) {  // hack
-      cropBorder += 30.0f;
-      fudge = 14.0f;
+    if (mCropBorder > 0.0f) {
+      cropBorder += mCropBorder;
+      fudge = 14.0f;  // Bug workaround to view the entire image better...
     }
-    gl.glOrthof(0.0f, (float)mWidth, cropBorder, mHeight+cropBorder+fudge, 0.0f, 1.0f);
+    gl.glOrthof(0.0f, (float)mWidth, cropBorder, mHeight + cropBorder + fudge, 0.0f, 1.0f);
     gl.glMatrixMode(GL10.GL_MODELVIEW);
     gl.glLoadIdentity();
+  }
+
+  public void onSurfaceChanged(GL10 gl, int width, int height) {
+    gl.glViewport(0, 0, width, height);
+  }
+
+  public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    setupOrtho(gl);
 
 //    gl.glShadeModel(GL10.GL_FLAT);
     gl.glEnable(gl.GL_TEXTURE_2D);
@@ -159,25 +161,14 @@ class KegsRenderer implements GLSurfaceView.Renderer {
 
     if (mSizeChange) {
       mSizeChange = false;
-      gl.glMatrixMode(GL10.GL_PROJECTION);
-      gl.glLoadIdentity();
-    // 50.0f is 512-(400+32+30)  (the distance from the bottom of the texture to our actual bitmap)
-    float cropBorder = 50.0f;
-    float fudge = 0.0f;
-    if (mWidth > 1024) {  // hack
-      cropBorder += 30.0f;
-      fudge = 14.0f;
+      setupOrtho(gl);
     }
-    gl.glOrthof(0.0f, (float)mWidth, cropBorder, mHeight+cropBorder+fudge, 0.0f, 1.0f);
-
-      gl.glMatrixMode(GL10.GL_MODELVIEW);
-      gl.glLoadIdentity();
-    }
-
 
     Bitmap bitmap = mBitmap;
     int format = GLUtils.getInternalFormat(bitmap);
     int type = GLUtils.getType(bitmap);
+    // This was just to play around with multiple textures on the GPU,
+    // it serves no benefit.
     int texId = (mTexLast == mTexId) ? mTexId2 : mTexId;
     mTexLast = texId;
     gl.glBindTexture(gl.GL_TEXTURE_2D, texId);
@@ -197,9 +188,9 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
     gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuffer);
     gl.glScalef(mTexWidth, mTexHeight, 0.0f);
-    if (mWidth > 1000) {
-      // additional scale on top of earlier scale
-      gl.glScalef(mScaleX, mScaleY, 0.0f);  // hack
+    if (mScaled) {
+      // Additional scale on top of earlier scale.
+      gl.glScalef(mScaleX, mScaleY, 0.0f);
     }
     gl.glDrawElements(GL10.GL_TRIANGLES, mIndices.length, GL10.GL_UNSIGNED_SHORT, mIndexBuffer);
     gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
@@ -217,10 +208,14 @@ class KegsRenderer implements GLSurfaceView.Renderer {
   }
 
   public void updateScreenSize(BitmapSize bitmapSize) {
+    // There should probably be a lock surrounding updating these.
     mWidth = bitmapSize.getViewWidth();
     mHeight = bitmapSize.getViewHeight();
     mScaleX = bitmapSize.getScaleX();
     mScaleY = bitmapSize.getScaleY();
+    mCropBorder = (float)bitmapSize.getCropPixelCount();
+    mScaled = bitmapSize.isScaled();
     mSizeChange = true;
+    Log.e("kegs", "screen size " + mWidth + "x" + mHeight + " " + mScaleX + ":" + mScaleY + " crop=" + mCropBorder);
   }
 }

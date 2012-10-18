@@ -51,6 +51,14 @@ class BitmapSize {
     return mCropped;
   }
 
+  public int getCropPixelCount() {
+    if (doCropBorder()) {
+      return 30;  // pixels dropped from the *bottom*
+    } else {
+      return 0;
+    }
+  }
+
   public boolean isScaled() {
     return (mScaleFactorX != 1.0f || mScaleFactorY != 1.0f);
   }
