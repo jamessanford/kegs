@@ -1,6 +1,5 @@
 package com.froop.app.kegs;
 
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
@@ -33,7 +32,7 @@ class InputFix {
           //
           // There must be a better way to handle input rather than
           // providing an entire InputConnection or hacking it like this.
-          final long eventTime = SystemClock.uptimeMillis();
+          final long eventTime = System.currentTimeMillis();
           final int keyCode = KeyEvent.KEYCODE_DEL;
 
           sendKeyEvent(new KeyEvent(eventTime, eventTime, KeyEvent.ACTION_DOWN,
