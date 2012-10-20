@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 // Ick.
 
 class Config {
+  // FIXME: use local directory here, not sdcard
   public static final File mPath = Environment.getExternalStorageDirectory();
   public static final String mConfigFile = "KEGS/config.kegs";
   public static final String mROM03 = "KEGS/ROM.03";
@@ -26,7 +27,8 @@ class Config {
     return null;
   }
 
-  public static void checkConfig(String rom_path) {
+  public static void defaultConfig(String rom_path) {
+    // FIXME: copy 'default' over to 'config.kegs'
     File config = new File(mPath, mConfigFile);
     if (config == null || !config.exists()) {
       createConfig(rom_path);

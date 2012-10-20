@@ -17,7 +17,7 @@
           android:showAsAction="ifRoom"
           android:title="@string/emulation_speed" />
 
-    <item android:id="@+id/action_function"
+    <item android:id="@+id/action_more_keys"
           android:showAsAction="never"
           android:title="@string/more_keys" />
 

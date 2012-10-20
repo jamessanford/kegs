@@ -21,19 +21,14 @@
     <item>Unlimited</item>
   </string-array>
 
-  <string name="diskimage_title">Load disk image</string>
+  <string name="diskimage_title">Insert disk</string>
 
   <!-- R.menu.actions -->
   <string name="input_joystick">Use Joystick</string>
   <string name="input_mouse">Use Mouse</string>
   <string name="input_keyboard">Keyboard</string>
   <string name="emulation_speed">Emulation Speed</string>
-  <string name="more_keys">Additional Keys</string>
   <string name="diskimage">Disk Images</string>
-
-  <!-- R.menu.options -->
-  <string name="input_controls_hide">Hide Controls</string>
-  <string name="input_controls_show">Show Controls</string>
-  <string name="warm_reset">Warm Reset</string>
-  <string name="power_cycle">Power Cycle</string>
+  <string name="more_keys">Additional Keys</string>
+  <string name="power_off">Power Off</string>
 </resources>

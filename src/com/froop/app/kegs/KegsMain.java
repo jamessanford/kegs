@@ -21,7 +21,6 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
-import android.widget.PopupMenu;
 import android.widget.ToggleButton;
 
 public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
@@ -40,13 +39,11 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private KegsKeyboard mKegsKeyboard;
   private TouchJoystick mJoystick;
 
-  private PopupMenu mSettingsMenu;
   private boolean mModeMouse = true;
   private int mLastActionBar = 0;  // window height at last ActionBar change.
 
   private View.OnClickListener mButtonClick = new View.OnClickListener() {
     public void onClick(View v) {
-//      Log.e("kegs", "button clicked");
       final int click_id = v.getId();
       int key_id = -1;
       boolean sticky = false;
@@ -54,8 +51,6 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
         key_id = KegsKeyboard.KEY_ESCAPE;
       } else if (click_id == R.id.key_return) {
         key_id = KegsKeyboard.KEY_RETURN;
-      } else if (click_id == R.id.key_f4) {
-        key_id = KegsKeyboard.KEY_F4;
       } else if (click_id == R.id.key_tab) {
         key_id = KegsKeyboard.KEY_TAB;
       } else if (click_id == R.id.key_control) {
@@ -88,41 +83,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     }
   };
 
-  private PopupMenu.OnMenuItemClickListener mSettingsClick = new PopupMenu.OnMenuItemClickListener() {
-    public boolean onMenuItemClick(MenuItem item) {
-      final int item_id = item.getItemId();
-      if (item_id == R.id.input_controls) {
-        final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
-        findViewById(R.id.b1).setVisibility(vis);
-        findViewById(R.id.b2).setVisibility(vis);
-        return true;
-      } else if (item_id == R.id.warm_reset) {
-        getThread().doWarmReset();
-        return true;
-      } else if (item_id == R.id.power_cycle) {
-        getThread().doPowerOff();
-        getThread().allowPowerOn();
-        return true;
-      }
-      return false;
-    }
-  };
-
   private boolean areControlsVisible() {
     return findViewById(R.id.b1).getVisibility() == View.VISIBLE;
-  }
-
-  // Adjust items to say "Use Joystick" vs "Use Mouse", etc.
-  private void updateSettingsMenu() {
-    final Menu m = mSettingsMenu.getMenu();
-    MenuItem item;
-    item = m.findItem(R.id.input_controls);
-    item.setTitle(areControlsVisible() ? R.string.input_controls_hide : R.string.input_controls_show);
-  }
-
-  public void showPopup(View v) {
-    updateSettingsMenu();
-    mSettingsMenu.show();
   }
 
   public void onStickyReset() {
@@ -155,7 +117,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
           dialog.show(getFragmentManager(), FRAGMENT_ERROR);
         }
       } else {
-        Config.checkConfig(mRomfile);
+        Config.defaultConfig(mRomfile);
         getThread().setReady(true);
       }
     }
@@ -318,12 +280,15 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       mModeMouse = !mModeMouse;
       invalidateOptionsMenu();  // update icon
       return true;
-    } else if (item_id == R.id.action_function) {
-// drop down menu for special keys...?
-      return true;
     } else if (item_id == R.id.action_diskimage) {
 // FIXME
 //      new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+      return true;
+    } else if (item_id == R.id.action_more_keys) {
+      final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
+      findViewById(R.id.b1).setVisibility(vis);
+      findViewById(R.id.b2).setVisibility(vis);
+      findViewById(R.id.b3).setVisibility(vis);
       return true;
     }
     return false;
@@ -361,13 +326,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     mKegsKeyboard = new KegsKeyboard(getThread().getEventQueue());
     mKegsKeyboard.setOnStickyReset(this);
 
-    mSettingsMenu = new PopupMenu(this, findViewById(R.id.key_settings));
-    mSettingsMenu.inflate(R.menu.options);
-    mSettingsMenu.setOnMenuItemClickListener(mSettingsClick);
-
     findViewById(R.id.key_escape).setOnClickListener(mButtonClick);
     findViewById(R.id.key_return).setOnClickListener(mButtonClick);
-    findViewById(R.id.key_f4).setOnClickListener(mButtonClick);
     findViewById(R.id.key_control).setOnClickListener(mButtonClick);
     findViewById(R.id.key_open_apple).setOnClickListener(mButtonClick);
     findViewById(R.id.key_closed_apple).setOnClickListener(mButtonClick);
@@ -381,7 +341,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       final DialogFragment chooseRom = new RomDialogFragment();
       chooseRom.show(getFragmentManager(), FRAGMENT_ROM);
     } else {
-      Config.checkConfig(romfile);
+      Config.defaultConfig(romfile);
       getThread().setReady(true);
     }
   }
