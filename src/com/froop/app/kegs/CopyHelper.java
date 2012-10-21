@@ -17,6 +17,10 @@ public class CopyHelper {
     mFile = filename;
   }
 
+  // This leaves a partial temporary file on error and doesn't let you know
+  // whether it was successful.  If your disk is full you will be unhappy.
+  //
+  // Caller could check for final file name.
   public void copy() throws java.io.IOException {
     Log.e("kegs", "CopyHelper to " + mDir + "/" + mFile);
     final File dir = new File(mDir);
