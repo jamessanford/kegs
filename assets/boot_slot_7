@@ -1,25 +1,11 @@
-# 0 = unlimited    1 = 1mhz    2 = 2.8mhz    3 = 8mhz
+
 g_limit_speed = 2
 
-# By default no disk images are loaded until the user inserts one.
-#
-# Put your custom config here and KEGS will use it on power on.
-
-# s5d1 = /mnt/sdcard/Downloads/DELTA_DEMO.2MG
-# s6d1 = /mnt/sdcard/Downloads/karateka.dsk
-# s7d1 = /mnt/sdcard/Downloads/Hard Drive 1.hdv
-# s7d2 = /mnt/sdcard/Downloads/Hard Drive 2.hdv
-#
-# s7d11 = :Partition Name:/path/to/image
-
-# The BRAM below tells it to boot SLOT 5.
-#
-# DELETE all the below lines to get the default.
-#   or for custom BRAM, copy config_kegs to here while KEGS is running.
+s7d1 = System 6.hdv
 
 bram1[00] = 00 00 00 01 00 00 0d 06 02 01 01 00 01 00 00 00
 bram1[10] = 00 00 07 06 02 01 01 00 00 00 0f 06 06 00 05 06
-bram1[20] = 01 00 00 00 00 00 00 01 05 00 00 00 03 02 02 02
+bram1[20] = 01 00 00 00 00 00 00 01 07 00 00 00 03 02 02 02
 bram1[30] = 00 00 00 00 00 00 00 00 00 00 01 02 03 04 05 06
 bram1[40] = 07 00 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d
 bram1[50] = 0e 0f ff ff ff ff ff ff ff ff ff ff ff ff ff ff
@@ -32,11 +18,11 @@ bram1[b0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram1[c0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram1[d0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram1[e0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-bram1[f0] = ff ff ff ff ff ff ff ff ff ff ff ff fd 96 57 3c
+bram1[f0] = ff ff ff ff ff ff ff ff ff ff ff ff fe 98 54 32
 
 bram3[00] = 00 00 00 01 00 00 0d 06 02 01 01 00 01 00 00 00
 bram3[10] = 00 00 07 06 02 01 01 00 00 00 0f 06 06 00 05 06
-bram3[20] = 01 00 00 00 00 00 00 01 05 00 00 00 05 02 02 00
+bram3[20] = 01 00 00 00 00 00 00 01 07 00 00 00 05 02 02 00
 bram3[30] = 00 00 2d 2d 00 00 00 00 00 00 02 02 02 06 08 00
 bram3[40] = 01 02 03 04 05 06 07 0a 00 01 02 03 04 05 06 07
 bram3[50] = 08 09 0a 0b 0c 0d 0e 0f 00 00 ff ff ff ff ff ff
@@ -49,4 +35,5 @@ bram3[b0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram3[c0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram3[d0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
 bram3[e0] = ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-bram3[f0] = ff ff ff ff ff ff ff ff ff ff ff ff 38 b4 92 1e
+bram3[f0] = ff ff ff ff ff ff ff ff ff ff ff ff 39 76 93 dc
+

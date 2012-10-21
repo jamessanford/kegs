@@ -1,21 +1,7 @@
-# 0 = unlimited    1 = 1mhz    2 = 2.8mhz    3 = 8mhz
+
 g_limit_speed = 2
 
-# By default no disk images are loaded until the user inserts one.
-#
-# Put your custom config here and KEGS will use it on power on.
-
-# s5d1 = /mnt/sdcard/Downloads/DELTA_DEMO.2MG
-# s6d1 = /mnt/sdcard/Downloads/karateka.dsk
-# s7d1 = /mnt/sdcard/Downloads/Hard Drive 1.hdv
-# s7d2 = /mnt/sdcard/Downloads/Hard Drive 2.hdv
-#
-# s7d11 = :Partition Name:/path/to/image
-
-# The BRAM below tells it to boot SLOT 5.
-#
-# DELETE all the below lines to get the default.
-#   or for custom BRAM, copy config_kegs to here while KEGS is running.
+s5d1 = XMAS_DEMO.2MG
 
 bram1[00] = 00 00 00 01 00 00 0d 06 02 01 01 00 01 00 00 00
 bram1[10] = 00 00 07 06 02 01 01 00 00 00 0f 06 06 00 05 06
