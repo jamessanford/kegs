@@ -30,6 +30,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private static final String FRAGMENT_SPEED = "speed";
   private static final String FRAGMENT_DISKIMAGE = "diskimage";
 
+  private ConfigFile mConfigFile;
   private KegsThread mKegsThread;
 
   // For the software renderer, use 'KegsView' here and in res/layout/main.xml
@@ -104,7 +105,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     protected Boolean doInBackground(String ... raw_romfile) {
       mRomfile = raw_romfile[0];
       return new DownloadHelper().save(
-          "http://jsan.co/" + mRomfile, Config.mPath.getPath() + "/" + mRomfile);
+          "http://jsan.co/KEGS/" + mRomfile,
+          mConfigFile.getConfigPath() + "/" + mRomfile);
     }
     protected void onPostExecute(Boolean success) {
       final DialogFragment frag = (DialogFragment)getFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
@@ -117,7 +119,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
           dialog.show(getFragmentManager(), FRAGMENT_ERROR);
         }
       } else {
-        Config.defaultConfig(mRomfile);
+        mConfigFile.defaultConfig();
         getThread().setReady(true);
       }
     }
@@ -301,7 +303,10 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 
     mKegsView = (KegsViewGL)findViewById(R.id.kegsview);
 
-    mKegsThread = new KegsThread(mKegsView.getBitmap());
+    mConfigFile = new ConfigFile(this);
+
+    mKegsThread = new KegsThread(mConfigFile.getConfigFile(),
+                                 mKegsView.getBitmap());
     mKegsThread.registerUpdateScreenInterface(mKegsView);
 
     workaroundScreenSize();
@@ -336,12 +341,15 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     findViewById(R.id.key_up).setOnClickListener(mButtonClick);
     findViewById(R.id.key_down).setOnClickListener(mButtonClick);
 
-    final String romfile = Config.whichRomFile();
+// TODO: Kick this off in the background for built in images.
+//    mConfigFile.ensureAssetCopied("XMAS_DEMO.2MG");
+
+    final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {
       final DialogFragment chooseRom = new RomDialogFragment();
       chooseRom.show(getFragmentManager(), FRAGMENT_ROM);
     } else {
-      Config.defaultConfig(romfile);
+      mConfigFile.defaultConfig();
       getThread().setReady(true);
     }
   }

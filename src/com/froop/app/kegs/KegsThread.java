@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 class KegsThread extends Thread {
   private ConcurrentLinkedQueue<Event.KegsEvent> mEventQueue = new ConcurrentLinkedQueue<Event.KegsEvent>();
 
+  private String mConfigFile;  // full path to config_kegs
   private Bitmap mBitmap;
   private final ReentrantLock mPauseLock = new ReentrantLock();
   private final ReentrantLock mPowerWait = new ReentrantLock();
@@ -25,7 +26,8 @@ class KegsThread extends Thread {
   }
   private UpdateScreen mUpdateScreen;
 
-  public KegsThread(Bitmap bitmap) {
+  public KegsThread(String configFile, Bitmap bitmap) {
+    mConfigFile = configFile;
     mBitmap = bitmap;
   }
 
@@ -49,6 +51,10 @@ class KegsThread extends Thread {
       // deadlock here until onResume.  Maybe not efficient.
       mPauseLock.unlock();
     }
+  }
+
+  private String getConfigFile() {
+    return mConfigFile;
   }
 
   // See jni/android_driver.c:mainLoop()

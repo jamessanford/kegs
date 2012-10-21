@@ -339,9 +339,14 @@ config_init()
 
 	// Find the config.kegs file
 	g_config_kegs_name[0] = 0;
+#ifdef __ANDROID__
+        extern void android_config_init(char *, int);
+        android_config_init(&g_config_kegs_name[0], sizeof(g_config_kegs_name));
+#else
 	can_create = 1;
 	setup_kegs_file(&g_config_kegs_name[0], sizeof(g_config_kegs_name), 0,
 				can_create, &g_config_kegs_name_list[0]);
+#endif
 
 	config_parse_config_kegs_file();
 }
@@ -687,6 +692,7 @@ config_parse_config_kegs_file()
 	g_highest_smartport_unit = -1;
 
 	cfg_get_base_path(&g_cfg_cwd_str[0], g_config_kegs_name, 0);
+#if !defined(__ANDROID__)
 	if(g_cfg_cwd_str[0] != 0) {
 		ret = chdir(&g_cfg_cwd_str[0]);
 		if(ret != 0) {
@@ -696,6 +702,7 @@ config_parse_config_kegs_file()
 
 	/* In any case, copy the directory path to g_cfg_cwd_str */
 	(void)getcwd(&g_cfg_cwd_str[0], CFG_PATH_MAX);
+#endif
 
 	fconf = fopen(g_config_kegs_name, "r");
 	if(fconf == 0) {

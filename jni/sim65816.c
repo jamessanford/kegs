@@ -20,7 +20,6 @@ const char rcsid_sim65816_c[] = "@(#)$KmKId: sim65816.c,v 1.367 2004-11-22 02:39
 #define vsnprintf _vsnprintf
 #endif
 
-
 #define PC_LOG_LEN	(8*1024)
 
 int g_speed_fast ;	// OG Expose fast parameter
@@ -1215,7 +1214,14 @@ setup_kegs_file(char *outname, int maxlen, int ok_if_missing,
 
 	outname[0] = 0;
 
+#ifdef __ANDROID__
+        extern char g_cfg_cwd_str[];
+        // For this to work, g_config_kegs_name must have already been set.
+        const char *tmp_paths[2] = { g_cfg_cwd_str, 0 };
+        path_ptr = &tmp_paths[0];
+#else
 	path_ptr = &g_kegs_default_paths[0];
+#endif
 
 	save_path_ptr = path_ptr;
 	while(*path_ptr) {

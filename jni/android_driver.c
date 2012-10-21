@@ -292,6 +292,26 @@ x_update_color(int col_num, int red, int green, int blue, word32 rgb)
 {
 }
 
+// This typically sets g_config_kegs_name to the full path of 'config.kegs'.
+void android_config_init(char *output, int maxlen) {
+  output[0] = 0;
+
+  jclass cls = (*g_env)->GetObjectClass(g_env, g_thiz);
+  jmethodID mid = (*g_env)->GetMethodID(g_env, cls, "getConfigFile", "()Ljava/lang/String;");
+  (*g_env)->DeleteLocalRef(g_env, cls);
+  if (mid == NULL) {
+    return;
+  }
+  jstring config_path = (*g_env)->CallObjectMethod(g_env, g_thiz, mid);
+  if (config_path == NULL) {
+    return;
+  }
+  const char *nativeString = (*g_env)->GetStringUTFChars(g_env, config_path, 0);
+  strncpy(output, nativeString, maxlen - 1);
+  output[maxlen - 1] = 0;
+  (*g_env)->ReleaseStringUTFChars(g_env, config_path, nativeString);
+  (*g_env)->DeleteLocalRef(g_env, config_path);
+}
 
 // Instead of 'KegsView$KegsThread', the $ is encoded as _00024.
 // (not any more, but it was KegsView_00024KegsThread_mainLoop)

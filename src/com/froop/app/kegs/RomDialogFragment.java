@@ -19,9 +19,9 @@ public class RomDialogFragment extends DialogFragment {
         if (item == 0) {
           ((KegsMain)getActivity()).finish();
         } else if (item == 1) {
-          ((KegsMain)getActivity()).getRomFile(Config.mROM01);
+          ((KegsMain)getActivity()).getRomFile(ConfigFile.ROM01);
         } else if (item == 2) {
-          ((KegsMain)getActivity()).getRomFile(Config.mROM03);
+          ((KegsMain)getActivity()).getRomFile(ConfigFile.ROM03);
         }
       }
     });
