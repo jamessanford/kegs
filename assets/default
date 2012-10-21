@@ -1,5 +1,3 @@
-# testing:
-# g_cfg_rom_path = /mnt/sdcard/ROM.03
 # 0 = unlimited    1 = 1mhz    2 = 2.8mhz    3 = 8mhz
 g_limit_speed = 2
 
