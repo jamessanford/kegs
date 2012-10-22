@@ -21,7 +21,8 @@
     <item>Unlimited</item>
   </string-array>
 
-  <string name="diskimage_title">Insert disk</string>
+  <string name="diskimage_title">Choose a disk</string>
+  <string name="asset_loading">Preparing disk image...</string>
 
   <!-- R.menu.actions -->
   <string name="input_joystick">Use Joystick</string>

@@ -23,12 +23,13 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.ToggleButton;
 
-public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
+public class KegsMain extends Activity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady {
   private static final String FRAGMENT_ROM = "rom";
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
   private static final String FRAGMENT_SPEED = "speed";
   private static final String FRAGMENT_DISKIMAGE = "diskimage";
+  private static final String FRAGMENT_ASSET = "asset";
 
   private ConfigFile mConfigFile;
   private KegsThread mKegsThread;
@@ -40,6 +41,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
   private KegsKeyboard mKegsKeyboard;
   private TouchJoystick mJoystick;
 
+  private boolean mAssetsReady = false;
   private boolean mModeMouse = true;
   private int mLastActionBar = 0;  // window height at last ActionBar change.
 
@@ -94,14 +96,35 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     ((ToggleButton)findViewById(R.id.key_closed_apple)).setChecked(false);
   }
 
+  public void onAssetsReady(boolean success) {
+    mAssetsReady = success;
+  }
+
+  private void loadConfigWhenReady(final String configfile) {
+    final AssetFragment frag = (AssetFragment)getFragmentManager().findFragmentByTag(FRAGMENT_ASSET);
+
+    if (!getThread().nowWaitingForPowerOn() || !mAssetsReady) {
+      if (frag == null && !mAssetsReady) {
+        // Only the asset part will take time, so only show the dialog
+        // when waiting for the asset.
+        final DialogFragment assetProgress = new AssetFragment();
+        assetProgress.show(getFragmentManager(), FRAGMENT_ASSET);
+      }
+      mKegsView.postDelayed(new Runnable() {
+        public void run() { loadConfigWhenReady(configfile); }
+      }, 100);
+    } else {
+      if (frag != null) {
+        frag.dismiss();
+      }
+      mConfigFile.internalConfig(configfile);
+      getThread().allowPowerOn();
+    }
+  }
+
   protected void loadConfig(String configfile) {
     getThread().doPowerOff();
-    while(!getThread().nowWaitingForPowerOn()) {
-      // FIXME: should not do this in the UI thread...should use a probe or handler
-      try { Thread.sleep(50); } catch (InterruptedException e) {}
-    }
-    mConfigFile.internalConfig(configfile);
-    getThread().allowPowerOn();
+    loadConfigWhenReady(configfile);
   }
 
   protected void getRomFile(String romfile) {
@@ -161,6 +184,24 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
 // TODO do getActivity().finish() on button clicks
 // TODO setCanceledOnTouchOutside(false) ?  otherwise can accidentally dismiss the error.
       return builder.create();
+    }
+  }
+
+  class AssetFragment extends DialogFragment {
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+      ProgressDialog dialog = new ProgressDialog(getActivity());
+      // TODO: should probably use an XML layout for this.
+      dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+      dialog.setMessage(getResources().getText(R.string.asset_loading));
+      dialog.setProgressNumberFormat(null);
+      if (android.os.Build.VERSION.SDK_INT >= 11) {
+        dialog.setProgressPercentFormat(null);
+      }
+      dialog.setIndeterminate(true);
+      dialog.setCancelable(false);
+      dialog.setCanceledOnTouchOutside(false);
+      return dialog;
     }
   }
 
@@ -351,7 +392,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     findViewById(R.id.key_down).setOnClickListener(mButtonClick);
 
     // Make sure local copy of internal disk images exist.
-    new AssetImages(mConfigFile).execute();
+    new AssetImages(this, mConfigFile).execute();
 
     final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {
