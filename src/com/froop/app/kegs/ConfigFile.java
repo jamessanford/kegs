@@ -1,6 +1,7 @@
 package com.froop.app.kegs;
 
 import android.content.Context;
+import android.util.Log;
 import java.io.File;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -49,6 +50,7 @@ class ConfigFile {
       }
     } catch (java.io.IOException e) {
      // KEGS will just fail.
+     Log.e("kegs", Log.getStackTraceString(e));
      return;
     }
   }
@@ -66,6 +68,7 @@ class ConfigFile {
                      mConfigPath, assetName).copy();
     } catch (java.io.IOException e) {
      // KEGS will just fail.
+     Log.e("kegs", Log.getStackTraceString(e));
      return;
     }
   }
@@ -78,6 +81,7 @@ class ConfigFile {
                      mConfigPath, mConfigFile).copy();
     } catch (java.io.IOException e) {
      // KEGS will just fail.
+     Log.e("kegs", Log.getStackTraceString(e));
      return;
     }
   }
@@ -89,6 +93,7 @@ class ConfigFile {
                      mConfigPath, mConfigFile).copy();
     } catch (java.io.IOException e) {
      // KEGS will just fail.
+     Log.e("kegs", Log.getStackTraceString(e));
      return;
     }
   }

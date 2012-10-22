@@ -154,6 +154,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       } else {
         mConfigFile.defaultConfig();
         getThread().setReady(true);
+        mKegsView.postDelayed(new Runnable() { public void run() { new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE); } }, 1000);
       }
     }
   }
@@ -401,6 +402,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     } else {
       mConfigFile.defaultConfig();
       getThread().setReady(true);
+      mKegsView.postDelayed(new Runnable() { public void run() { new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE); } }, 1000);
     }
   }
 
