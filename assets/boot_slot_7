@@ -1,7 +1,7 @@
 
 g_limit_speed = 3
 
-s7d1 = System 6 and Free Games.hdv
+s7d1 = System 6.hdv
 
 bram1[00] = 00 00 00 01 00 00 0d 06 02 01 01 00 01 00 00 00
 bram1[10] = 00 00 07 06 02 01 01 00 00 00 0f 06 06 00 05 06

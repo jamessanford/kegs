@@ -26,7 +26,7 @@ class AssetImages extends AsyncTask<Void, Void, Boolean> {
   protected Boolean doInBackground(Void... params) {
     mConfigFile.ensureAssetCopied("XMAS_DEMO.2MG");
     mConfigFile.ensureAssetCopied("System 6 Shareware.zip",
-                                  "System 6 and Free Games.hdv");
+                                  "System 6.hdv");
     // TODO: could check to make sure they actually exist now.
 
 // For testing:
