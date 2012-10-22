@@ -130,7 +130,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   protected void getRomFile(String romfile) {
     final DialogFragment download = new DownloadDialogFragment();
     download.show(getFragmentManager(), FRAGMENT_DOWNLOAD);
-    new DownloadRom().execute(romfile);
+    new DownloadRom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, romfile);
   }
 
   class DownloadRom extends AsyncTask<String, Void, Boolean> {
@@ -393,7 +393,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     findViewById(R.id.key_down).setOnClickListener(mButtonClick);
 
     // Make sure local copy of internal disk images exist.
-    new AssetImages(this, mConfigFile).execute();
+    new AssetImages(this, mConfigFile).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {
