@@ -17,13 +17,17 @@
           android:showAsAction="ifRoom"
           android:title="@string/emulation_speed" />
 
-    <item android:id="@+id/action_more_keys"
-          android:showAsAction="never"
-          android:title="@string/more_keys" />
-
     <item android:id="@+id/action_diskimage"
           android:icon="@drawable/ic_menu_save"
           android:showAsAction="ifRoom"
           android:title="@string/diskimage" />
+
+    <item android:id="@+id/action_more_keys"
+          android:showAsAction="never"
+          android:title="@string/more_keys" />
+
+    <item android:id="@+id/action_power_off"
+          android:showAsAction="never"
+          android:title="@string/power_off" />
 
 </menu>

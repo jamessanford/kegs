@@ -334,7 +334,6 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     return true;
   }
 
-  // TODO: FIXME: Seriously in progress.
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     // Action bar was clicked.
@@ -361,6 +360,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       findViewById(R.id.b2).setVisibility(vis);
       findViewById(R.id.b3).setVisibility(vis);
       return true;
+    } else if (item_id == R.id.action_power_off) {
+      getThread().doPowerOff();
+      finish();
     }
     return false;
   }
