@@ -175,6 +175,12 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       dialog.setCanceledOnTouchOutside(false);  // lame
       return dialog;
     }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+      super.onCancel(dialog);
+      finish();
+    }
   }
 
   class ErrorDialogFragment extends DialogFragment {
@@ -185,6 +191,18 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
 // TODO do getActivity().finish() on button clicks
 // TODO setCanceledOnTouchOutside(false) ?  otherwise can accidentally dismiss the error.
       return builder.create();
+    }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+      super.onCancel(dialog);
+      finish();
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+      super.onDismiss(dialog);
+      finish();
     }
   }
 

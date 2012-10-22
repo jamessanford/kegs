@@ -29,4 +29,10 @@ public class RomDialogFragment extends DialogFragment {
     dialog.setCanceledOnTouchOutside(false);  // lame
     return dialog;
   }
+
+  @Override
+  public void onCancel(DialogInterface dialog) {
+    super.onCancel(dialog);
+    ((KegsMain)getActivity()).finish();
+  }
 }
