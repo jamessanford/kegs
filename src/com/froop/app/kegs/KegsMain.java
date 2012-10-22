@@ -94,6 +94,16 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     ((ToggleButton)findViewById(R.id.key_closed_apple)).setChecked(false);
   }
 
+  protected void loadConfig(String configfile) {
+    getThread().doPowerOff();
+    while(!getThread().nowWaitingForPowerOn()) {
+      // FIXME: should not do this in the UI thread...should use a probe or handler
+      try { Thread.sleep(50); } catch (InterruptedException e) {}
+    }
+    mConfigFile.internalConfig(configfile);
+    getThread().allowPowerOn();
+  }
+
   protected void getRomFile(String romfile) {
     final DialogFragment download = new DownloadDialogFragment();
     download.show(getFragmentManager(), FRAGMENT_DOWNLOAD);
@@ -283,8 +293,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
       invalidateOptionsMenu();  // update icon
       return true;
     } else if (item_id == R.id.action_diskimage) {
-// FIXME
-//      new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+      new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
       return true;
     } else if (item_id == R.id.action_more_keys) {
       final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
@@ -341,8 +350,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset {
     findViewById(R.id.key_up).setOnClickListener(mButtonClick);
     findViewById(R.id.key_down).setOnClickListener(mButtonClick);
 
-// TODO: Kick this off in the background for built in images.
-//    mConfigFile.ensureAssetCopied("XMAS_DEMO.2MG");
+    // Make sure local copy of internal disk images exist.
+    new AssetImages(mConfigFile).execute();
 
     final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {

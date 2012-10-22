@@ -287,9 +287,21 @@ insert_disk(int slot, int drive, const char *name, int ejected, int force_size,
 		free(dsk->name_ptr);
 	}
 
+#ifdef __ANDROID__
+        int use_cwd = (name[0] == '/') ? 0 : 1;
+        extern char g_cfg_cwd_str[];
+	name_len = strlen(name) + (use_cwd ? strlen(g_cfg_cwd_str) : 0);
+	name_ptr = (char *)malloc(name_len + 1);
+        name_ptr[0] = 0;
+        if (use_cwd) {
+          strncat(name_ptr, g_cfg_cwd_str, name_len);
+        }
+	strncat(name_ptr, name, name_len - strlen(name_ptr));
+#else
 	name_len = strlen(name);
 	name_ptr = (char *)malloc(name_len + 1);
 	strncpy(name_ptr, name, name_len + 1);
+#endif
 	dsk->name_ptr = name_ptr;
 
 	dsk->partition_name = 0;

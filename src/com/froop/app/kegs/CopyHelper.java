@@ -7,14 +7,20 @@ import java.io.FileOutputStream;
 
 public class CopyHelper {
   private InputStream mInput;
+  private boolean mClose;
   private String mDir;
   private String mFile;
   private static final String mTmp = "tmp_";
 
-  CopyHelper(InputStream input, String dir, String filename) {
+  CopyHelper(InputStream input, boolean close, String dir, String filename) {
     mInput = input;
+    mClose = close;
     mDir = dir;
     mFile = filename;
+  }
+
+  CopyHelper(InputStream input, String dir, String filename) {
+    this(input, true, dir, filename);
   }
 
   // This leaves a partial temporary file on error and doesn't let you know
@@ -47,6 +53,8 @@ public class CopyHelper {
     } while (true);
     out.close();
     output_file.renameTo(final_file);
-    mInput.close();
+    if (mClose) {
+      mInput.close();
+    }
   }
 }

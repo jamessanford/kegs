@@ -2,8 +2,11 @@ package com.froop.app.kegs;
 
 import android.content.Context;
 import java.io.File;
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
 
 class ConfigFile {
   public static final String ROM03 = "ROM.03";
@@ -26,6 +29,28 @@ class ConfigFile {
 
   public String getConfigPath() {
     return mConfigPath;
+  }
+
+  public void ensureAssetCopied(String zipfile, String exampleFile) {
+    // We only check for a local copy of a single file before unzipping...
+    final File local_copy = new File(mConfigPath, exampleFile);
+    if (local_copy != null && local_copy.exists()) {
+      // Assume that whatever is there will work.
+      return;
+    }
+
+    // NOTE: There's no sanity checking here, so it's best for builtin assets.
+    try {
+      ZipInputStream zipStream = new ZipInputStream(new BufferedInputStream(mContext.getAssets().open(zipfile)));
+      ZipEntry zipEntry;
+      while ((zipEntry = zipStream.getNextEntry()) != null) {
+        new CopyHelper(zipStream, false,
+                       mConfigPath, zipEntry.getName()).copy();
+      }
+    } catch (java.io.IOException e) {
+     // KEGS will just fail.
+     return;
+    }
   }
 
   public void ensureAssetCopied(String assetName) {
