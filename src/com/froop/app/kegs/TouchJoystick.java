@@ -15,7 +15,7 @@ class TouchJoystick {
   private ConcurrentLinkedQueue mEventQueue;
   private int mTouchSlop;
 
-  public int mMotionPointer = -1;  // active pointer Id
+  private int mMotionPointer = -1;  // active pointer Id
   private int mButton1 = 0;        // buttons pressed?  lower two bits.
   private MotionEvent trackA;      // original A down event
   private MotionEvent trackB;      // original B down event

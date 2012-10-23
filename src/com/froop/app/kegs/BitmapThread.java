@@ -79,7 +79,7 @@ class BitmapThread extends Thread {
     mRectSrc = new Rect(bitmapSize.getRectSrc());
     mRectDst = new Rect(bitmapSize.getRectDst());
     mSurfaceLock.unlock();
-    updateScreen();  // Note: UI thread.
+    updateScreen();  // NOTE: UI thread.
   }
 
   public void setHaveSurface(boolean haveSurface) {
@@ -89,7 +89,7 @@ class BitmapThread extends Thread {
 
     if (haveSurface) {
       // Refresh the canvas when we obtain a surface.
-      updateScreen();  // Note: UI thread.
+      updateScreen();  // NOTE: UI thread.
     }
   }
 }

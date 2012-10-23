@@ -5,6 +5,8 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
 
+// A RelativeLayout that sends notifications when its screen size changes.
+
 class SpecialRelativeLayout extends RelativeLayout {
   public SpecialRelativeLayout(Context context, AttributeSet attrs) {
     super(context, attrs);

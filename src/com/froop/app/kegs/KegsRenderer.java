@@ -15,9 +15,9 @@ import android.opengl.GLUtils;
 import android.opengl.GLSurfaceView;
 
 class KegsRenderer implements GLSurfaceView.Renderer {
+  public static final int TextureWidth = 1024;
+  public static final int TextureHeight = 512;
   private Bitmap mBitmap;
-  private static final int mTexWidth = 1024;
-  private static final int mTexHeight = 512;
 
   // Buffer holding the vertices
   final FloatBuffer mVertexBuffer;
@@ -116,21 +116,18 @@ class KegsRenderer implements GLSurfaceView.Renderer {
 
     checkGlError(gl, "surfaceCreatedA0");
 
-    Bitmap blank = Bitmap.createBitmap(mTexWidth, mTexHeight, Bitmap.Config.RGB_565);
+    Bitmap blank = Bitmap.createBitmap(TextureWidth,
+                                       TextureHeight,
+                                       Bitmap.Config.RGB_565);
 
     int[] textures = new int[2];
     gl.glGenTextures(2, textures, 0);
     checkGlError(gl, "surfaceCreatedGen");
-    mTexId = textures[0];  // FIXME
+    mTexId = textures[0];
     mTexId2 = textures[1];
     mTexLast = 1;
     mTexIdOK = true;
 
-    int[] crop = new int [4];
-    crop[0] = 0;
-    crop[1] = mTexHeight;
-    crop[2] = mTexWidth;
-    crop[3] = -mTexHeight;
     for(int i=0; i < 2; i++) {
       gl.glBindTexture(gl.GL_TEXTURE_2D, textures[i]);
 //      gl.glPixelStorei(GLES20.GL_UNPACK_ALIGNMENT, 1);
@@ -176,7 +173,9 @@ class KegsRenderer implements GLSurfaceView.Renderer {
 //    gl.glTexEnvx(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE,
 //                GL10.GL_MODULATE);
 
-    gl.glClearColor(0.643f, 0.776f, 0.223f, 1.0f);  // Green color for testing.
+    gl.glClearColor(0f, 0f, 0f, 1.0f);  // Black.
+// Testing: This green color is useful for testing beyond the texture area.
+//    gl.glClearColor(0.643f, 0.776f, 0.223f, 1.0f);  // Green.
     gl.glClear(gl.GL_COLOR_BUFFER_BIT);
 
     gl.glLoadIdentity();
@@ -185,7 +184,7 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
     gl.glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
     gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, mTextureBuffer);
-    gl.glScalef(mTexWidth, mTexHeight, 0.0f);
+    gl.glScalef(TextureWidth, TextureHeight, 0.0f);
     if (mScaled) {
       // Additional scale on top of earlier scale.
       gl.glScalef(mScaleX, mScaleY, 0.0f);
@@ -200,13 +199,13 @@ class KegsRenderer implements GLSurfaceView.Renderer {
   private void checkGlError(GL10 gl, String op) {
     int error;
     while ((error = gl.glGetError()) != GL10.GL_NO_ERROR) {
-      Log.e("kegsgl", op + ": glError " + error);
+      Log.e("kegs", op + ": glError " + error);
       throw new RuntimeException(op + ": glError " + error);
     }
   }
 
   public void updateScreenSize(BitmapSize bitmapSize) {
-    // There should probably be a lock surrounding updating these.
+    // TODO: There should probably be a lock surrounding updating these.
     mWidth = bitmapSize.getViewWidth();
     mHeight = bitmapSize.getViewHeight();
     mScaleX = bitmapSize.getScaleX();
@@ -214,6 +213,6 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     mCropBorder = bitmapSize.doCropBorder();
     mScaled = bitmapSize.isScaled();
     mSizeChange = true;
-    Log.e("kegs", "screen size " + mWidth + "x" + mHeight + " " + mScaleX + ":" + mScaleY + " crop=" + mCropBorder);
+    Log.i("kegs", "screen size " + mWidth + "x" + mHeight + " " + mScaleX + ":" + mScaleY + " crop=" + mCropBorder);
   }
 }

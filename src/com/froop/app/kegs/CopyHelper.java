@@ -28,7 +28,7 @@ public class CopyHelper {
   //
   // Caller could check for final file name.
   public void copy() throws java.io.IOException {
-    Log.e("kegs", "CopyHelper to " + mDir + "/" + mFile);
+    Log.i("kegs", "CopyHelper to " + mDir + "/" + mFile);
     final File dir = new File(mDir);
     dir.mkdirs();
 

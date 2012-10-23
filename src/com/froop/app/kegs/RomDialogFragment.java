@@ -26,7 +26,7 @@ public class RomDialogFragment extends DialogFragment {
       }
     });
     final AlertDialog dialog = builder.create();
-    dialog.setCanceledOnTouchOutside(false);  // lame
+    dialog.setCanceledOnTouchOutside(false);
     return dialog;
   }
 

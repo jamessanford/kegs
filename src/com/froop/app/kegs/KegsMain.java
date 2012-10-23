@@ -9,7 +9,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
-import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -155,7 +154,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       } else {
         mConfigFile.defaultConfig();
         getThread().setReady(true);
-        mKegsView.postDelayed(new Runnable() { public void run() { new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE); } }, 1000);
+        mKegsView.postDelayed(new Runnable() { public void run() {
+          new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+        } }, 1000);
       }
     }
   }
@@ -173,7 +174,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       }
       dialog.setIndeterminate(true);
       dialog.setCancelable(false);
-      dialog.setCanceledOnTouchOutside(false);  // lame
+      dialog.setCanceledOnTouchOutside(false);
       return dialog;
     }
 
@@ -189,7 +190,6 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
       builder.setMessage(getResources().getText(R.string.rom_error));
-// TODO do getActivity().finish() on button clicks
 // TODO setCanceledOnTouchOutside(false) ?  otherwise can accidentally dismiss the error.
       return builder.create();
     }
@@ -386,7 +386,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
         public void onSizeChanged(final int w, final int h, int oldw, int oldh) {
           final long now = System.currentTimeMillis();
           mScreenSizeTime = now;
-          mKegsView.postDelayed(new Runnable() { public void run() { updateScreenSize(w, h, now); } }, 250);
+          mKegsView.postDelayed(new Runnable() { public void run() {
+            updateScreenSize(w, h, now);
+          } }, 250);
         }
       }
     );
@@ -414,7 +416,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     } else {
       mConfigFile.defaultConfig();
       getThread().setReady(true);
-      mKegsView.postDelayed(new Runnable() { public void run() { new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE); } }, 1000);
+      mKegsView.postDelayed(new Runnable() { public void run() {
+        new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+      } }, 1000);
     }
   }
 

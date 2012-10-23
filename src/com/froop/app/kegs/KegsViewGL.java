@@ -19,7 +19,8 @@ class KegsViewGL extends GLSurfaceView implements KegsThread.UpdateScreen {
   public KegsViewGL(Context context, AttributeSet attrs) {
     super(context, attrs);
 
-    Bitmap bitmap = Bitmap.createBitmap(1024, 512, // OpenGL FIXME
+    Bitmap bitmap = Bitmap.createBitmap(KegsRenderer.TextureWidth,
+                                        KegsRenderer.TextureHeight,
                                         Bitmap.Config.RGB_565);
     mBitmap = bitmap;
 
