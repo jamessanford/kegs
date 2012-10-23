@@ -190,8 +190,9 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
       builder.setMessage(getResources().getText(R.string.rom_error));
-// TODO setCanceledOnTouchOutside(false) ?  otherwise can accidentally dismiss the error.
-      return builder.create();
+      final AlertDialog dialog = builder.create();
+      dialog.setCanceledOnTouchOutside(false);  // prevent accidental dismissal
+      return dialog;
     }
 
     @Override
