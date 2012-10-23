@@ -24,14 +24,12 @@ class BitmapSize {
   }
 
   public boolean showActionBar() {
-    if (mScaleFactorY != 1.0f && mScaleFactorX != mScaleFactorY) {
-      return false;
-    } else if (mHeight < getViewHeight()) {
-      // However, beware that disabling the action bar may increase
-      // the space enough to think that we should reenable it.
-      return false;
-    } else {
+    if (mWidth < mHeight) {
+      // portrait mode
       return true;
+    } else {
+      // TODO FIXME: also if the screen is BIG, return true.
+      return false;
     }
   }
 
@@ -40,23 +38,15 @@ class BitmapSize {
   }
 
   public int getViewHeight() {
-    if (!doCropBorder()) {
-      return (int)(Const.A2Height * mScaleFactorY);
-    } else {
-      return (int)((Const.A2Height - 32 - 30) * mScaleFactorY);
-    }
-  }
-
-  private boolean doCropBorder() {
-    return mCropped;
-  }
-
-  public int getCropPixelCount() {
     if (doCropBorder()) {
-      return 30;  // pixels dropped from the *bottom*
+      return (int)(400 * mScaleFactorY);
     } else {
-      return 0;
+      return (int)(Const.A2Height * mScaleFactorY);
     }
+  }
+
+  public boolean doCropBorder() {
+    return mCropped;
   }
 
   public boolean isScaled() {
@@ -87,32 +77,35 @@ class BitmapSize {
     }
   }
 
-// If we can fit at least 90% of a scaled screen into the display area, do it.
-// If we hit less than 100% height, turn off system action bar and title.
-// If ((400 + 32) * scale) > height, then crop border.
   private void calculateScale(int width, int height) {
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
+    float scaleX;
+    float scaleY;
     boolean crop = false;
 
     // Force integer scaling on X axis.
     scaleX = (float)Math.round((width * 0.9) / 640);
     scaleX = Math.max(1, scaleX);
-    scaleY = Math.min(scaleX, height / 400.0f);
+    scaleY = scaleX;
 
-    // NOTE: scaleY should really never be less than '1',
-    // although theoretically 0.5-1 would look OK, it causes poor performance
+    if (height < Const.A2Height * scaleY) {
+      // Scale it so that only the 400 pixels that matter take up the view.
+      scaleY = Math.min(scaleX, height / 400.0f);
+
+      // User should only use the 400 pixels that matter.
+      crop = true;
+    }
 
     // If Y would be compressed in a weird way, reduce the scale and use 1:1.
     if ((scaleX - scaleY) > 0.5) {
       scaleX = Math.max(1, scaleX - 1);
       scaleY = scaleX;
-    }
 
-    // If the 32 line border and the 400 pixel display do not fit, try
-    // cropping out the 32 line border.
-    if (height < 432 * scaleY) {
-      crop = true;
+      // See whether we should crop it at that height.
+      if (height < Const.A2Height * scaleY) {
+        crop = true;
+      } else {
+        crop = false;
+      }
     }
 
     mCropped = crop;
@@ -120,13 +113,4 @@ class BitmapSize {
     mScaleFactorY = scaleY;
     Log.w("kegs", "using scale " + scaleX + ":" + scaleY + " crop=" + crop + " from screen " + width + "x" + height);
   }
-
-// call us when you update your screen size/configuration
-
-// helper to calculate view area for KegsView:onMeasure
-
-// helper to create size struct
-
-// helper struct for scale factors (&isScaled), crop info, source/dest rects
-//    KegsView can get this and pass it into the thread.
 }

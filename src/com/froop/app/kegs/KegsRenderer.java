@@ -51,7 +51,7 @@ class KegsRenderer implements GLSurfaceView.Renderer {
   private int mHeight = 0;
   private float mScaleX = 1.0f;
   private float mScaleY = 1.0f;
-  private float mCropBorder = 0.0f;
+  private boolean mCropBorder = false;
   private boolean mScaled = false;
   private boolean mSizeChange = false;
 
@@ -86,11 +86,12 @@ class KegsRenderer implements GLSurfaceView.Renderer {
   private void setupOrtho(GL10 gl) {
     gl.glMatrixMode(GL10.GL_PROJECTION);
     gl.glLoadIdentity();
-    // 50.0f is 512-(400+32+30)  (the distance from the bottom of the texture to our actual bitmap)
-    float cropBorder = 50.0f;
-    cropBorder *= mScaleY;
-    cropBorder += mCropBorder * mScaleY;  // likely zero
-    gl.glOrthof(0.0f, (float)mWidth, cropBorder, mHeight + cropBorder, 0.0f, 1.0f);
+    // 50.0f is 512-(30+400+32)  (the distance from the bottom of the texture to our actual bitmap)
+    if (mCropBorder) {
+      gl.glOrthof(0.0f, (float)mWidth, (50.0f+30.0f) * mScaleY, (50.0f+400.0f+30.0f) * mScaleY, 0.0f, 1.0f);
+    } else {
+      gl.glOrthof(0.0f, (float)mWidth, 50.0f * mScaleY, (50.0f+30.0f+400.0f+32.0f) * mScaleY, 0.0f, 1.0f);
+    }
     gl.glMatrixMode(GL10.GL_MODELVIEW);
     gl.glLoadIdentity();
   }
@@ -210,7 +211,7 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     mHeight = bitmapSize.getViewHeight();
     mScaleX = bitmapSize.getScaleX();
     mScaleY = bitmapSize.getScaleY();
-    mCropBorder = (float)bitmapSize.getCropPixelCount();
+    mCropBorder = bitmapSize.doCropBorder();
     mScaled = bitmapSize.isScaled();
     mSizeChange = true;
     Log.e("kegs", "screen size " + mWidth + "x" + mHeight + " " + mScaleX + ":" + mScaleY + " crop=" + mCropBorder);

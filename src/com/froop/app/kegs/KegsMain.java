@@ -43,7 +43,8 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
 
   private boolean mAssetsReady = false;
   private boolean mModeMouse = true;
-  private int mLastActionBar = 0;  // window height at last ActionBar change.
+
+  private long mScreenSizeTime = 0;
 
   private View.OnClickListener mButtonClick = new View.OnClickListener() {
     public void onClick(View v) {
@@ -241,63 +242,37 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     }
   }
 
-  private void setScreenSize(boolean quick) {
-    int width;
-    int height;
-
-    if (quick) {
-      width = getResources().getDisplayMetrics().widthPixels;
-      height = getResources().getDisplayMetrics().heightPixels;
-      if (android.os.Build.VERSION.SDK_INT >= 11) {
-        // NOTE: 48 is a guess at the System Bar obstruction.
-        // These are 'visible insets' into the display from the window manager.
-        height -= 48;
-      }
-    } else {
-      Rect displaySize = new Rect();
-      // We use the mKegsView object here, but we could ask any view.
-      mKegsView.getWindowVisibleDisplayFrame(displaySize);
-      width = displaySize.width();
-      height = displaySize.height();
+  private void updateScreenSize(int width, int height, long sent) {
+    if (mScreenSizeTime != sent) {
+      // There's a newer event coming soon, wait for it.
+      return;
     }
     final BitmapSize bitmapSize = new BitmapSize(width, height);
 
-    mKegsView.updateScreenSize(bitmapSize);
+    updateActionBar(bitmapSize.showActionBar());
 
-    // Only change action bar if the window height is significantly
-    // different from the last time we changed the action bar.
-    if (height < (mLastActionBar * 0.85) || height > (mLastActionBar * 1.15)) {
-      mLastActionBar = height;
-      updateActionBar(bitmapSize.showActionBar());
-    }
+    mKegsView.updateScreenSize(bitmapSize);
 
     // Force another redraw of the bitmap into the canvas.  Bug workaround.
     getThread().updateScreen();
   }
 
-  private void workaroundScreenSize() {
-    // First use displayMetrics.
-    setScreenSize(true);
-
-    // Then update with getWindowVisibleDisplayFrame in 250ms.
-    //
-    // We want to use getWindowVisibleDisplayFrame, but it's not
-    // always immediately available.  Bug workaround.
-    //
-    // BUG: Sometimes if the device rotates as the soft keyboard
-    //      is becoming visible for the first time, the reported
-    //      window size is reduced and we don't scale to full screen.
-    //      The user can fix this by rotating the screen again.
-    //      We may want to trap IME visible/hidden events and update the size.
-    mKegsView.postDelayed(new Runnable() {
-                           public void run() { setScreenSize(false); }
-                         }, 250);
-  }
-
-  @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
-    workaroundScreenSize();
+
+    // Fire off a guess at a new size during this request,
+    // it makes the animation transition look better.
+    int width = getResources().getDisplayMetrics().widthPixels;
+    int height = getResources().getDisplayMetrics().heightPixels;
+    if (android.os.Build.VERSION.SDK_INT >= 11) {
+      // NOTE: 48 is a guess at the System Bar obstruction.
+      // These are 'visible insets' into the display from the window manager.
+      height -= 48;
+    }
+    final BitmapSize bitmapSize = new BitmapSize(width, height);
+    updateActionBar(bitmapSize.showActionBar());
+    mKegsView.updateScreenSize(bitmapSize);
+    getThread().updateScreen();
   }
 
   @Override
@@ -380,12 +355,10 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
                                  mKegsView.getBitmap());
     mKegsThread.registerUpdateScreenInterface(mKegsView);
 
-    workaroundScreenSize();
-
     mKegsTouch = new KegsTouch(this, getThread().getEventQueue());
     mJoystick = new TouchJoystick(getThread().getEventQueue());
 
-    final View mainView = findViewById(R.id.mainview);
+    final SpecialRelativeLayout mainView = (SpecialRelativeLayout)findViewById(R.id.mainview);
     mainView.setClickable(true);
     mainView.setLongClickable(true);
     mainView.setOnTouchListener(new OnTouchListener() {
@@ -398,6 +371,15 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
         }
       }
     });
+    mainView.setNotifySizeChanged(
+      new SpecialRelativeLayout.NotifySizeChanged() {
+        public void onSizeChanged(final int w, final int h, int oldw, int oldh) {
+          final long now = System.currentTimeMillis();
+          mScreenSizeTime = now;
+          mKegsView.postDelayed(new Runnable() { public void run() { updateScreenSize(w, h, now); } }, 250);
+        }
+      }
+    );
 
     mKegsKeyboard = new KegsKeyboard(getThread().getEventQueue());
     mKegsKeyboard.setOnStickyReset(this);
