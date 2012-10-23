@@ -245,6 +245,16 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   private void updateScreenSize(int width, int height, long sent) {
     if (mScreenSizeTime != sent) {
       // There's a newer event coming soon, wait for it.
+      //
+      // This is a bug workaround.  We need to wait for the size to settle
+      // before acting on it.   If we update *immediately* it seems to
+      // confuse Android.  If we update multiple times, Android creates
+      // completely screwed up animations during the rotation.
+      //
+      // So, we mark mScreenSize with a message time and tell it to update
+      // 250ms later.  We only want to act on the last update that is sent,
+      // but we can't easily cancel the fact that the message is being sent,
+      // so bail out here if the time doesn't match the last message.
       return;
     }
     final BitmapSize bitmapSize = new BitmapSize(width, height);
