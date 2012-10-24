@@ -1,5 +1,7 @@
 Port of Kent Dickey's KEGS Apple IIgs Emulator to Android.
 
+You can find a release version in Google Play: https://play.google.com/store/apps/details?id=com.froop.app.kegs
+
 Work in progress!  Screen may be cropped in portrait mode on phones.
 Flip it over to landscape orientation.
 
