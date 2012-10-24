@@ -18,6 +18,8 @@ Source code:
 
 To build from source:
 <pre>
+  (git submodule init && git submodule update)
+  android update project -p ActionBarSherlock/library -s
   android update project -p . -s
   ndk-build
   ant debug install
