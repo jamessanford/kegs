@@ -65,7 +65,8 @@ class BitmapThread extends Thread {
       }
     } finally {
       mSurfaceLock.unlock();
-      fpsCount.fps();
+// for testing
+//      fpsCount.fps();
     }
   }
 

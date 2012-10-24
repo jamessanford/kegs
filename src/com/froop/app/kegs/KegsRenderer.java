@@ -152,7 +152,8 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     if (!mTexIdOK) {
       return;
     }
-    fpsCount.fps();
+// for testing
+//    fpsCount.fps();
 
     if (mSizeChange) {
       mSizeChange = false;

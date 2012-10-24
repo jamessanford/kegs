@@ -72,7 +72,8 @@ class KegsView extends SurfaceView implements KegsThread.UpdateScreen, SurfaceHo
     // Empty the queue first in case bitmap thread is lagging behind.
     mHandler.removeMessages(0);
     mHandler.sendEmptyMessage(0);
-    fpsCount.fps();
+// for testing
+//    fpsCount.fps();
   }
 
   public void updateScreenSize(BitmapSize bitmapSize) {
