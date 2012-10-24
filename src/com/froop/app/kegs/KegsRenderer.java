@@ -49,6 +49,7 @@ class KegsRenderer implements GLSurfaceView.Renderer {
 
   private int mWidth = 0;
   private int mHeight = 0;
+  private int mHeightUnscaled = 0;
   private float mScaleX = 1.0f;
   private float mScaleY = 1.0f;
   private boolean mCropBorder = false;
@@ -88,7 +89,15 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     gl.glLoadIdentity();
     // 50.0f is 512-(30+400+32)  (the distance from the bottom of the texture to our actual bitmap)
     if (mCropBorder) {
-      gl.glOrthof(0.0f, (float)mWidth, (50.0f+30.0f) * mScaleY, (50.0f+400.0f+30.0f) * mScaleY, 0.0f, 1.0f);
+      if (mHeightUnscaled > 400) {
+        // Show as much of the border as we can.
+        int leftover = (30+400+32) - mHeightUnscaled;
+        leftover /= 2;
+        gl.glOrthof(0.0f, (float)mWidth, (50.0f+leftover) * mScaleY, (50.0f+leftover+mHeightUnscaled) * mScaleY, 0.0f, 1.0f);
+      } else {
+        // Just show the 400 pixels.
+        gl.glOrthof(0.0f, (float)mWidth, (50.0f+30.0f) * mScaleY, (50.0f+30.0f+400.0f) * mScaleY, 0.0f, 1.0f);
+      }
     } else {
       gl.glOrthof(0.0f, (float)mWidth, 50.0f * mScaleY, (50.0f+30.0f+400.0f+32.0f) * mScaleY, 0.0f, 1.0f);
     }
@@ -209,6 +218,7 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     // TODO: There should probably be a lock surrounding updating these.
     mWidth = bitmapSize.getViewWidth();
     mHeight = bitmapSize.getViewHeight();
+    mHeightUnscaled = bitmapSize.getSuggestedHeightUnscaled();
     mScaleX = bitmapSize.getScaleX();
     mScaleY = bitmapSize.getScaleY();
     mCropBorder = bitmapSize.doCropBorder();

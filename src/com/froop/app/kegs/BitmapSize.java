@@ -57,11 +57,18 @@ class BitmapSize {
   }
 
   public int getViewHeight() {
-    if (doCropBorder()) {
-      return (int)(400 * mScaleFactorY);
-    } else {
-      return (int)(Const.A2Height * mScaleFactorY);
+    return (int)(getSuggestedHeightUnscaled() * mScaleFactorY);
+  }
+
+  public int getSuggestedHeightUnscaled() {
+    if (!doCropBorder()) {
+      return Const.A2Height;
     }
+    if (400.0f * mScaleFactorY >= mHeight - 1.0f) {  // -1 in case it is 'near'
+      return 400;
+    }
+    // How much of the uncropped image would actually fit on the display.
+    return Math.min(Const.A2Height, (int)(mHeight / mScaleFactorY));
   }
 
   public boolean doCropBorder() {
