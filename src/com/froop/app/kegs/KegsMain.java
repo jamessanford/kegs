@@ -258,7 +258,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       // so bail out here if the time doesn't match the last message.
       return;
     }
-    final BitmapSize bitmapSize = new BitmapSize(width, height);
+    final BitmapSize bitmapSize = new BitmapSize(width, height, getResources().getDisplayMetrics());
 
     updateActionBar(bitmapSize.showActionBar());
 
@@ -280,7 +280,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       // These are 'visible insets' into the display from the window manager.
       height -= 48;
     }
-    final BitmapSize bitmapSize = new BitmapSize(width, height);
+    final BitmapSize bitmapSize = new BitmapSize(width, height, getResources().getDisplayMetrics());
     updateActionBar(bitmapSize.showActionBar());
     mKegsView.updateScreenSize(bitmapSize);
     getThread().updateScreen();

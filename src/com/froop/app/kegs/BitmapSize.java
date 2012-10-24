@@ -1,6 +1,7 @@
 package com.froop.app.kegs;
 
 import android.graphics.Rect;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 class BitmapSize {
@@ -8,27 +9,45 @@ class BitmapSize {
     public static final int A2Width = 640 + 32 + 32;   // kegs defcomm.h
     public static final int A2Height = 400 + 32 + 30;  // kegs defcomm.h
   }
+  private static final float LARGE_SCREEN_INCHES = 9.0f;
 
   private int mWidth = 0;
   private int mHeight = 0;
+  private boolean mLargeScreen = false;
 
   private boolean mScaled = false;
   private boolean mCropped = false;
   private float mScaleFactorX = 1.0f;
   private float mScaleFactorY = 1.0f;
 
-  public BitmapSize(int width, int height) {
+  public BitmapSize(int width, int height, DisplayMetrics display) {
     mWidth = width;
     mHeight = height;
+    if (display != null) {
+      mLargeScreen = isLargeScreen(display);
+    }
     calculateScale(width, height);
+  }
+
+  private boolean isLargeScreen(DisplayMetrics display) {
+    float a_side = (display.widthPixels / display.xdpi);
+    float b_side = (display.heightPixels / display.ydpi);
+
+    float a_squared = a_side * a_side;
+    float b_squared = b_side * b_side;
+    float diagonal = LARGE_SCREEN_INCHES * LARGE_SCREEN_INCHES;
+
+    return (a_squared + b_squared > diagonal);
   }
 
   public boolean showActionBar() {
     if (mWidth < mHeight) {
       // portrait mode
       return true;
+    } else if (mLargeScreen) {
+      // 9 inches or more
+      return true;
     } else {
-      // TODO FIXME: also if the screen is BIG, return true.
       return false;
     }
   }
