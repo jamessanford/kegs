@@ -224,6 +224,6 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     mCropBorder = bitmapSize.doCropBorder();
     mScaled = bitmapSize.isScaled();
     mSizeChange = true;
-    Log.i("kegs", "screen size " + mWidth + "x" + mHeight + " " + mScaleX + ":" + mScaleY + " crop=" + mCropBorder);
+    Log.i("kegs", "screen size " + mWidth + "x" + mHeight + " " + mScaleX + ":" + mScaleY + " crop=" + mCropBorder + " unscaledY=" + mHeightUnscaled);
   }
 }

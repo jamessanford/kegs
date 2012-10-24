@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <resources>
-  <style name="Theme.BlackBackground" parent="android:Theme">
+  <style name="Theme.BlackBackground" parent="Theme.Sherlock">
     <item name="android:windowBackground">@drawable/screen_background_black</item>
   </style>
 </resources>

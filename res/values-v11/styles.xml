@@ -3,7 +3,7 @@
 <!-- For API level 11 and later, use a parent of Theme.Holo. -->
 
 <resources>
-  <style name="Theme.BlackBackground" parent="android:Theme.Holo">
+  <style name="Theme.BlackBackground" parent="Theme.Sherlock">
     <item name="android:windowBackground">@drawable/screen_background_black</item>
   </style>
 </resources>

@@ -8,7 +8,6 @@
   <string name="rom_error">Unable to obtain ROM.  Find ROM.01 or ROM.03 and put it in /Android/data/com.froop.app.kegs/files/ on your SD Card.</string>
 
   <string-array name="rom_choices">
-    <item>I don\'t own a GS</item>
     <item>I have a ROM 01</item>
     <item>I have a ROM 03</item>
   </string-array>

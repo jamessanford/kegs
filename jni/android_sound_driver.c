@@ -112,6 +112,11 @@ void child_sound_init_android() {
   g_audio_rate = 44100;
   set_audio_rate(g_audio_rate);
 
+  if(engineObject != NULL) {
+    // Already active.
+    return;
+  }
+
   SLresult result;
   result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
   assert(SL_RESULT_SUCCESS == result);

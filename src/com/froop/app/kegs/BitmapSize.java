@@ -137,6 +137,6 @@ class BitmapSize {
     mCropped = crop;
     mScaleFactorX = scaleX;
     mScaleFactorY = scaleY;
-    Log.w("kegs", "using scale " + scaleX + ":" + scaleY + " crop=" + crop + " from screen " + width + "x" + height);
+    Log.i("kegs", "using scale " + scaleX + ":" + scaleY + " crop=" + crop + " from screen " + width + "x" + height);
   }
 }

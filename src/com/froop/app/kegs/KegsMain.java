@@ -1,10 +1,8 @@
 package com.froop.app.kegs;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,8 +11,6 @@ import android.os.Bundle;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.inputmethod.InputMethodManager;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -22,7 +18,13 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.ToggleButton;
 
-public class KegsMain extends Activity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady {
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.app.SherlockDialogFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+
+public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady {
   private static final String FRAGMENT_ROM = "rom";
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
@@ -101,14 +103,14 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   }
 
   private void loadConfigWhenReady(final String configfile) {
-    final AssetFragment frag = (AssetFragment)getFragmentManager().findFragmentByTag(FRAGMENT_ASSET);
+    final AssetFragment frag = (AssetFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_ASSET);
 
     if (!getThread().nowWaitingForPowerOn() || !mAssetsReady) {
       if (frag == null && !mAssetsReady) {
         // Only the asset part will take time, so only show the dialog
         // when waiting for the asset.
-        final DialogFragment assetProgress = new AssetFragment();
-        assetProgress.show(getFragmentManager(), FRAGMENT_ASSET);
+        final SherlockDialogFragment assetProgress = new AssetFragment();
+        assetProgress.show(getSupportFragmentManager(), FRAGMENT_ASSET);
       }
       mKegsView.postDelayed(new Runnable() {
         public void run() { loadConfigWhenReady(configfile); }
@@ -128,9 +130,13 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   }
 
   protected void getRomFile(String romfile) {
-    final DialogFragment download = new DownloadDialogFragment();
-    download.show(getFragmentManager(), FRAGMENT_DOWNLOAD);
-    new DownloadRom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, romfile);
+    final SherlockDialogFragment download = new DownloadDialogFragment();
+    download.show(getSupportFragmentManager(), FRAGMENT_DOWNLOAD);
+    if (android.os.Build.VERSION.SDK_INT >= 11) {
+      new DownloadRom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, romfile);
+    } else {
+      new DownloadRom().execute(romfile);
+    }
   }
 
   class DownloadRom extends AsyncTask<String, Void, Boolean> {
@@ -142,26 +148,26 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
           mConfigFile.getConfigPath() + "/" + mRomfile);
     }
     protected void onPostExecute(Boolean success) {
-      final DialogFragment frag = (DialogFragment)getFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
+      final SherlockDialogFragment frag = (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
       if (frag != null) {
         frag.dismiss();
       }
       if (!success) {
         if (!isCancelled()) {
-          final DialogFragment dialog = new ErrorDialogFragment();
-          dialog.show(getFragmentManager(), FRAGMENT_ERROR);
+          final SherlockDialogFragment dialog = new ErrorDialogFragment();
+          dialog.show(getSupportFragmentManager(), FRAGMENT_ERROR);
         }
       } else {
         mConfigFile.defaultConfig();
         getThread().setReady(true);
         mKegsView.postDelayed(new Runnable() { public void run() {
-          new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+          new DiskImageFragment().show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
         } }, 1000);
       }
     }
   }
 
-  class DownloadDialogFragment extends DialogFragment {
+  class DownloadDialogFragment extends SherlockDialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       ProgressDialog dialog = new ProgressDialog(getActivity());
@@ -185,7 +191,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     }
   }
 
-  class ErrorDialogFragment extends DialogFragment {
+  class ErrorDialogFragment extends SherlockDialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -208,7 +214,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     }
   }
 
-  class AssetFragment extends DialogFragment {
+  class AssetFragment extends SherlockDialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       ProgressDialog dialog = new ProgressDialog(getActivity());
@@ -231,7 +237,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   }
 
   private void updateActionBar(boolean showActionBar) {
-    final ActionBar actionBar = getActionBar();
+    final ActionBar actionBar = getSupportActionBar();
     if (showActionBar) {
       if (actionBar != null && !actionBar.isShowing()) {
         actionBar.show();
@@ -302,7 +308,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   public boolean onCreateOptionsMenu(Menu menu) {
     // BUG: no overflow menu on devices with menu button
     // BUG: when action bar is hidden, menu bar only shows overflow items
-    getMenuInflater().inflate(R.menu.actions, menu);
+    getSupportMenuInflater().inflate(R.menu.actions, menu);
     return true;
   }
 
@@ -310,7 +316,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
   public boolean onPrepareOptionsMenu(Menu menu) {
     super.onPrepareOptionsMenu(menu);
 
-    // remember to call invalidateOptionsMenu() for this to be run
+    // remember to call supportInvalidateOptionsMenu() for this to be run
     MenuItem item;
     item = menu.findItem(R.id.action_joystick);
     if (item != null) {
@@ -331,14 +337,14 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
       }
       return true;
     } else if (item_id == R.id.action_speed) {
-      new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
+      new SpeedFragment().show(getSupportFragmentManager(), FRAGMENT_SPEED);
       return true;
     } else if (item_id == R.id.action_joystick) {
       mModeMouse = !mModeMouse;
-      invalidateOptionsMenu();  // update icon
+      supportInvalidateOptionsMenu();  // update icon
       return true;
     } else if (item_id == R.id.action_diskimage) {
-      new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+      new DiskImageFragment().show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
       return true;
     } else if (item_id == R.id.action_more_keys) {
       final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
@@ -408,17 +414,21 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     findViewById(R.id.key_down).setOnClickListener(mButtonClick);
 
     // Make sure local copy of internal disk images exist.
-    new AssetImages(this, mConfigFile).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    if (android.os.Build.VERSION.SDK_INT >= 11) {
+      new AssetImages(this, mConfigFile).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    } else {
+      new AssetImages(this, mConfigFile).execute();
+    }
 
     final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {
-      final DialogFragment chooseRom = new RomDialogFragment();
-      chooseRom.show(getFragmentManager(), FRAGMENT_ROM);
+      final SherlockDialogFragment chooseRom = new RomDialogFragment();
+      chooseRom.show(getSupportFragmentManager(), FRAGMENT_ROM);
     } else {
       mConfigFile.defaultConfig();
       getThread().setReady(true);
       mKegsView.postDelayed(new Runnable() { public void run() {
-        new DiskImageFragment().show(getFragmentManager(), FRAGMENT_DISKIMAGE);
+        new DiskImageFragment().show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
       } }, 1000);
     }
   }
