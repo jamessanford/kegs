@@ -8,6 +8,8 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.opengl.GLSurfaceView;
 
+// All the interesting OpenGL stuff is in the KegsRenderer class.
+
 class KegsViewGL extends GLSurfaceView implements KegsThread.UpdateScreen {
   // Reported area of this view, see updateScreenSize()
   private int mWidth = 0;

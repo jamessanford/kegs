@@ -8,6 +8,8 @@ import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+// Translate onTouchEvent calls into mouse pointer movement.
+
 class KegsTouch {
   private ConcurrentLinkedQueue mEventQueue;
   private int mButton1 = 0;

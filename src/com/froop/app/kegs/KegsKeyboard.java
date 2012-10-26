@@ -6,6 +6,7 @@ import android.view.KeyEvent;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 class KegsKeyboard {
+  // These are ADB keycodes.
   public final static int KEY_ESCAPE = 0x35;
   public final static int KEY_RETURN = 0x24;
   public final static int KEY_BACKSPACE = 0x33;  // 0x75 == delete

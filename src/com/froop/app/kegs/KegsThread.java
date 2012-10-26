@@ -39,12 +39,14 @@ class KegsThread extends Thread {
     mUpdateScreen = update;
   }
 
+  // Called by native thread.  Sometimes called by UI thread.
   protected void updateScreen() {
     if (mUpdateScreen != null) {
       mUpdateScreen.updateScreen();
     }
   }
 
+  // Called by native thread.
   private void checkForPause() {
     if (mPaused) {
       mPauseLock.lock();
@@ -53,6 +55,7 @@ class KegsThread extends Thread {
     }
   }
 
+  // Called by native thread.
   private String getConfigFile() {
     return mConfigFile;
   }

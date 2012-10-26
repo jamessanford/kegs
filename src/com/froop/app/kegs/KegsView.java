@@ -11,6 +11,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 
+// This is the old software renderer that uses BitmapThread.
+
 class KegsView extends SurfaceView implements KegsThread.UpdateScreen, SurfaceHolder.Callback {
   // Reported area of this view, see updateScreenSize()
   private int mWidth = 0;
