@@ -16,7 +16,7 @@ chevron.scale(2, 2)
 chevron.scale(1, 1.25)
 dwg.defs.add(chevron)
 
-center = dwg.circle(center=(0, 0), r=50, fill='white', opacity=0.5)
+center = dwg.circle(center=(0, 0), r=40, fill='white', opacity=0.5)
 dwg.defs.add(center)
 
 count = 5
@@ -33,7 +33,7 @@ for r in angles:
 
   ux = dwg.use(chevron)
   ux.rotate(r)
-  ux.translate(0, -180)
+  ux.translate(0, -160)
   doc.add(ux)
 
   if r == 0:
@@ -42,24 +42,26 @@ for r in angles:
 
   u2 = dwg.use(chevron)
   u2.rotate(abs(r))
-  u2.translate(0, -180)
+  u2.translate(0, -160)
   doc.add(u2)
 
 u_c = dwg.use(center)
 u_c.translate(0, -25)
 doc.add(u_c)
 
-dark_red = '#b02020'
+dark_red = '#707070'  # actually gray.
+size = 14.25
+right = 27
 needle2 = dwg.g()
-needle2.add(dwg.circle(center=(-75, 0), r=20, fill=dark_red))
-needle2.add(dwg.circle(center=(45, 0), r=20, fill=dark_red))
-needle2.add(dwg.polygon(points=[(-75, 20), (-75, -20), (45, -20), (45, 20)], fill=dark_red))
-needle2.add(dwg.circle(center=(-75, 0), r=5, fill='black'))
+needle2.add(dwg.circle(center=(-75, 0), r=size, fill=dark_red))
+needle2.add(dwg.circle(center=(right, 0), r=size, fill=dark_red))
+needle2.add(dwg.polygon(points=[(-75, size), (-75, -size), (right, -size), (right, size)], fill=dark_red))
+needle2.add(dwg.circle(center=(-75, 0), r=6, fill='black'))
 dwg.defs.add(needle2)
 
 u_n2 = dwg.use(needle2)
-u_n2.translate(53, -83 + 5)
-u_n2.rotate(-45)
+u_n2.translate(57, -78 + 5)
+u_n2.rotate(-40)
 doc.add(u_n2)
 
 # calibration circle for center of dial
