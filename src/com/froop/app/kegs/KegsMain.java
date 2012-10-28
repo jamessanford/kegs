@@ -238,14 +238,10 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
   private void updateActionBar(boolean showActionBar) {
     final ActionBar actionBar = getSupportActionBar();
-    if (showActionBar) {
-      if (actionBar != null && !actionBar.isShowing()) {
-        actionBar.show();
-      }
-    } else {
-      if (actionBar != null && actionBar.isShowing()) {
-        actionBar.hide();
-      }
+    if (actionBar != null && showActionBar) {
+      actionBar.show();
+    } else if (actionBar != null && !showActionBar) {
+      actionBar.hide();
     }
   }
 
@@ -279,16 +275,9 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
     // Fire off a guess at a new size during this request,
     // it makes the animation transition look better.
-    int width = getResources().getDisplayMetrics().widthPixels;
-    int height = getResources().getDisplayMetrics().heightPixels;
-    if (android.os.Build.VERSION.SDK_INT >= 11) {
-      // NOTE: 48 is a guess at the System Bar obstruction.
-      // These are 'visible insets' into the display from the window manager.
-      height -= 48;
-    }
-    final BitmapSize bitmapSize = new BitmapSize(width, height, getResources().getDisplayMetrics());
-    updateActionBar(bitmapSize.showActionBar());
-    mKegsView.updateScreenSize(bitmapSize);
+    final BitmapSize quickSize = BitmapSize.quick(this);
+    updateActionBar(quickSize.showActionBar());
+    mKegsView.updateScreenSize(quickSize);
     getThread().updateScreen();
   }
 
@@ -363,6 +352,8 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+
+    updateActionBar(BitmapSize.quick(this).showActionBar());
 
     mKegsView = (KegsViewGL)findViewById(R.id.kegsview);
 

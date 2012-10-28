@@ -1,5 +1,6 @@
 package com.froop.app.kegs;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -27,6 +28,20 @@ class BitmapSize {
       mLargeScreen = isLargeScreen(display);
     }
     calculateScale(width, height);
+  }
+
+
+  // Next method provides a rough estimate based on the total display size.
+  public static BitmapSize quick(Context context) {
+    final DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+    int width = metrics.widthPixels;
+    int height = metrics.heightPixels;
+    if (android.os.Build.VERSION.SDK_INT >= 11) {
+      // NOTE: 48 is a guess at the System Bar obstruction.
+      // These are 'visible insets' into the display from the window manager.
+      height -= 48;
+    }
+    return new BitmapSize(width, height, metrics);
   }
 
   private boolean isLargeScreen(DisplayMetrics display) {
