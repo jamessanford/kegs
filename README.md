@@ -1,4 +1,4 @@
-Port of Kent Dickey's KEGS Apple IIgs Emulator to Android.
+Port of Kent Dickey's KEGS Apple IIgs Emulator to Android.  Also includes OG ActiveGS patches as of kegs_3_0_242.
 
 You can find a release version in Google Play: https://play.google.com/store/apps/details?id=com.froop.app.kegs
 
@@ -27,21 +27,19 @@ To build from source:
 
 
 Changes made to KEGS:
-- Various ifdefs for __ANDROID__ in the kegs 'core'
+- Various ifdefs for \_\_ANDROID\_\_ in the kegs 'core'
 - Addition of android_driver.c and android_sound_driver.c
 
 Application structure:
 - The UI is coordinated via KegsMain
 - There is a KegsThread class that gets its own thread.  This thread ends up calling mainLoop() in jni/android_driver.c and running KEGS in that thread.
-- The native thread gets two things from Java:
--- a Bitmap
--- a ConcurrentLinkedQueue
+- The native thread gets two things from Java: a Bitmap, and a ConcurrentLinkedQueue.
 
 All UI events are sent to the native thread by pushing events into the ConcurrentLinkedQueue (KegsEvent, MouseKegsEvent, KeyKegsEvent).
 
 The native thread pulls events off the queue, writes updates into the bitmap object, then calls the Java "updateScreen" in the KegsThread object.
 
-The native thread also calls support functions in Java, such as checkForPause(), which deadlocks the thread while it should be paused.
+The native thread also calls support functions in Java, such as checkForPause(), which deadlocks the thread while it should be paused.  See comments in KegsThread.java for more details.
 
 Android NDK samples were used as a base for this:
 - bitmap-plasma
