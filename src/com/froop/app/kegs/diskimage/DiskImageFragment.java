@@ -19,7 +19,7 @@ import com.actionbarsherlock.app.SherlockDialogFragment;
 
 public class DiskImageFragment extends SherlockDialogFragment {
   private String[] mImages = {
-    "System 6", "X-MAS Demo (FTA)"};
+    "System 6", "X-MAS Demo (FTA)", "Prince of Persia"};
 
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -29,10 +29,19 @@ public class DiskImageFragment extends SherlockDialogFragment {
     builder.setItems(mImages, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int item) {
         dismiss();
+        DiskImage image = null;
+
         if (item == 0) {
-          ((KegsMain)getActivity()).loadConfig("boot_slot_7");
+          image = new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7);
         } else if (item == 1) {
-          ((KegsMain)getActivity()).loadConfig("boot_slot_5");
+          image = new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5);
+        } else if (item == 2) {
+          // TODO: There should be an adapter on the ListView instead.
+          image = new DiskImage("prince.2mg", "s5d1", 2, DiskImage.BOOT_SLOT_5);
+        }
+
+        if (image != null) {
+          ((KegsMain)getActivity()).loadDiskImage(image);
         }
       }
     });

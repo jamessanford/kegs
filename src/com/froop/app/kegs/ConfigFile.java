@@ -31,9 +31,13 @@ class ConfigFile {
     return mConfigPath;
   }
 
-  public void ensureAssetCopied(String zipfile, String exampleFile) {
+  public String getImagePath() {
+    return mConfigPath + "/images";
+  }
+
+  public void ensureAssetCopied(String destPath, String zipfile, String exampleFile) {
     // We only check for a local copy of a single file before unzipping...
-    final File local_copy = new File(mConfigPath, exampleFile);
+    final File local_copy = new File(destPath, exampleFile);
     if (local_copy != null && local_copy.exists()) {
       // Assume that whatever is there will work.
       return;
@@ -44,8 +48,8 @@ class ConfigFile {
       ZipInputStream zipStream = new ZipInputStream(new BufferedInputStream(mContext.getAssets().open(zipfile)));
       ZipEntry zipEntry;
       while ((zipEntry = zipStream.getNextEntry()) != null) {
-        new CopyHelper(zipStream, false,
-                       mConfigPath, zipEntry.getName()).copy();
+        new CopyHelper(zipStream, destPath,
+                       zipEntry.getName()).withClose(false).copy();
       }
     } catch (java.io.IOException e) {
      // KEGS will just fail.
@@ -54,9 +58,9 @@ class ConfigFile {
     }
   }
 
-  public void ensureAssetCopied(String assetName) {
+  public void ensureAssetCopied(String destPath, String assetName) {
     // Make sure there's a user-readable copy of whatever from assets.
-    final File local_copy = new File(mConfigPath, assetName);
+    final File local_copy = new File(destPath, assetName);
     if (local_copy != null && local_copy.exists()) {
       // Assume that whatever is there will work.
       return;
@@ -64,7 +68,7 @@ class ConfigFile {
 
     try {
       new CopyHelper(mContext.getAssets().open(assetName),
-                     mConfigPath, assetName).copy();
+                     destPath, assetName).copy();
     } catch (java.io.IOException e) {
      // KEGS will just fail.
      Log.e("kegs", Log.getStackTraceString(e));
@@ -73,7 +77,7 @@ class ConfigFile {
   }
 
   public void defaultConfig() {
-    ensureAssetCopied(mConfigDefault);
+    ensureAssetCopied(mConfigPath, mConfigDefault);
     // Then, copy whatever is there over to the actual 'config.kegs' file.
     try {
       new CopyHelper(new FileInputStream(new File(mConfigPath, mConfigDefault)),
@@ -85,11 +89,17 @@ class ConfigFile {
     }
   }
 
-  public void internalConfig(String configName) {
-    // Overwrite 'config.kegs' with a config from the assets directory.
+  public byte[] getConfigPreface(final DiskImage image) {
+    return String.format("g_limit_speed = %d\n%s = %s/%s\n\n",
+                         image.speed, image.drive,
+                         getImagePath(), image.filename).getBytes();
+  }
+
+  public void setConfig(DiskImage image) {
+    // Overwrite 'config.kegs' with a config based on a template.
     try {
-      new CopyHelper(mContext.getAssets().open(configName),
-                     mConfigPath, mConfigFile).copy();
+      new CopyHelper(mContext.getAssets().open(image.template), mConfigPath,
+                     mConfigFile).withPreface(getConfigPreface(image)).copy();
     } catch (java.io.IOException e) {
      // KEGS will just fail.
      Log.e("kegs", Log.getStackTraceString(e));

@@ -24,7 +24,7 @@ import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
-public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady {
+public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady, DownloadImage.DownloadReady {
   private static final String FRAGMENT_ROM = "rom";
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
@@ -43,6 +43,9 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private TouchJoystick mJoystick;
 
   private boolean mAssetsReady = false;
+  private boolean mDownloadReady = false;
+  private boolean mDownloadAborted = false;
+
   private boolean mModeMouse = true;
 
   private long mScreenSizeTime = 0;
@@ -99,34 +102,75 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   }
 
   public void onAssetsReady(boolean success) {
+    // TODO FIXME: this needs to throw an error if it fails.
     mAssetsReady = success;
   }
 
-  private void loadConfigWhenReady(final String configfile) {
+  public void onDownloadReady(boolean success) {
+    // TODO FIXME: this needs to throw an error if it fails.
+    mDownloadReady = success;
+  }
+
+  private void loadDiskImageWhenReady(final DiskImage image) {
     final AssetFragment frag = (AssetFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_ASSET);
 
-    if (!getThread().nowWaitingForPowerOn() || !mAssetsReady) {
-      if (frag == null && !mAssetsReady) {
+    // This code is lame.
+    if (mDownloadAborted) {
+      if (frag != null) {
+        frag.dismiss();
+      }
+      if (image.primary) {
+        getThread().allowPowerOn();
+      }
+      return;  // don't schedule another pass.
+    }
+
+    boolean nativeReady;
+    if (image.primary) {
+      nativeReady = getThread().nowWaitingForPowerOn();
+    } else {
+      nativeReady = true;
+    }
+
+    if (!nativeReady || !mAssetsReady || !mDownloadReady) {
+      if (frag == null && (!mAssetsReady || !mDownloadReady)) {
         // Only the asset part will take time, so only show the dialog
         // when waiting for the asset.
         final SherlockDialogFragment assetProgress = new AssetFragment();
         assetProgress.show(getSupportFragmentManager(), FRAGMENT_ASSET);
       }
       mKegsView.postDelayed(new Runnable() {
-        public void run() { loadConfigWhenReady(configfile); }
+        public void run() { loadDiskImageWhenReady(image); }
       }, 100);
     } else {
       if (frag != null) {
         frag.dismiss();
       }
-      mConfigFile.internalConfig(configfile);
-      getThread().allowPowerOn();
+      if (image.primary) {
+        mConfigFile.setConfig(image);
+        getThread().allowPowerOn();
+      } else {
+        // TODO FIXME: eject/insert the new disk.
+      }
     }
   }
 
-  protected void loadConfig(String configfile) {
-    getThread().doPowerOff();
-    loadConfigWhenReady(configfile);
+  protected void loadDiskImage(DiskImage image) {
+    if (image.primary) {
+      getThread().doPowerOff();
+    }
+
+    mDownloadReady = false;
+    mDownloadAborted = false;
+
+    final String imagePath = mConfigFile.getImagePath();
+    if (android.os.Build.VERSION.SDK_INT >= 11) {
+      new DownloadImage(this, imagePath, image).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    } else {
+      new DownloadImage(this, imagePath, image).execute();
+    }
+
+    loadDiskImageWhenReady(image);
   }
 
   protected void getRomFile(String romfile) {
@@ -229,6 +273,12 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       dialog.setCancelable(false);
       dialog.setCanceledOnTouchOutside(false);
       return dialog;
+    }
+
+    @Override
+    public void onCancel(DialogInterface dialog) {
+      super.onCancel(dialog);
+      mDownloadAborted = true;
     }
   }
 

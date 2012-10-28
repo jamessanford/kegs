@@ -6,21 +6,29 @@ import java.io.InputStream;
 import java.io.FileOutputStream;
 
 public class CopyHelper {
+  private byte[] mPreface;
   private InputStream mInput;
   private boolean mClose;
   private String mDir;
   private String mFile;
   private static final String mTmp = "tmp_";
 
-  CopyHelper(InputStream input, boolean close, String dir, String filename) {
+  CopyHelper(InputStream input, String dir, String filename) {
+    mPreface = null;
     mInput = input;
-    mClose = close;
+    mClose = true;
     mDir = dir;
     mFile = filename;
   }
 
-  CopyHelper(InputStream input, String dir, String filename) {
-    this(input, true, dir, filename);
+  public CopyHelper withPreface(byte[] preface) {
+    mPreface = preface;
+    return this;
+  }
+
+  public CopyHelper withClose(boolean close) {
+    mClose = close;
+    return this;
   }
 
   // This leaves a partial temporary file on error and doesn't let you know
@@ -43,6 +51,9 @@ public class CopyHelper {
 
     byte buf[] = new byte[4096];
     FileOutputStream out = new FileOutputStream(output_file);
+    if (mPreface != null) {
+      out.write(mPreface, 0, mPreface.length);
+    }
     do {
       int numread = mInput.read(buf);
       if (numread <= 0) {
