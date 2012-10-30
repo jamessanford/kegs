@@ -31,13 +31,11 @@ jobject g_bitmap;
 AndroidBitmapInfo g_bitmap_info;
 jobject g_eventqueue;
 
-extern int Verbose;
-
 void *g_android_pixels;
 
-extern int g_warp_pointer;
+int g_use_shmem = 0;
+
 extern int g_screen_depth;
-extern int g_force_depth;
 int g_screen_mdepth = 0;
 
 int g_android_mouse_x = 0;
@@ -52,13 +50,6 @@ extern Kimage g_mainwin_kimage;
 extern int g_config_kegs_update_needed;
 extern int g_limit_speed;
 
-int	g_has_focus = 0;
-int	g_auto_repeat_on = -1;
-
-int	g_use_shmem = 0;
-
-int	g_needs_cmap = 0;
-
 extern word32 g_red_mask;
 extern word32 g_green_mask;
 extern word32 g_blue_mask;
@@ -69,32 +60,12 @@ extern int g_red_right_shift;
 extern int g_green_right_shift;
 extern int g_blue_right_shift;
 
-extern int Max_color_size;
-
 extern word32 g_palette_8to1624[256];
 extern word32 g_a2palette_8to1624[256];
 
-int	g_alt_left_up = 1;
-int	g_alt_right_up = 1;
-
-extern word32 g_full_refresh_needed;
-
-extern int g_border_sides_refresh_needed;
-extern int g_border_special_refresh_needed;
-extern int g_status_refresh_needed;
-
 extern int g_lores_colors[];
-extern int g_cur_a2_stat;
-
-extern int g_a2vid_palette;
 
 extern int g_installed_full_superhires_colormap;
-
-extern int g_screen_redraw_skip_amt;
-
-extern word32 g_a2_screen_buffer_changed;
-
-extern char *g_status_ptrs[MAX_STATUS_LINES];
 
 void
 x_dialog_create_kegs_conf(const char *str)
@@ -116,7 +87,6 @@ x_show_alert(int is_fatal, const char *str)
 void
 xdriver_end()
 {
-        printf("xdriver_end\n");
 }
 
 void
@@ -136,8 +106,8 @@ x_get_kimage(Kimage *kimage_ptr) {
         ptr = (byte *)malloc(size);
 
         if(ptr == 0) {
-                mac_printf("malloc for data fail, mdepth:%d\n", mdepth);
-                exit(2);
+                LOGE("malloc for data fail, mdepth:%d", mdepth);
+                my_exit(2);
         }
 
         kimage_ptr->data_ptr = ptr;
@@ -154,15 +124,6 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
 {
   void *pixels;
   int ret;
-
-#if 0
-  static int pushed = 60;
-  pushed++;
-  if (pushed >= 60) {
-    LOGE("XXXXXXXXXXXXXXXXXXXXXXX PUSH XXXXXXXXXXXXXXXXXXXXXXXXX");
-    pushed=0;
-  }
-#endif
 
 #ifndef ANDROID_GL
   if ((ret = AndroidBitmap_lockPixels(g_env, g_bitmap, &pixels)) < 0) {
@@ -205,6 +166,7 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
     indata += in_width;
   }
 #else
+// RGB_565
   pixels = ((char *)pixels + (g_bitmap_info.stride * desty)) + (destx * 2);
   for (y=0; y<height; y++) {
     uint16_t *line = (uint16_t*)pixels;
@@ -221,12 +183,6 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
   AndroidBitmap_unlockPixels(g_env, g_bitmap);
 #endif
 
-#if 0
-  if (pushed == 0) {
-    LOGE("XXXXXXXXXXXXXXXXXXXXXXX UNLOCK XXXXXXXXXXXXXXXXXXXXXXXXX");
-  }
-#endif
-
 // TODO: these can be global refs instead...
 // and right now, can be just one call instead of two
 // alternatively, could use a Rect when locking the canvas
@@ -237,12 +193,6 @@ x_push_kimage(Kimage *kimage_ptr, int destx, int desty, int srcx, int srcy,
   }
   (*g_env)->CallVoidMethod(g_env, g_thiz, mid);
   (*g_env)->DeleteLocalRef(g_env, cls);
-
-#if 0
-  if (pushed == 0) {
-    LOGE("XXXXXXXXXXXXXXXXXXXXXXX AFTER afterUpdate XXXXXXXXXXXXXXXXXXXXXXXXX");
-  }
-#endif
 }
 
 void
@@ -264,7 +214,6 @@ x_hide_pointer(int do_hide)
 void
 x_full_screen(int do_full)
 {
-        return;
 }
 
 void
@@ -320,10 +269,6 @@ Java_com_froop_app_kegs_KegsThread_mainLoop( JNIEnv* env, jobject thiz, jobject 
 {
   int ret;
 
-#if 0
-  LOGE("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX enter mainLoop");
-#endif
-
   g_env = env;
   g_thiz = thiz;
   g_bitmap = bitmap;
@@ -368,8 +313,7 @@ dev_video_init()
         int i;
         int     lores_col;
 // We tell KEGS we have an 8bit display,
-// but then when it asks us to push it, we transform the update area
-// into ARGB_8888.
+// but in x_push_kimage we transform the update area into RGB_565 or ARGB_8888.
         g_screen_mdepth = 8;
         g_screen_depth = g_screen_mdepth;
 
@@ -559,10 +503,6 @@ int x_key_update(jclass key_class, jobject key_event) {
     return 0;
   }
   jboolean key_up = (*g_env)->GetBooleanField(g_env, key_event, fid);
-
-#if 0
-  LOGE("got key_id %d %d", key_id, key_up);
-#endif
 
   if (key_id >= 0 && key_id < 0x80) {
     adb_physical_key_update(key_id, key_up);
