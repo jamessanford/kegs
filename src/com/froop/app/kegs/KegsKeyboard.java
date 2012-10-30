@@ -50,6 +50,24 @@ class KegsKeyboard {
     mNotify = notify;
   }
 
+  // Direct interface to modifiers, not sticky keys.
+  public boolean keyModifiers(final int meta, boolean key_up) {
+    boolean handled = false;
+    if ((meta & KeyEvent.META_ALT_ON) != 0) {
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_OPEN_APPLE, key_up));
+      handled = true;
+    }
+    if ((meta & KeyEvent.META_META_ON) != 0) {
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_CLOSED_APPLE, key_up));
+      handled = true;
+    }
+    if ((meta & KeyEvent.META_CTRL_ON) != 0) {
+      mEventQueue.add(new Event.KeyKegsEvent(KEY_CONTROL, key_up));
+      handled = true;
+    }
+    return handled;
+  }
+
   // Handle 'space' through to ~.
   public boolean handleAsciiKey(int key_id) {
     if (key_id < 0x20 || key_id > 0x7e) {
@@ -67,34 +85,67 @@ class KegsKeyboard {
     return true;
   }
 
+  public boolean handleOtherKey(int keyCode) {
+    boolean handled = false;
+    // Yes, this should be a lookup table.
+    if (keyCode == KeyEvent.KEYCODE_ENTER) {
+      keyDownUp(KEY_RETURN);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_SPACE) {
+      keyDownUp(KEY_SPACE);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_TAB) {
+      keyDownUp(KEY_TAB);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_ESCAPE) {
+      keyDownUp(KEY_ESCAPE);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_DEL) {
+      keyDownUp(KEY_BACKSPACE);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+      keyDownUp(KEY_LEFT);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+      keyDownUp(KEY_RIGHT);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+      keyDownUp(KEY_UP);
+      handled = true;
+    } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+      keyDownUp(KEY_DOWN);
+      handled = true;
+    }
+    return handled;
+  }
+
   public boolean keyEvent(KeyEvent event) {
+    boolean handled = false;
     if (event.getAction() == KeyEvent.ACTION_MULTIPLE && event.getKeyCode() == KeyEvent.KEYCODE_UNKNOWN) {
       // TODO: support event.getCharacters(), but we may need to use InputConnection instead of key events.
       // Log.w("kegs", "key CHARACTERS " + event.getCharacters());
       // return true;
     }
     if (event.getAction() == KeyEvent.ACTION_DOWN) {
-      int keyCode = event.getKeyCode();
-      if (keyCode == KeyEvent.KEYCODE_ENTER) {
-        keyDownUp(KEY_RETURN);
-        return true;
-      } else if (keyCode == KeyEvent.KEYCODE_SPACE) {
-        keyDownUp(KEY_SPACE);
-        return true;
-      } else if (keyCode == KeyEvent.KEYCODE_TAB) {
-        keyDownUp(KEY_TAB);
-        return true;
-      } else if (keyCode == KeyEvent.KEYCODE_DEL) {
-        keyDownUp(KEY_BACKSPACE);
-        return true;
-      } else if (keymap == null) {
-        return false;
-      } else if (keymap.isPrintingKey(keyCode)) {
-        int key_id = keymap.get(keyCode, event.getMetaState());
-        return handleAsciiKey(key_id);
+      final int modifiers = event.getModifiers();
+      handled = keyModifiers(modifiers, false);
+      final int keyCode = event.getKeyCode();
+      if (keymap != null && keymap.isPrintingKey(keyCode)) {
+        int meta = event.getMetaState();
+        // Remove meta states that we handle to get a meaningful ASCII result.
+        meta &= ~(KeyEvent.META_ALT_LEFT_ON | KeyEvent.META_ALT_RIGHT_ON | KeyEvent.META_ALT_ON);
+        meta &= ~(KeyEvent.META_META_LEFT_ON | KeyEvent.META_META_RIGHT_ON | KeyEvent.META_META_ON);
+        meta &= ~(KeyEvent.META_CTRL_LEFT_ON | KeyEvent.META_CTRL_RIGHT_ON | KeyEvent.META_CTRL_ON);
+        int key_id = keymap.get(keyCode, meta);
+        handled = handleAsciiKey(key_id) | handled;
+      } else {
+        handled = handleOtherKey(keyCode) | handled;
       }
+      // Release any modifiers that may have been pressed.
+      // BUG: ACTION_UP for this is not working, so just toggle them here.
+      handled = keyModifiers(modifiers, true) | handled;
     }
-    return false;
+    return handled;
   }
 
   private void resetStickyKeys() {
@@ -115,7 +166,7 @@ class KegsKeyboard {
     }
   }
 
-  public void keyDownSticky(int key_id, boolean key_up) {
+  public void keyDownSticky(final int key_id, final boolean key_up) {
     int mask = 0;
     if (key_id == KEY_CONTROL) {
       mEventQueue.add(new Event.KeyKegsEvent(KEY_CONTROL, key_up));
@@ -134,7 +185,7 @@ class KegsKeyboard {
     }
   }
 
-  public void keyDownUp(int key_id) {
+  public void keyDownUp(final int key_id) {
     mEventQueue.add(new Event.KeyKegsEvent(key_id, false));  // key down
     mEventQueue.add(new Event.KeyKegsEvent(key_id, true));   // key up
     resetStickyKeys();
