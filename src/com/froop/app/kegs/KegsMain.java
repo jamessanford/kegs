@@ -44,6 +44,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
   private boolean mAssetsReady = false;
   private boolean mDownloadReady = false;
+  private boolean mDownloadStarted = false;
   private boolean mDownloadAborted = false;
 
   private boolean mModeMouse = true;
@@ -114,6 +115,17 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private void loadDiskImageWhenReady(final DiskImage image) {
     final AssetFragment frag = (AssetFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_ASSET);
 
+    // Only start download when the assets are ready.
+    if (mAssetsReady && !mDownloadStarted) {
+      mDownloadStarted = true;
+      final String imagePath = mConfigFile.getImagePath();
+      if (android.os.Build.VERSION.SDK_INT >= 11) {
+        new DownloadImage(this, imagePath, image).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+      } else {
+        new DownloadImage(this, imagePath, image).execute();
+      }
+    }
+
     // This code is lame.
     if (mDownloadAborted) {
       if (frag != null) {
@@ -160,15 +172,9 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       getThread().doPowerOff();
     }
 
+    mDownloadStarted = false;
     mDownloadReady = false;
     mDownloadAborted = false;
-
-    final String imagePath = mConfigFile.getImagePath();
-    if (android.os.Build.VERSION.SDK_INT >= 11) {
-      new DownloadImage(this, imagePath, image).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    } else {
-      new DownloadImage(this, imagePath, image).execute();
-    }
 
     loadDiskImageWhenReady(image);
   }
