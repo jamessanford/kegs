@@ -16,6 +16,13 @@ class AssetImages extends AsyncTask<Void, Void, Boolean> {
   AssetImages(AssetsReady notify, ConfigFile config) {
     mNotify = notify;
     mConfigFile = config;
+
+    // An optimization to let the UI thread know as soon as possible.
+    if (mNotify != null &&
+        new File(mConfigFile.getImagePath(), "XMAS_DEMO.2MG").exists() &&
+        new File(mConfigFile.getImagePath(), "System 6.hdv").exists()) {
+      mNotify.onAssetsReady(true);
+    }
   }
 
   private void checkOldImagePath(String filename) {
