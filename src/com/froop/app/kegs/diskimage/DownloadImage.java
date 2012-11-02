@@ -13,13 +13,20 @@ class DownloadImage extends AsyncTask<Void, Void, Boolean> {
   private DownloadReady mNotify;
   private DiskImage mImage;
   private File mDest;
+  private boolean mLocalPath = false;
 
   DownloadImage(DownloadReady notify, String imagePath, DiskImage image) {
     mNotify = notify;
     mImage = image;
-    mDest = new File(imagePath + "/" + mImage.filename);
 
-    if (mDest.exists()) {
+    if (imagePath == null || image.filename.startsWith("/")) {
+      mLocalPath = true;
+      mDest = new File(image.filename);
+    } else {
+      mDest = new File(imagePath, image.filename);
+    }
+
+    if (mLocalPath || mDest.exists()) {
       // Assume whatever is there will work.
       // So the caller will immediately see that it's already done.
       mNotify.onDownloadReady(true);
@@ -30,7 +37,7 @@ class DownloadImage extends AsyncTask<Void, Void, Boolean> {
   }
 
   protected Boolean doInBackground(Void... params) {
-    if (mDest.exists()) {
+    if (mLocalPath || mDest.exists()) {
       // Assume whatever is there will work.
       return true;
     }

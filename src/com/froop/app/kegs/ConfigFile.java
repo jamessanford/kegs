@@ -89,10 +89,18 @@ class ConfigFile {
     }
   }
 
+  public String fullPath(final String filename) {
+    if (filename.startsWith("/")) {
+      return filename;
+    } else {
+      return getImagePath() + "/" + filename;
+    }
+  }
+
   public byte[] getConfigPreface(final DiskImage image) {
-    return String.format("g_limit_speed = %d\n%s = %s/%s\n\n",
+    return String.format("g_limit_speed = %d\n%s = %s\n\n",
                          image.speed, image.drive,
-                         getImagePath(), image.filename).getBytes();
+                         fullPath(image.filename)).getBytes();
   }
 
   public void setConfig(DiskImage image) {

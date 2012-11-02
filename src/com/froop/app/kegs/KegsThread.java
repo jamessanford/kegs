@@ -108,6 +108,10 @@ class KegsThread extends Thread {
   }
 
   public void doPowerOff() {
+    if (!mReady) {
+      return;  // bail out, we haven't started doing anything yet
+    }
+
     // Tell the native thread loop to wait before powering on again.
     mPowerWait.lock();
 
@@ -115,8 +119,14 @@ class KegsThread extends Thread {
     mEventQueue.add(new Event.KeyKegsEvent(120 + 0x80, true));
   }
 
+  // Call from the UI thread only.
   public void allowPowerOn() {
-    // Intended to be called from the UI thread.
+    if (!mReady) {
+      mReady = true;
+      onResume();  // Will start the thread if not already started.
+      return;
+    }
+
     // As the native thread is allowed to loop by default,
     // this is only useful after using doPowerOff().
     if (mPowerWait.isHeldByCurrentThread()) {
@@ -126,6 +136,10 @@ class KegsThread extends Thread {
 
   // Is native thread loop sitting around waiting for us to allow power on?
   public boolean nowWaitingForPowerOn() {
+    if (!mReady) {
+      return true;  // bail out, we haven't started doing anything yet
+    }
+
     return mPowerWait.hasQueuedThreads();
   }
 
@@ -152,15 +166,5 @@ class KegsThread extends Thread {
     getEventQueue().add(new Event.KeyKegsEvent(KegsKeyboard.KEY_RESET, true));
     getEventQueue().add(new Event.KeyKegsEvent(KegsKeyboard.KEY_CONTROL, true));
     getEventQueue().add(new Event.KeyKegsEvent(KegsKeyboard.KEY_OPEN_APPLE, true));
-  }
-
-  public void setReady(boolean ready) {
-    final boolean wasReady = mReady;
-    mReady = ready;
-
-    if (ready && !wasReady) {
-      // Will start the thread if not already started.
-      onResume();
-    }
   }
 }

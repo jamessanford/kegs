@@ -6,7 +6,9 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -179,6 +181,34 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     loadDiskImageWhenReady(image);
   }
 
+  private DiskImage getBootDiskImage(Intent intent) {
+    if (intent != null && intent.getAction() == Intent.ACTION_VIEW) {
+      final Uri uri = intent.getData();
+      if (uri != null && uri.getScheme().equals("file")) {
+        final String path = uri.getPath();
+        if (path != null) {
+          return DiskImage.fromPath(path);
+        }
+      }
+    }
+    return null;
+  }
+
+  // The first boot upon application launch.
+  private void boot() {
+    final DiskImage image = getBootDiskImage(getIntent());
+    if (image != null) {
+      loadDiskImage(image);
+    } else {
+      mConfigFile.defaultConfig();
+      getThread().allowPowerOn();
+      mKegsView.postDelayed(new Runnable() { public void run() {
+        new DiskImageFragment().show(getSupportFragmentManager(),
+                                     FRAGMENT_DISKIMAGE);
+      } }, 1000);
+    }
+  }
+
   protected void getRomFile(String romfile) {
     final SherlockDialogFragment download = new DownloadDialogFragment();
     download.show(getSupportFragmentManager(), FRAGMENT_DOWNLOAD);
@@ -208,11 +238,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           dialog.show(getSupportFragmentManager(), FRAGMENT_ERROR);
         }
       } else {
-        mConfigFile.defaultConfig();
-        getThread().setReady(true);
-        mKegsView.postDelayed(new Runnable() { public void run() {
-          new DiskImageFragment().show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
-        } }, 1000);
+        boot();
       }
     }
   }
@@ -405,6 +431,15 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   }
 
   @Override
+  protected void onNewIntent(Intent intent) {
+    // TODO: consider asking user whether to swap disks or reboot
+    final DiskImage image = getBootDiskImage(intent);
+    if (image != null) {
+      loadDiskImage(image);
+    }
+  }
+
+  @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
@@ -472,11 +507,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       final SherlockDialogFragment chooseRom = new RomDialogFragment();
       chooseRom.show(getSupportFragmentManager(), FRAGMENT_ROM);
     } else {
-      mConfigFile.defaultConfig();
-      getThread().setReady(true);
-      mKegsView.postDelayed(new Runnable() { public void run() {
-        new DiskImageFragment().show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
-      } }, 1000);
+      boot();
     }
   }
 
