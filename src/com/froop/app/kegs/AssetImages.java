@@ -46,6 +46,7 @@ class AssetImages extends AsyncTask<Void, Void, Boolean> {
     mConfigFile.ensureAssetCopied(mConfigFile.getImagePath(),
                                   "System 6 Shareware.zip", "System 6.hdv");
     // TODO: could check to make sure they actually exist now.
+    nativeSync();
     return true;
   }
 
@@ -56,4 +57,7 @@ class AssetImages extends AsyncTask<Void, Void, Boolean> {
   protected void onPostExecute(final Boolean result) {
     mNotify.onAssetsReady(result);
   }
+
+  // See jni/android_driver.c:nativeSync()
+  private native void nativeSync();
 }

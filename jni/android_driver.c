@@ -262,6 +262,12 @@ void android_config_init(char *output, int maxlen) {
   (*g_env)->DeleteLocalRef(g_env, config_path);
 }
 
+JNIEXPORT void JNICALL
+Java_com_froop_app_kegs_AssetImages_nativeSync( JNIEnv* env, jobject thiz) {
+  sync();
+  sync();
+}
+
 // Instead of 'KegsView$KegsThread', the $ is encoded as _00024.
 // (not any more, but it was KegsView_00024KegsThread_mainLoop)
 JNIEXPORT void JNICALL
