@@ -23,6 +23,12 @@
   <string name="diskimage_title">Choose a disk</string>
   <string name="asset_loading">Preparing disk image...</string>
 
+  <string-array name="swapdisk_choices">
+    <item>Ignore this disk</item>
+    <item>Swap to this disk</item>
+    <item>Boot this disk</item>
+  </string-array>
+
   <!-- R.menu.actions -->
   <string name="input_joystick">Use Joystick</string>
   <string name="input_mouse">Use Mouse</string>

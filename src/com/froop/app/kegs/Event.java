@@ -38,4 +38,15 @@ class Event {
     public int y;  // absolute Y, -32767 to 32767
     public int buttons;
   }
+
+  static class DiskImageEvent extends KegsEvent {
+    public DiskImageEvent(String filename, int slot, int drive) {
+      this.filename = filename;  // when null, eject only.
+      this.slot = slot;
+      this.drive = drive;
+    }
+    public String filename;
+    public int slot;
+    public int drive;
+  }
 }

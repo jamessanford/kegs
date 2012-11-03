@@ -458,6 +458,45 @@ int x_mouse_update(jclass mouse_class, jobject mouse_event) {
   return 1;
 }
 
+int x_diskimage(jclass diskimage_class, jobject diskimage_event) {
+  jfieldID fid = (*g_env)->GetFieldID(g_env, diskimage_class, "slot", "I");
+  if (fid == NULL) {
+    LOGE("NO FID");
+    return 0;
+  }
+  jint slot = (*g_env)->GetIntField(g_env, diskimage_event, fid);
+
+  fid = (*g_env)->GetFieldID(g_env, diskimage_class, "drive", "I");
+  if (fid == NULL) {
+    LOGE("NO FID");
+    return 0;
+  }
+  jint drive = (*g_env)->GetIntField(g_env, diskimage_event, fid);
+
+  // s6d1 is 'slot 6 drive 0' according to KEGS.
+  drive--;
+
+  fid = (*g_env)->GetFieldID(g_env, diskimage_class, "filename", "Ljava/lang/String;");
+  if (fid == NULL) {
+    LOGE("NO FID");
+    return 0;
+  }
+  jstring name = (*g_env)->GetObjectField(g_env, diskimage_event, fid);
+  char *nativeString = NULL;
+  if (name != NULL) {
+    nativeString = (char *)(*g_env)->GetStringUTFChars(g_env, name, 0);
+  }
+
+  // KEGS makes its own copy of the string.
+  int eject = nativeString == NULL ? 1 : 0;
+  insert_disk(slot, drive, nativeString, eject, 0, 0, -1);
+
+  (*g_env)->ReleaseStringUTFChars(g_env, name, nativeString);
+  (*g_env)->DeleteLocalRef(g_env, name);
+
+  return 1;
+}
+
 void x_key_special(int key_id) {
   key_id = key_id & 0x7f;  // only use lower 7 bits
   switch(key_id) {
@@ -556,6 +595,7 @@ check_input_events()
       jclass mouse_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$MouseKegsEvent");
       jclass joystick_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$JoystickKegsEvent");
       jclass key_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$KeyKegsEvent");
+      jclass diskimage_class = (*g_env)->FindClass(g_env, "com/froop/app/kegs/Event$DiskImageEvent");
 
       if (mouse_class != NULL && (*g_env)->IsInstanceOf(g_env, event_item, mouse_class)) {
         keep_going = x_mouse_update(mouse_class, event_item);
@@ -563,10 +603,13 @@ check_input_events()
         keep_going = x_joystick_update(joystick_class, event_item);
       } else if (key_class != NULL && (*g_env)->IsInstanceOf(g_env, event_item, key_class)) {
         keep_going = x_key_update(key_class, event_item);
+      } else if (diskimage_class != NULL && (*g_env)->IsInstanceOf(g_env, event_item, diskimage_class)) {
+        keep_going = x_diskimage(diskimage_class, event_item);
       }
       (*g_env)->DeleteLocalRef(g_env, mouse_class);
       (*g_env)->DeleteLocalRef(g_env, joystick_class);
       (*g_env)->DeleteLocalRef(g_env, key_class);
+      (*g_env)->DeleteLocalRef(g_env, diskimage_class);
       (*g_env)->DeleteLocalRef(g_env, event_item);
     }
   } while(event_item != NULL && keep_going);

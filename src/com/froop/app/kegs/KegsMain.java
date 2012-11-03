@@ -33,6 +33,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private static final String FRAGMENT_SPEED = "speed";
   private static final String FRAGMENT_DISKIMAGE = "diskimage";
   private static final String FRAGMENT_ASSET = "asset";
+  private static final String FRAGMENT_SWAPDISK = "swapdisk";
 
   private ConfigFile mConfigFile;
   private KegsThread mKegsThread;
@@ -50,6 +51,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private boolean mDownloadAborted = false;
 
   private boolean mModeMouse = true;
+  private boolean mHaveNewIntent = false;
 
   private long mScreenSizeTime = 0;
 
@@ -164,7 +166,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
         mConfigFile.setConfig(image);
         getThread().allowPowerOn();
       } else {
-        // TODO FIXME: eject/insert the new disk.
+        getThread().getEventQueue().add(image.getDiskImageEvent());
       }
     }
   }
@@ -430,13 +432,37 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     return false;
   }
 
+  private boolean dismissFragment(String tag) {
+    final SherlockDialogFragment frag = (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(tag);
+    if (frag == null) {
+      return false;
+    } else {
+      frag.dismiss();
+      return true;
+    }
+  }
+
+  private void handleNewIntent(Intent intent) {
+    final DiskImage image = getBootDiskImage(intent);
+    if (image == null) {
+      return;  // Nothing to do.
+    }
+    dismissFragment(FRAGMENT_ROM);  // Note: should probably bail if visible.
+    dismissFragment(FRAGMENT_SPEED);
+    dismissFragment(FRAGMENT_DISKIMAGE);
+    dismissFragment(FRAGMENT_SWAPDISK);
+
+    // Ask the user what to do with this new disk image.
+    new SwapDiskFragment(image).show(getSupportFragmentManager(),
+                                     FRAGMENT_SWAPDISK);
+  }
+
   @Override
   protected void onNewIntent(Intent intent) {
-    // TODO: consider asking user whether to swap disks or reboot
-    final DiskImage image = getBootDiskImage(intent);
-    if (image != null) {
-      loadDiskImage(image);
-    }
+    // "An activity will always be paused before receiving a new intent."
+    // Being paused means we can't show a dialog here.  Tell onResume to do it.
+    setIntent(intent);
+    mHaveNewIntent = true;
   }
 
   @Override
@@ -526,6 +552,10 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     getThread().onResume();
     if (mKegsView instanceof KegsViewGL) {
       mKegsView.onResume();
+    }
+    if (mHaveNewIntent) {
+      mHaveNewIntent = false;
+      handleNewIntent(getIntent());
     }
   }
 

@@ -1,5 +1,7 @@
 package com.froop.app.kegs;
 
+import android.util.Log;
+import java.lang.Integer;
 import java.io.File;
 
 class DiskImage {
@@ -36,6 +38,35 @@ class DiskImage {
     } else if (length > 0) {
       return new DiskImage(path, "s6d1", 1, BOOT_SLOT_6);
     } else {
+      return null;
+    }
+  }
+
+  public String getTitle() {
+    int pos = this.filename.lastIndexOf("/") + 1;
+    return this.filename.substring(pos);
+  }
+
+  public int getIconId() {
+    if (this.template.equals(BOOT_SLOT_7)) {
+      return (R.drawable.ic_menu_save);  // FIXME should be hard disk icon
+    } else if (this.template.equals(BOOT_SLOT_5)) {
+      return (R.drawable.ic_menu_save);
+    } else if (this.template.equals(BOOT_SLOT_6)) {
+      return (R.drawable.ic_menu_save);  // FIXME should be 5.25 disk icon
+    } else {
+      return (R.drawable.ic_menu_save);  // FIXME should be question mark icon
+    }
+  }
+
+  public Event.DiskImageEvent getDiskImageEvent() {
+    if (this.drive.substring(0, 1).equals("s") &&
+        this.drive.substring(2, 3).equals("d")) {
+      int slot = Integer.parseInt(this.drive.substring(1, 2));
+      int drive = Integer.parseInt(this.drive.substring(3));
+      return new Event.DiskImageEvent(this.filename, slot, drive);
+    } else {
+      Log.e("kegs", "disk image " + this.filename + " has bad drive " + this.drive);
       return null;
     }
   }
