@@ -308,6 +308,15 @@ const word32 g_hires_convert[64] = {
 		0x050, 0x0d0, 0x150, 0x1d0, 0x250, 0x2d0, 0x350, 0x3d0
 };
 
+// OG Defined below
+extern int     g_flash_count;
+extern int     g_screen_redraw_skip_count;
+extern int     g_screen_redraw_skip_amt;
+extern word32  g_cycs_in_check_input;
+extern int g_needfullrefreshfornextframe;
+extern int g_num_a2vid_palette_checks;
+extern int g_border_color;    // OG Expose border color
+extern int     g_num_border_changes;
 
 void
 video_init()
@@ -375,17 +384,20 @@ video_init()
 	g_num_lines_prev_superhires = 0;
 	g_num_lines_prev_superhires640 = 0;
 
-	/*
-	g_red_mask = 0xff;
-	g_green_mask = 0xff;
-	g_blue_mask = 0xff;
-	g_red_left_shift = 16;
-	g_green_left_shift = 8;
-	g_blue_left_shift = 0;
-	g_red_right_shift = 0;
-	g_green_right_shift = 0;
-	g_blue_right_shift = 0;
-*/
+	g_flash_count = 0;
+
+	g_screen_redraw_skip_count = 0;
+	g_screen_redraw_skip_amt = -1;
+
+	g_cycs_in_check_input = 0;
+
+	g_needfullrefreshfornextframe = 1 ;
+
+	g_num_a2vid_palette_checks = 1;
+
+	g_border_color = 0;     // OG Expose border color
+
+	g_num_border_changes = 0;
 
 /* Initialize video system */
 

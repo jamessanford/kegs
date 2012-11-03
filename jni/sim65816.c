@@ -191,6 +191,24 @@ Data_log *g_log_data_ptr = &(g_data_log_array[0]);
 Data_log *g_log_data_start_ptr = &(g_data_log_array[0]);
 Data_log *g_log_data_end_ptr = &(g_data_log_array[PC_LOG_LEN]);
 
+// OG Missing defined below
+extern word32  g_vbl_count;
+extern int     g_vbl_index_count;
+extern int     g_limit_speed;
+extern double  g_sim_sum;
+
+extern double  g_cur_sim_dtime;
+extern double  g_projected_pmhz;
+extern double  g_zip_pmhz;
+extern double  g_sim_mhz;
+extern int     g_line_ref_amt;
+extern int     g_video_line_update_interval;
+
+extern double  g_dtime_last_vbl;
+extern double  g_dtime_expected;
+
+extern int g_scan_int_events;
+
 // OG Added sim65816_initglobals()
 void sim65816_initglobals()
 {
@@ -253,6 +271,31 @@ void sim65816_initglobals()
 	 g_mem_size_base = 256*1024;	/* size of motherboard memory */
 	 g_mem_size_exp = 8*1024*1024;	/* size of expansion RAM card */
 	 g_mem_size_total = 256*1024;	/* Total contiguous RAM from 0 */
+
+	// OG Added missing initializers 120710
+	//     g_force_depth = -1; // OG Should be no reseted
+	//     g_screen_depth = 8; // OG Should be no reseted
+
+	g_vbl_count = 0;
+	g_vbl_index_count = 0;
+	//     g_limit_speed = 0;              // OG Should be no reseted
+	g_sim_sum = 0.0;
+
+	g_cur_sim_dtime = 0.0;
+	g_projected_pmhz = 1.0;
+	g_zip_pmhz = 8.0;
+	g_sim_mhz = 100.0;
+	g_line_ref_amt = 1;
+	g_video_line_update_interval = 0;
+
+	g_dtime_last_vbl = 0.0;
+#ifdef __ANDROID__
+	g_dtime_expected = (1.0/59.8);
+#else
+	g_dtime_expected = (1.0/60.0);
+#endif
+
+	g_scan_int_events = 0;
 }
 
 void
@@ -741,10 +784,10 @@ do_reset()
 	{
 
 	extern int	g_irq_pending;
+/*
 	extern	int g_scan_int_events ;
 	extern int g_c023_val;
 
-/*
 		#define REMOVEIRQ(ADR) { extern int ADR; if (ADR) { remove_irq(); ADR=0; } }	
 		#define CLEARIRQ(ADR) { extern int ADR; ADR=0;  }	
 		
