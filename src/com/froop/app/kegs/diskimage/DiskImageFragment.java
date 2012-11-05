@@ -32,16 +32,16 @@ public class DiskImageFragment extends SherlockDialogFragment {
         DiskImage image = null;
 
         if (item == 0) {
-          image = new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7);
+          image = new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7, DiskImage.ASSET);
         } else if (item == 1) {
-          image = new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5);
+          image = new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.ASSET);
         } else if (item == 2) {
           // TODO: There should be an adapter on the ListView instead.
-          image = new DiskImage("prince.2mg", "s5d1", 2, DiskImage.BOOT_SLOT_5);
+          image = new DiskImage("prince.2mg", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.DOWNLOAD);
         }
 
         if (image != null) {
-          ((KegsMain)getActivity()).loadDiskImage(image);
+          ((KegsMain)getActivity()).prepareDiskImage(image);
         }
       }
     });

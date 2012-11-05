@@ -35,6 +35,10 @@ class ConfigFile {
     return mConfigPath + "/images";
   }
 
+  public String getCachePath() {
+    return mContext.getExternalCacheDir().getPath();
+  }
+
   public void ensureAssetCopied(String destPath, String zipfile, String exampleFile) {
     // We only check for a local copy of a single file before unzipping...
     final File local_copy = new File(destPath, exampleFile);

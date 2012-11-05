@@ -5,24 +5,40 @@ import java.lang.Integer;
 import java.io.File;
 
 class DiskImage {
+  // template
   public static final String BOOT_SLOT_5 = "boot_slot_5";
   public static final String BOOT_SLOT_6 = "boot_slot_6";
   public static final String BOOT_SLOT_7 = "boot_slot_7";
 
-  public boolean primary = true;
+  // origin
+  public static final int ASSET = 0;
+  public static final int DOWNLOAD = 1;
+  public static final int LOCALFILE = 2;
+  public static final int ERROR = 3;
+
+  // action
+  public static final int BOOT = 0;
+  public static final int SWAP = 1;
+  public static final int ASK = 2;
+
   public String filename;
   public String drive;
   public int speed;
   public String template;
+  public int origin;
+  public int action;
+  public String extract_filename = null;  // for extracting from zipfiles
 
   // Example:
-  //   DiskImage("XMAS_DEMO.2MG", "s5d1", 2, "boot_slot_5");
+  //   DiskImage("XMAS_DEMO.2MG", "s5d1", 2, "boot_slot_5", LOCALFILE);
   public DiskImage(final String filename, final String drive,
-                   final int speed, final String template) {
+                   final int speed, final String template, final int origin) {
     this.filename = filename;
     this.drive = drive;
     this.speed = speed;
     this.template = template;
+    this.origin = origin;
+    this.action = BOOT;
   }
 
   public static DiskImage fromPath(String path) {
@@ -32,19 +48,44 @@ class DiskImage {
       return null;
     } else if (length >= 1024 * 1024) {
       // TODO: should insert the disk and use the System 6 template
-      return new DiskImage(path, "s7d1", 3, BOOT_SLOT_7);
+      return new DiskImage(path, "s7d1", 3, BOOT_SLOT_7, LOCALFILE);
     } else if (length >= 400 * 1024) {
-      return new DiskImage(path, "s5d1", 2, BOOT_SLOT_5);
+      return new DiskImage(path, "s5d1", 2, BOOT_SLOT_5, LOCALFILE);
     } else if (length > 0) {
-      return new DiskImage(path, "s6d1", 1, BOOT_SLOT_6);
+      return new DiskImage(path, "s6d1", 1, BOOT_SLOT_6, LOCALFILE);
     } else {
       return null;
     }
   }
 
+  public static boolean isDiskImageFilename(String filename) {
+    if (filename.endsWith(".2mg") ||
+        filename.endsWith(".dsk") ||
+        filename.endsWith(".nib") ||
+        filename.endsWith(".hdv") ||
+        filename.endsWith(".po") ||
+        filename.endsWith(".do") ||
+        filename.endsWith(".bin") ||
+        filename.endsWith(".2MG") ||
+        filename.endsWith(".DSK") ||
+        filename.endsWith(".NIB") ||
+        filename.endsWith(".HDV") ||
+        filename.endsWith(".PO") ||
+        filename.endsWith(".DO") ||
+        filename.endsWith(".BIN")) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public String getBaseFilename() {
+    int pos = this.filename.lastIndexOf("/");
+    return this.filename.substring(pos + 1);
+  }
+
   public String getTitle() {
-    int pos = this.filename.lastIndexOf("/") + 1;
-    return this.filename.substring(pos);
+    return getBaseFilename();
   }
 
   public int getIconId() {

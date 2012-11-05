@@ -28,9 +28,10 @@ public class SwapDiskFragment extends SherlockDialogFragment {
         if (item == 0) {
           // ignore this image
         } else if (item == 1) {
-          mImage.primary = false;  // just a disk insert
+          mImage.action = DiskImage.SWAP;  // just a disk insert
           ((KegsMain)getActivity()).loadDiskImage(mImage);
         } else if (item == 2) {
+          mImage.action = DiskImage.BOOT;  // was ASK
           ((KegsMain)getActivity()).loadDiskImage(mImage);
         }
       }

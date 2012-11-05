@@ -20,41 +20,51 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <intent-filter android:priority="999">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" android:pathPattern=".*\\.2mg" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" android:pathPattern=".*\\.dsk" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" android:pathPattern=".*\\.nib" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" android:pathPattern=".*\\.hdv" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" android:pathPattern=".*\\.po" />
-            </intent-filter>
-            <intent-filter android:priority="999">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="file" android:pathPattern=".*\\.do" />
+
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.zip" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.ZIP" />
+
+<!-- Yeah, this is pretty much awful.  Blame PatternMatcher -->
+
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.2mg" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.dsk" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.nib" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.hdv" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.po" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.do" />
+
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.2MG" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.DSK" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.NIB" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.HDV" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.PO" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.DO" />
+
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.2mg.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.dsk.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.nib.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.hdv.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.po.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.do.gz" />
+
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.2MG.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.DSK.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.NIB.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.HDV.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.PO.gz" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.DO.gz" />
+
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.2MG.GZ" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.DSK.GZ" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.NIB.GZ" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.HDV.GZ" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.PO.GZ" />
+<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.DO.GZ" />
+
             </intent-filter>
 
         </activity>

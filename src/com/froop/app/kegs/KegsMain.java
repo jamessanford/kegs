@@ -26,14 +26,17 @@ import com.actionbarsherlock.app.SherlockDialogFragment;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 
-public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady, DownloadImage.DownloadReady {
+import java.util.ArrayDeque;
+
+public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady, DiskLoader.ImageReady {
   private static final String FRAGMENT_ROM = "rom";
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
   private static final String FRAGMENT_SPEED = "speed";
   private static final String FRAGMENT_DISKIMAGE = "diskimage";
-  private static final String FRAGMENT_ASSET = "asset";
   private static final String FRAGMENT_SWAPDISK = "swapdisk";
+  private static final String FRAGMENT_ZIPDISK = "zipdisk";
+  private static final String FRAGMENT_LOADING = "loading";
 
   private ConfigFile mConfigFile;
   private KegsThread mKegsThread;
@@ -45,15 +48,26 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private KegsKeyboard mKegsKeyboard;
   private TouchJoystick mJoystick;
 
-  private boolean mAssetsReady = false;
-  private boolean mDownloadReady = false;
-  private boolean mDownloadStarted = false;
-  private boolean mDownloadAborted = false;
-
   private boolean mModeMouse = true;
-  private boolean mHaveNewIntent = false;
 
   private long mScreenSizeTime = 0;
+
+  private boolean mPaused = false;
+  final ArrayDeque<Runnable> mResumeQueue = new ArrayDeque<Runnable>();
+
+  private DiskLoader mDiskLoader = null;
+
+  private void withUIActive(final Runnable runnable) {
+    if(!mPaused) {
+      runnable.run();
+    } else {
+      mResumeQueue.add(runnable);
+    }
+  }
+
+  public void onAssetsReady(boolean result) {
+    // TODO: deal with error conditions from assets as a warning.
+  }
 
   private View.OnClickListener mButtonClick = new View.OnClickListener() {
     public void onClick(View v) {
@@ -106,81 +120,109 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     ((ToggleButton)findViewById(R.id.key_closed_apple)).setChecked(false);
   }
 
-  public void onAssetsReady(boolean success) {
-    // TODO FIXME: this needs to throw an error if it fails.
-    mAssetsReady = success;
-  }
-
-  public void onDownloadReady(boolean success) {
-    // TODO FIXME: this needs to throw an error if it fails.
-    mDownloadReady = success;
+  protected void loadDiskImage(final DiskImage image) {
+    if (image.action == DiskImage.BOOT) {
+      getThread().doPowerOff();
+    }
+    loadDiskImageWhenReady(image);
   }
 
   private void loadDiskImageWhenReady(final DiskImage image) {
-    final AssetFragment frag = (AssetFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_ASSET);
-
-    // Only start download when the assets are ready.
-    if (mAssetsReady && !mDownloadStarted) {
-      mDownloadStarted = true;
-      final String imagePath = mConfigFile.getImagePath();
-      if (android.os.Build.VERSION.SDK_INT >= 11) {
-        new DownloadImage(this, imagePath, image).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-      } else {
-        new DownloadImage(this, imagePath, image).execute();
-      }
-    }
-
-    // This code is lame.
-    if (mDownloadAborted) {
-      if (frag != null) {
-        frag.dismiss();
-      }
-      if (image.primary) {
-        getThread().allowPowerOn();
-      }
-      return;  // don't schedule another pass.
-    }
-
     boolean nativeReady;
-    if (image.primary) {
+    if (image.action == DiskImage.BOOT) {
       nativeReady = getThread().nowWaitingForPowerOn();
     } else {
       nativeReady = true;
     }
 
-    if (!nativeReady || !mAssetsReady || !mDownloadReady) {
-      if (frag == null && (!mAssetsReady || !mDownloadReady)) {
-        // Only the asset part will take time, so only show the dialog
-        // when waiting for the asset.
-        final SherlockDialogFragment assetProgress = new AssetFragment();
-        assetProgress.show(getSupportFragmentManager(), FRAGMENT_ASSET);
-      }
+    if (!nativeReady) {
       mKegsView.postDelayed(new Runnable() {
-        public void run() { loadDiskImageWhenReady(image); }
+        public void run() {
+          loadDiskImageWhenReady(image);
+        }
       }, 100);
-    } else {
-      if (frag != null) {
-        frag.dismiss();
-      }
-      if (image.primary) {
-        mConfigFile.setConfig(image);
-        getThread().allowPowerOn();
-      } else {
-        getThread().getEventQueue().add(image.getDiskImageEvent());
-      }
+      return;
     }
+
+    withUIActive(new Runnable() {
+      public void run() {
+        if (image.action == DiskImage.BOOT) {
+          mConfigFile.setConfig(image);
+          getThread().allowPowerOn();
+        } else if (image.action == DiskImage.SWAP) {
+          getThread().getEventQueue().add(image.getDiskImageEvent());
+        }
+      }
+    });
   }
 
-  protected void loadDiskImage(DiskImage image) {
-    if (image.primary) {
-      getThread().doPowerOff();
+  public void onImageReady(final boolean result, final DiskImage image) {
+    mDiskLoader = null;
+    withUIActive(new Runnable() {
+      public void run() {
+        dismissFragment(FRAGMENT_LOADING);
+        if (!result) {
+          // TODO: Consider not showing the error if it was cancelled.
+          new ErrorDialogFragment(R.string.image_error, null).show(getSupportFragmentManager(), FRAGMENT_ERROR);
+        } else if (image.action != DiskImage.ASK) {
+          loadDiskImage(image);
+        } else {
+          new SwapDiskFragment(image).show(getSupportFragmentManager(),
+                                           FRAGMENT_SWAPDISK);
+        }
+      }
+    });
+  }
+
+  public void prepareDiskImage(DiskImage image) {
+    dismissFragment(FRAGMENT_ROM);  // Note: should probably bail if visible.
+    dismissFragment(FRAGMENT_SPEED);
+    dismissFragment(FRAGMENT_DISKIMAGE);
+    dismissFragment(FRAGMENT_SWAPDISK);
+    dismissFragment(FRAGMENT_ZIPDISK);
+
+    if (image.filename.endsWith(".zip") || image.filename.endsWith(".ZIP")) {
+      final ZipDiskFragment zip = new ZipDiskFragment(image);
+      if (zip.needsDialog()) {
+        zip.show(getSupportFragmentManager(), FRAGMENT_ZIPDISK);
+        return;
+      } else {
+        image = zip.getFirstImage();
+      }
     }
+    runDiskLoader(image);
+  }
 
-    mDownloadStarted = false;
-    mDownloadReady = false;
-    mDownloadAborted = false;
+  // So that other fragments can transition into the DiskLoader.
+  public void runDiskLoader(final DiskImage image) {
+    final Runnable cancel = new Runnable() {
+      public void run() {
+        if (mDiskLoader != null) {
+          mDiskLoader.cancel(true);
+          mDiskLoader = null;
+        }
+      }
+    };
 
-    loadDiskImageWhenReady(image);
+    final DiskLoader.ImageReady notify = this;
+    withUIActive(new Runnable() {
+      public void run() {
+        // In case there was already another DiskLoader.
+        cancel.run();
+        dismissFragment(FRAGMENT_LOADING);
+
+        mDiskLoader = new DiskLoader(notify, mConfigFile, image);
+        if (mDiskLoader.willBeSlow()) {
+          new SpecialProgressDialog(cancel).show(getSupportFragmentManager(),
+                                                 FRAGMENT_LOADING);
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+          mDiskLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } else {
+          mDiskLoader.execute();
+        }
+      }
+    });
   }
 
   private DiskImage getBootDiskImage(Intent intent) {
@@ -200,14 +242,20 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private void boot() {
     final DiskImage image = getBootDiskImage(getIntent());
     if (image != null) {
-      loadDiskImage(image);
+      prepareDiskImage(image);
     } else {
       mConfigFile.defaultConfig();
       getThread().allowPowerOn();
-      mKegsView.postDelayed(new Runnable() { public void run() {
-        new DiskImageFragment().show(getSupportFragmentManager(),
-                                     FRAGMENT_DISKIMAGE);
-      } }, 1000);
+      mKegsView.postDelayed(new Runnable() {
+        public void run() {
+          withUIActive(new Runnable() {
+            public void run() {
+              new DiskImageFragment().show(getSupportFragmentManager(),
+                                           FRAGMENT_DISKIMAGE);
+            }
+          });
+        }
+      }, 1000);
     }
   }
 
@@ -229,19 +277,23 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           "http://jsan.co/KEGS/" + mRomfile,
           mConfigFile.getConfigPath() + "/" + mRomfile);
     }
-    protected void onPostExecute(Boolean success) {
-      final SherlockDialogFragment frag = (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
-      if (frag != null) {
-        frag.dismiss();
-      }
-      if (!success) {
-        if (!isCancelled()) {
-          final SherlockDialogFragment dialog = new ErrorDialogFragment();
-          dialog.show(getSupportFragmentManager(), FRAGMENT_ERROR);
+    protected void onPostExecute(final Boolean success) {
+      withUIActive(new Runnable() {
+        public void run() {
+          final SherlockDialogFragment frag = (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
+          if (frag != null) {
+            frag.dismiss();
+          }
+          if (!success) {
+            if (!isCancelled()) {
+              final Runnable runnable = new Runnable() { public void run() { finish(); } };
+              new ErrorDialogFragment(R.string.rom_error, runnable).show(getSupportFragmentManager(), FRAGMENT_ERROR);
+            }
+          } else {
+            boot();
+          }
         }
-      } else {
-        boot();
-      }
+      });
     }
   }
 
@@ -266,53 +318,6 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     public void onCancel(DialogInterface dialog) {
       super.onCancel(dialog);
       finish();
-    }
-  }
-
-  class ErrorDialogFragment extends SherlockDialogFragment {
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-      AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-      builder.setMessage(getResources().getText(R.string.rom_error));
-      final AlertDialog dialog = builder.create();
-      dialog.setCanceledOnTouchOutside(false);  // prevent accidental dismissal
-      return dialog;
-    }
-
-    @Override
-    public void onCancel(DialogInterface dialog) {
-      super.onCancel(dialog);
-      finish();
-    }
-
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-      super.onDismiss(dialog);
-      finish();
-    }
-  }
-
-  class AssetFragment extends SherlockDialogFragment {
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-      ProgressDialog dialog = new ProgressDialog(getActivity());
-      // TODO: should probably use an XML layout for this.
-      dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-      dialog.setMessage(getResources().getText(R.string.asset_loading));
-      dialog.setProgressNumberFormat(null);
-      if (android.os.Build.VERSION.SDK_INT >= 11) {
-        dialog.setProgressPercentFormat(null);
-      }
-      dialog.setIndeterminate(true);
-      dialog.setCancelable(false);
-      dialog.setCanceledOnTouchOutside(false);
-      return dialog;
-    }
-
-    @Override
-    public void onCancel(DialogInterface dialog) {
-      super.onCancel(dialog);
-      mDownloadAborted = true;
     }
   }
 
@@ -447,22 +452,18 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     if (image == null) {
       return;  // Nothing to do.
     }
-    dismissFragment(FRAGMENT_ROM);  // Note: should probably bail if visible.
-    dismissFragment(FRAGMENT_SPEED);
-    dismissFragment(FRAGMENT_DISKIMAGE);
-    dismissFragment(FRAGMENT_SWAPDISK);
-
-    // Ask the user what to do with this new disk image.
-    new SwapDiskFragment(image).show(getSupportFragmentManager(),
-                                     FRAGMENT_SWAPDISK);
+    image.action = DiskImage.ASK;
+    prepareDiskImage(image);
   }
 
   @Override
-  protected void onNewIntent(Intent intent) {
+  protected void onNewIntent(final Intent intent) {
     // "An activity will always be paused before receiving a new intent."
-    // Being paused means we can't show a dialog here.  Tell onResume to do it.
-    setIntent(intent);
-    mHaveNewIntent = true;
+    withUIActive(new Runnable() {
+      public void run() {
+        handleNewIntent(intent);
+      }
+    });
   }
 
   @Override
@@ -530,8 +531,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
     final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {
-      final SherlockDialogFragment chooseRom = new RomDialogFragment();
-      chooseRom.show(getSupportFragmentManager(), FRAGMENT_ROM);
+      new RomDialogFragment().show(getSupportFragmentManager(), FRAGMENT_ROM);
     } else {
       boot();
     }
@@ -544,6 +544,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     if (mKegsView instanceof KegsViewGL) {
       mKegsView.onPause();
     }
+    mPaused = true;
   }
 
   @Override
@@ -553,15 +554,18 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     if (mKegsView instanceof KegsViewGL) {
       mKegsView.onResume();
     }
-    if (mHaveNewIntent) {
-      mHaveNewIntent = false;
-      handleNewIntent(getIntent());
+    mPaused = false;
+
+    Runnable runnable;
+    while ((runnable = mResumeQueue.poll()) != null) {
+      runnable.run();
     }
   }
 
   @Override
   protected void onDestroy() {
     super.onDestroy();
+    mResumeQueue.clear();
     Log.w("kegs", "onDestroy called, halting");
     // Force process to exit.  We cannot handle another onCreate
     // once a KegsView has been active.  (JNI kegsmain has already run)
