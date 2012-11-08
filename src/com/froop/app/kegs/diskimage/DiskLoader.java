@@ -13,6 +13,7 @@ import java.util.zip.ZipEntry;
 class DiskLoader extends AsyncTask<Void, Void, Boolean> {
   interface ImageReady {
     void onImageReady(boolean result, DiskImage image);
+    void onImageCancelled(boolean result, DiskImage image);
   }
 
   private ImageReady mNotify;
@@ -60,7 +61,8 @@ class DiskLoader extends AsyncTask<Void, Void, Boolean> {
   }
 
   private Boolean extractImage() {
-    if (mImage.origin == DiskImage.ERROR) {
+    if (mImage.action == DiskImage.CANCEL) {
+      cancel(true);
       return false;
     }
 
@@ -134,7 +136,7 @@ class DiskLoader extends AsyncTask<Void, Void, Boolean> {
   }
 
   protected void onCancelled(final Boolean result) {
-    mNotify.onImageReady(result, mImage);
+    mNotify.onImageCancelled(result, mImage);
   }
 
   protected void onPostExecute(final Boolean result) {

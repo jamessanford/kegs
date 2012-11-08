@@ -54,6 +54,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
   private boolean mPaused = false;
   final ArrayDeque<Runnable> mResumeQueue = new ArrayDeque<Runnable>();
+  final Runnable mErrorFinish = new Runnable() { public void run() { finish(); } };
 
   private DiskLoader mDiskLoader = null;
 
@@ -156,14 +157,28 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     });
   }
 
+  public void onImageCancelled(final boolean result, final DiskImage image) {
+    if (getThread().nowWaitingForPowerOn()) {
+      // Emulator never powered on and the user aborted.
+      finish();
+    }
+  }
+
   public void onImageReady(final boolean result, final DiskImage image) {
     mDiskLoader = null;
     withUIActive(new Runnable() {
       public void run() {
         dismissFragment(FRAGMENT_LOADING);
         if (!result) {
-          // TODO: Consider not showing the error if it was cancelled.
-          new ErrorDialogFragment(R.string.image_error, null).show(getSupportFragmentManager(), FRAGMENT_ERROR);
+          final Runnable cancel;
+          if (getThread().nowWaitingForPowerOn()) {
+            // Emulator never powered on and we failed, exit when user clicks OK.
+            cancel = mErrorFinish;
+          } else {
+            cancel = null;
+          }
+          new ErrorDialogFragment(R.string.image_error, cancel).show(
+                getSupportFragmentManager(), FRAGMENT_ERROR);
         } else if (image.action != DiskImage.ASK) {
           loadDiskImage(image);
         } else {
@@ -286,8 +301,8 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           }
           if (!success) {
             if (!isCancelled()) {
-              final Runnable runnable = new Runnable() { public void run() { finish(); } };
-              new ErrorDialogFragment(R.string.rom_error, runnable).show(getSupportFragmentManager(), FRAGMENT_ERROR);
+              new ErrorDialogFragment(R.string.rom_error, mErrorFinish).show(
+                    getSupportFragmentManager(), FRAGMENT_ERROR);
             }
           } else {
             boot();

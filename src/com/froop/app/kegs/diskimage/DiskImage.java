@@ -14,12 +14,12 @@ class DiskImage {
   public static final int ASSET = 0;
   public static final int DOWNLOAD = 1;
   public static final int LOCALFILE = 2;
-  public static final int ERROR = 3;
 
   // action
   public static final int BOOT = 0;
   public static final int SWAP = 1;
   public static final int ASK = 2;
+  public static final int CANCEL = 3;
 
   public String filename;
   public String drive;

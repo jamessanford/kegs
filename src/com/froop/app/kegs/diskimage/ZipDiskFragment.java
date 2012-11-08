@@ -63,7 +63,7 @@ public class ZipDiskFragment extends SherlockDialogFragment {
     // TODO: Ick.  All this just so that whoever opened this fragment
     //             will get a DiskLoader callback.
     mImage.filename = "";
-    mImage.origin = DiskImage.ERROR;
+    mImage.action = DiskImage.CANCEL;
     ((KegsMain)getActivity()).runDiskLoader(mImage);
   }
 
