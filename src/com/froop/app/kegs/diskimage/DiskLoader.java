@@ -130,9 +130,7 @@ class DiskLoader extends AsyncTask<Void, Void, Boolean> {
   }
 
   protected Boolean doInBackground(Void... params) {
-    Boolean result = extractImage();
-    nativeSync();  // Flush new disk images before claiming they are ready.
-    return result;
+    return extractImage();
   }
 
   protected void onCancelled(final Boolean result) {
@@ -142,7 +140,4 @@ class DiskLoader extends AsyncTask<Void, Void, Boolean> {
   protected void onPostExecute(final Boolean result) {
     mNotify.onImageReady(result, mImage);
   }
-
-  // See jni/android_driver.c:nativeSync()
-  private native void nativeSync();
 }

@@ -263,7 +263,7 @@ void android_config_init(char *output, int maxlen) {
 }
 
 JNIEXPORT void JNICALL
-Java_com_froop_app_kegs_DiskLoader_nativeSync( JNIEnv* env, jobject thiz) {
+Java_com_froop_app_kegs_CopyHelper_nativeSync( JNIEnv* env, jobject thiz) {
   sync();
   sync();
 }

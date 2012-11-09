@@ -54,6 +54,7 @@ public class CopyHelper {
     if (mPreface != null) {
       out.write(mPreface, 0, mPreface.length);
     }
+    int totalread = 0;
     do {
       int numread = mInput.read(buf);
       if (numread <= 0) {
@@ -61,11 +62,18 @@ public class CopyHelper {
       } else {
         out.write(buf, 0, numread);
       }
+      totalread += numread;
     } while (true);
     out.close();
+    if (totalread > 400 * 1024) {
+      nativeSync();
+    }
     output_file.renameTo(final_file);
     if (mClose) {
       mInput.close();
     }
   }
+
+  // See jni/android_driver.c:nativeSync()
+  private native void nativeSync();
 }
