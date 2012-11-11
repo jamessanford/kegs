@@ -399,6 +399,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
     // BUG: no overflow menu on devices with menu button
     // BUG: when action bar is hidden, menu bar only shows overflow items
     getSupportMenuInflater().inflate(R.menu.actions, menu);
