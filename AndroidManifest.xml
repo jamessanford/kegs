@@ -25,8 +25,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.zip" />
-<data android:scheme="file" android:host="*" android:mimeType="*/*" android:pathPattern=".*\\.ZIP" />
+<data android:scheme="file" android:host="*" android:mimeType="application/zip" />
             </intent-filter>
 
             <intent-filter>
@@ -36,40 +35,40 @@
 
 <!-- Yeah, this is pretty much awful.  Blame PatternMatcher -->
 
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.2mg" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.dsk" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.nib" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.hdv" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.po" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.do" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*2mg" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*dsk" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*nib" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*hdv" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*po" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*do" />
 
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.2MG" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.DSK" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.NIB" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.HDV" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.PO" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.DO" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*2MG" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*DSK" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*NIB" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*HDV" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*PO" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*DO" />
 
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.2mg.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.dsk.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.nib.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.hdv.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.po.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.do.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*2mg.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*dsk.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*nib.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*hdv.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*po.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*do.gz" />
 
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.2MG.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.DSK.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.NIB.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.HDV.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.PO.gz" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.DO.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*2MG.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*DSK.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*NIB.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*HDV.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*PO.gz" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*DO.gz" />
 
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.2MG.GZ" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.DSK.GZ" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.NIB.GZ" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.HDV.GZ" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.PO.GZ" />
-<data android:scheme="file" android:host="*" android:pathPattern=".*\\.DO.GZ" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*2MG.GZ" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*DSK.GZ" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*NIB.GZ" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*HDV.GZ" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*PO.GZ" />
+<data android:scheme="file" android:host="*" android:pathPattern=".*DO.GZ" />
 
             </intent-filter>
 
