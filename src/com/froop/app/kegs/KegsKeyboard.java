@@ -127,23 +127,23 @@ class KegsKeyboard {
       // return true;
     }
     if (event.getAction() == KeyEvent.ACTION_DOWN) {
-      final int modifiers = event.getModifiers();
-      handled = keyModifiers(modifiers, false);
+      final int meta = event.getMetaState();
+      handled = keyModifiers(meta, false);
       final int keyCode = event.getKeyCode();
       if (keymap != null && keymap.isPrintingKey(keyCode)) {
-        int meta = event.getMetaState();
         // Remove meta states that we handle to get a meaningful ASCII result.
-        meta &= ~(KeyEvent.META_ALT_LEFT_ON | KeyEvent.META_ALT_RIGHT_ON | KeyEvent.META_ALT_ON);
-        meta &= ~(KeyEvent.META_META_LEFT_ON | KeyEvent.META_META_RIGHT_ON | KeyEvent.META_META_ON);
-        meta &= ~(KeyEvent.META_CTRL_LEFT_ON | KeyEvent.META_CTRL_RIGHT_ON | KeyEvent.META_CTRL_ON);
-        int key_id = keymap.get(keyCode, meta);
+        int reduced_meta = meta;
+        reduced_meta &= ~(KeyEvent.META_ALT_LEFT_ON | KeyEvent.META_ALT_RIGHT_ON | KeyEvent.META_ALT_ON);
+        reduced_meta &= ~(KeyEvent.META_META_LEFT_ON | KeyEvent.META_META_RIGHT_ON | KeyEvent.META_META_ON);
+        reduced_meta &= ~(KeyEvent.META_CTRL_LEFT_ON | KeyEvent.META_CTRL_RIGHT_ON | KeyEvent.META_CTRL_ON);
+        int key_id = keymap.get(keyCode, reduced_meta);
         handled = handleAsciiKey(key_id) | handled;
       } else {
         handled = handleOtherKey(keyCode) | handled;
       }
       // Release any modifiers that may have been pressed.
       // BUG: ACTION_UP for this is not working, so just toggle them here.
-      handled = keyModifiers(modifiers, true) | handled;
+      handled = keyModifiers(meta, true) | handled;
     }
     return handled;
   }
