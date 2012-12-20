@@ -88,7 +88,8 @@ class DiskImage implements Comparable {
   }
 
   public String getTitle() {
-    return getBaseFilename();
+    // Use better names for included assets.
+    return AssetImages.translateTitle(getBaseFilename());
   }
 
   public int getIconId() {

@@ -41,6 +41,16 @@ class AssetImages extends AsyncTask<Void, Void, Boolean> {
     checkOldImagePath("System 6.hdv");
   }
 
+  public static String translateTitle(final String title) {
+    if (title.equals("System 6.hdv")) {
+      return "System 6";
+    } else if (title.equals("XMAS_DEMO.2MG")) {
+      return "X-MAS Demo";
+    } else {
+      return title;
+    }
+  }
+
   protected Boolean doInBackground(Void... params) {
     mConfigFile.ensureAssetCopied(mConfigFile.getImagePath(), "XMAS_DEMO.2MG");
     mConfigFile.ensureAssetCopied(mConfigFile.getImagePath(),

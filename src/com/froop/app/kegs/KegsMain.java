@@ -269,7 +269,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
             }
           });
         }
-      }, 1000);
+      }, 2000);
     }
   }
 
