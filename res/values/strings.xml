@@ -9,6 +9,7 @@
   <string name="image_error">Unable to load requested disk image.</string>
   <string name="error_title">Error</string>
   <string name="dialog_ok">OK</string>
+  <string name="dialog_cancel">Cancel</string>
 
   <string-array name="rom_choices">
     <item>I have a ROM 01</item>

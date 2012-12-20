@@ -2,8 +2,6 @@ package com.froop.app.kegs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -17,35 +15,105 @@ import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockDialogFragment;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+
 public class DiskImageFragment extends SherlockDialogFragment {
-  private String[] mImages = {
-    "System 6", "X-MAS Demo (FTA)", "Prince of Persia"};
+  private ArrayList<DiskImage> mFoundImages = new ArrayList<DiskImage>();
+
+  // TODO: This should be the title name, and then we should index to it.
+  private static int mLastSelected = -1;
+
+  public DiskImageFragment(final ConfigFile config) {
+    super();
+
+    // NOTE: We scan the directories in the UI thread before displaying
+    // the dialog.  The user is waiting, but considering this is just
+    // peeking at the directory listing on local disk it should be quick.
+    // (less than 500ms)
+
+    // Also, we scan each time the dialog is displayed, in case the
+    // user adds files in the mean time.  If we wanted to be fancy,
+    // we could use a special adapter, rescan every second, invalidate
+    // the list, etc.
+    updateFoundImages(config);
+  }
+
+  private void updateFoundImages(final ConfigFile config) {
+    String[] dirs = config.getAllImageDirs();
+    for (String dir : dirs) {
+      String[] files = new File(dir).list();
+      if (files != null) {
+        for (String filename : files) {
+          if (!filename.startsWith(".") && DiskImage.isDiskImageFilename(filename)) {
+            final DiskImage image = DiskImage.fromPath(dir + "/" + filename);
+            if (image != null) {
+              mFoundImages.add(image);
+            }
+          }
+        }
+      }
+    }
+    Collections.sort(mFoundImages);
+  }
 
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
-    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+    final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
     builder.setTitle(R.string.diskimage_title);
-    builder.setItems(mImages, new DialogInterface.OnClickListener() {
+    final DiskImageAdapter items = new DiskImageAdapter(getActivity());
+    builder.setSingleChoiceItems(items, mLastSelected, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int item) {
         dismiss();
-        DiskImage image = null;
-
-        if (item == 0) {
-          image = new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7, DiskImage.ASSET);
-        } else if (item == 1) {
-          image = new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.ASSET);
-        } else if (item == 2) {
-          // TODO: There should be an adapter on the ListView instead.
-          image = new DiskImage("prince.2mg", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.DOWNLOAD);
-        }
-
+        mLastSelected = item;
+        DiskImage image = mFoundImages.get(item);
         if (image != null) {
           ((KegsMain)getActivity()).prepareDiskImage(image);
         }
       }
     });
+    builder.setNegativeButton(R.string.dialog_cancel,
+                              new DialogInterface.OnClickListener() {
+      public void onClick(DialogInterface dialog, int button) {
+        dismiss();
+      }
+    });
     final AlertDialog dialog = builder.create();
     return dialog;
+  }
+
+
+  // This whole adapter is just so that we can try using custom views,
+  // or use isEnabled()==false to create a separator line in the ListView.
+  public class DiskImageAdapter extends BaseAdapter {
+    private LayoutInflater mInflater;
+
+    public DiskImageAdapter(Context context) {
+      mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    }
+
+    public Object getItem(int pos) {
+      return pos;
+    }
+
+    public long getItemId(int pos) {
+      return pos;
+    }
+
+    public int getCount() {
+      return mFoundImages.size();
+    }
+
+    public View getView(int pos, View convertView, ViewGroup parent) {
+      if (convertView == null) {
+        convertView = mInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+      }
+      int item = pos;  // BUG: should be getItem(pos)
+      String title = mFoundImages.get(item).getTitle();
+      ((TextView)(convertView.findViewById(android.R.id.text1))).setText(title);
+      return convertView;
+    }
   }
 }
