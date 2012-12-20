@@ -30,7 +30,13 @@
 
   <string-array name="swapdisk_choices">
     <item>Ignore this disk</item>
-    <item>Swap to this disk</item>
+    <item>Put disk into drive</item>
+    <item>Boot this disk</item>
+  </string-array>
+
+  <string-array name="swapdisk_hd_choices">
+    <item>Ignore this disk</item>
+    <item>Attach hard drive</item>
     <item>Boot this disk</item>
   </string-array>
 

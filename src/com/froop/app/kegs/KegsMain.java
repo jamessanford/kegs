@@ -57,6 +57,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   final Runnable mErrorFinish = new Runnable() { public void run() { finish(); } };
 
   private DiskLoader mDiskLoader = null;
+  private int mNextDriveNumber = 2;
 
   private void withUIActive(final Runnable runnable) {
     if(!mPaused) {
@@ -151,6 +152,14 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           mConfigFile.setConfig(image);
           getThread().allowPowerOn();
         } else if (image.action == DiskImage.SWAP) {
+          if (image.isHardDrive()) {
+            // Probably not the right place for this.
+            image.updateDriveNumber(mNextDriveNumber);
+            mNextDriveNumber += 1;
+            if (mNextDriveNumber > 7) {
+              mNextDriveNumber = 2;
+            }
+          }
           getThread().getEventQueue().add(image.getDiskImageEvent());
         }
       }

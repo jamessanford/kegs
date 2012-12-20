@@ -21,8 +21,8 @@ public class SwapDiskFragment extends SherlockDialogFragment {
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
     builder.setTitle(mImage.getTitle());
     builder.setIcon(mImage.getIconId());
-    builder.setItems(R.array.swapdisk_choices,
-        new DialogInterface.OnClickListener() {
+    final int choices = mImage.isHardDrive() ? R.array.swapdisk_hd_choices : R.array.swapdisk_choices;
+    builder.setItems(choices, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int item) {
         dismiss();
         if (item == 0) {

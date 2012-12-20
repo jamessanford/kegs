@@ -116,6 +116,14 @@ class DiskImage implements Comparable {
     }
   }
 
+  public void updateDriveNumber(int drive) {
+    this.drive = this.drive.substring(0, 3) + drive;
+  }
+
+  public boolean isHardDrive() {
+    return this.drive.substring(0, 2).equals("s7");
+  }
+
   public int compareTo(Object other) {
     if (other instanceof DiskImage) {
       return this.getTitle().compareToIgnoreCase(((DiskImage)other).getTitle());
