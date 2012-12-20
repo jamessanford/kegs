@@ -4,7 +4,10 @@ import android.util.Log;
 import java.lang.Integer;
 import java.io.File;
 
-class DiskImage {
+class DiskImage implements Comparable {
+  // NOTE: "this class has a natural ordering that is inconsistent with equals"
+  //       (sorted on the filename excluding path, case insensitive)
+
   // template
   public static final String BOOT_SLOT_5 = "boot_slot_5";
   public static final String BOOT_SLOT_6 = "boot_slot_6";
@@ -109,6 +112,14 @@ class DiskImage {
     } else {
       Log.e("kegs", "disk image " + this.filename + " has bad drive " + this.drive);
       return null;
+    }
+  }
+
+  public int compareTo(Object other) {
+    if (other instanceof DiskImage) {
+      return this.getTitle().compareToIgnoreCase(((DiskImage)other).getTitle());
+    } else {
+      throw new ClassCastException();
     }
   }
 }

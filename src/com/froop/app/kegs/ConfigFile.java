@@ -1,6 +1,7 @@
 package com.froop.app.kegs;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 import java.io.File;
 import java.io.BufferedInputStream;
@@ -37,6 +38,17 @@ class ConfigFile {
 
   public String getCachePath() {
     return mContext.getExternalCacheDir().getPath();
+  }
+
+  public String[] getAllImageDirs() {
+    String externalStorage = Environment.getExternalStorageDirectory().getPath();
+    String[] dirs = {
+      getImagePath(),
+      externalStorage,
+      externalStorage + "/kegs",
+      externalStorage + "/Download"
+    };
+    return dirs;
   }
 
   public void ensureAssetCopied(String destPath, String zipfile, String exampleFile) {
