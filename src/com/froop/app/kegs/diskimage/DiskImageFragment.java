@@ -25,8 +25,13 @@ public class DiskImageFragment extends SherlockDialogFragment {
   // TODO: This should be the title name, and then we should index to it.
   private static int mLastSelected = -1;
 
-  public DiskImageFragment(final ConfigFile config) {
+  // DiskImage.BOOT, DiskImage.ASK, etc.
+  private final int mDiskImageAction;
+
+  public DiskImageFragment(final ConfigFile config, int image_action) {
     super();
+
+    mDiskImageAction = image_action;
 
     // NOTE: We scan the directories in the UI thread before displaying
     // the dialog.  The user is waiting, but considering this is just
@@ -70,6 +75,7 @@ public class DiskImageFragment extends SherlockDialogFragment {
         mLastSelected = item;
         DiskImage image = mFoundImages.get(item);
         if (image != null) {
+          image.action = mDiskImageAction;
           ((KegsMain)getActivity()).prepareDiskImage(image);
         }
       }

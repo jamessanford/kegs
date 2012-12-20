@@ -265,7 +265,9 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
         public void run() {
           withUIActive(new Runnable() {
             public void run() {
-              new DiskImageFragment(mConfigFile).show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
+              if (findFragment(FRAGMENT_DISKIMAGE) == null) {
+                new DiskImageFragment(mConfigFile, DiskImage.BOOT).show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
+              }
             }
           });
         }
@@ -437,7 +439,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       supportInvalidateOptionsMenu();  // update icon
       return true;
     } else if (item_id == R.id.action_diskimage) {
-      new DiskImageFragment(mConfigFile).show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
+      new DiskImageFragment(mConfigFile, DiskImage.ASK).show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
       return true;
     } else if (item_id == R.id.action_more_keys) {
       final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
@@ -452,8 +454,12 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     return false;
   }
 
-  private boolean dismissFragment(String tag) {
-    final SherlockDialogFragment frag = (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(tag);
+  private SherlockDialogFragment findFragment(final String tag) {
+    return (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(tag);
+  }
+
+  private boolean dismissFragment(final String tag) {
+    final SherlockDialogFragment frag = findFragment(tag);
     if (frag == null) {
       return false;
     } else {
