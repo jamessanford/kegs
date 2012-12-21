@@ -53,11 +53,11 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private long mScreenSizeTime = 0;
 
   private boolean mPaused = false;
-  final ArrayDeque<Runnable> mResumeQueue = new ArrayDeque<Runnable>();
-  final Runnable mErrorFinish = new Runnable() { public void run() { finish(); } };
+  private final ArrayDeque<Runnable> mResumeQueue = new ArrayDeque<Runnable>();
+  private final Runnable mErrorFinish = new Runnable() { public void run() { finish(); } };
 
   private DiskLoader mDiskLoader = null;
-  private int mNextDriveNumber = 2;
+  private final DiskImage.DriveNumber mDriveNumber = new DiskImage.DriveNumber();
 
   private void withUIActive(final Runnable runnable) {
     if(!mPaused) {
@@ -153,12 +153,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           getThread().allowPowerOn();
         } else if (image.action == DiskImage.SWAP) {
           if (image.isHardDrive()) {
-            // Probably not the right place for this.
-            image.updateDriveNumber(mNextDriveNumber);
-            mNextDriveNumber += 1;
-            if (mNextDriveNumber > 7) {
-              mNextDriveNumber = 2;
-            }
+            image.chooseDriveNumber(mDriveNumber);
           }
           getThread().getEventQueue().add(image.getDiskImageEvent());
         }

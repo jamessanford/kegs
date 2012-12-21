@@ -116,8 +116,12 @@ class DiskImage implements Comparable {
     }
   }
 
-  public void updateDriveNumber(int drive) {
-    this.drive = this.drive.substring(0, 3) + drive;
+  public void chooseDriveNumber(final DriveNumber driveNumber) {
+    this.drive = this.drive.substring(0, 3) + driveNumber.drive;
+    driveNumber.drive++;
+    if (driveNumber.drive > 7) {
+      driveNumber.drive = 2;
+    }
   }
 
   public boolean isHardDrive() {
@@ -130,5 +134,9 @@ class DiskImage implements Comparable {
     } else {
       throw new ClassCastException();
     }
+  }
+
+  static class DriveNumber {
+    public int drive = 2;
   }
 }
