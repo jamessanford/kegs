@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.AsyncTask;
@@ -49,7 +50,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private TouchJoystick mJoystick;
 
   private boolean mModeMouse = true;
-
+  private boolean mOverrideActionBar = false;
   private long mScreenSizeTime = 0;
 
   private boolean mPaused = false;
@@ -345,7 +346,24 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     return mKegsThread;
   }
 
+  // Designate the upper right corner as a special zone that
+  // toggles the action bar.
+  private Rect getSpecialActionBarRect(BitmapSize bitmapSize) {
+    final int left = (int)(bitmapSize.getScreenWidth() * 0.80);
+    final int top = 0;
+    final int right = bitmapSize.getScreenWidth();
+    final int bottom = (int)(bitmapSize.getScreenHeight() * 0.10);
+
+    // Only have a special zone if the action bar is not supposed to be visible.
+    if (!bitmapSize.showActionBar() && left != 0 && bottom != 0) {
+      return new Rect(left, top, right, bottom);
+    } else {
+      return null;
+    }
+  }
+
   private void updateActionBar(boolean showActionBar) {
+    showActionBar = mOverrideActionBar || showActionBar;
     final ActionBar actionBar = getSupportActionBar();
     if (actionBar != null && showActionBar) {
       actionBar.show();
@@ -374,6 +392,13 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     updateActionBar(bitmapSize.showActionBar());
 
     mKegsView.updateScreenSize(bitmapSize);
+    mKegsTouch.setSpecialZone(
+      new TouchSpecialZone(getSpecialActionBarRect(bitmapSize)) {
+        public void activate() {
+          mOverrideActionBar = !mOverrideActionBar;
+          updateActionBar(mOverrideActionBar);
+        }
+      });
 
     // Force another redraw of the bitmap into the canvas.  Bug workaround.
     getThread().updateScreen();

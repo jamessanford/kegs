@@ -67,6 +67,14 @@ class BitmapSize {
     }
   }
 
+  public int getScreenWidth() {
+    return mWidth;
+  }
+
+  public int getScreenHeight() {
+    return mHeight;
+  }
+
   public int getViewWidth() {
     return (int)(Const.A2Width * mScaleFactorX);
   }

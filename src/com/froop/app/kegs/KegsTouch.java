@@ -1,6 +1,7 @@
 package com.froop.app.kegs;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -31,12 +32,18 @@ class KegsTouch {
   private static final int LONG_PRESS = 1;
   private static final int LONG_PRESS_TIMEOUT = ViewConfiguration.getLongPressTimeout();
 
+  private TouchSpecialZone mSpecialZone = null;
+
   public KegsTouch(Context context, ConcurrentLinkedQueue q) {
     mEventQueue = q;
 
     final ViewConfiguration configuration = ViewConfiguration.get(context);
     int touchSlop = configuration.getScaledTouchSlop();
     mTouchSlopSquare = touchSlop * touchSlop;
+  }
+
+  public void setSpecialZone(TouchSpecialZone zone) {
+    mSpecialZone = zone;
   }
 
   private Handler mHandler = new Handler() {
@@ -120,10 +127,13 @@ class KegsTouch {
           }
         } else if (!checkPrimarySlop(event, pointerIndex)) {
           // It didn't move while it was down, so send a click event.
-          mButton1 = 1;
-          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
-          mButton1 = 0;
-          mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+          if (mSpecialZone != null &&
+              !mSpecialZone.click(event, pointerIndex)) {
+            mButton1 = 1;
+            mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+            mButton1 = 0;
+            mEventQueue.add(new Event.MouseKegsEvent(0, 0, mButton1, 1));
+          }
         }
         mPrimaryId = -1;
         mPrimaryPastSlop = false;
