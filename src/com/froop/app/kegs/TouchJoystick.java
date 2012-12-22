@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 class TouchJoystick {
   private ConcurrentLinkedQueue mEventQueue;
+  private TouchSpecialZone mSpecialZone = null;
   private int mTouchSlop;
 
   private int mMotionPointer = -1;  // active pointer Id
@@ -31,6 +32,10 @@ class TouchJoystick {
 // TODO: Avoid deprecated interface, read docs on replacement:
 // final ViewConfiguration configuration = ViewConfiguration.get(context);
 // mTouchSlop = configuration.getScaledTouchSlop();
+  }
+
+  public void setSpecialZone(TouchSpecialZone zone) {
+    mSpecialZone = zone;
   }
 
   private void reset_tracks(boolean resetA, boolean resetB) {
@@ -134,8 +139,10 @@ class TouchJoystick {
         if (mMotionPointer == -1) {
           // No active movement, assume this click/release should be a button press/release.
           // TODO it probably shouldn't be sent if they had their finger down for more than 500ms or so.
-          mButton1 = 1;
-          mEventQueue.add(new Event.JoystickKegsEvent(0xFFFF, 0xFFFF, mButton1));
+          if (mSpecialZone != null && !mSpecialZone.click(e, pointerId)) {
+            mButton1 = 1;
+            mEventQueue.add(new Event.JoystickKegsEvent(0xFFFF, 0xFFFF, mButton1));
+          }
         }
         // SEND JOYSTICK BUTTON UP
         mButton1 = 0;

@@ -392,13 +392,17 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     updateActionBar(bitmapSize.showActionBar());
 
     mKegsView.updateScreenSize(bitmapSize);
-    mKegsTouch.setSpecialZone(
-      new TouchSpecialZone(getSpecialActionBarRect(bitmapSize)) {
+
+
+    // Update special click zone that toggles the ActionBar.
+    final TouchSpecialZone zone = new TouchSpecialZone(getSpecialActionBarRect(bitmapSize)) {
         public void activate() {
           mOverrideActionBar = !mOverrideActionBar;
           updateActionBar(mOverrideActionBar);
         }
-      });
+      };
+    mKegsTouch.setSpecialZone(zone);
+    mJoystick.setSpecialZone(zone);
 
     // Force another redraw of the bitmap into the canvas.  Bug workaround.
     getThread().updateScreen();
