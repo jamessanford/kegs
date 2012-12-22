@@ -113,8 +113,15 @@ public class DiskImageFragment extends SherlockDialogFragment {
     }
 
     public View getView(int pos, View convertView, ViewGroup parent) {
+      int layoutid;
+      if (android.os.Build.VERSION.SDK_INT >= 11) {
+        layoutid = android.R.layout.simple_list_item_1;
+      } else {
+        layoutid = android.R.layout.select_dialog_item;
+      }
+
       if (convertView == null) {
-        convertView = mInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+        convertView = mInflater.inflate(layoutid, parent, false);
       }
       int item = pos;  // BUG: should be getItem(pos)
       String title = mFoundImages.get(item).getTitle();
