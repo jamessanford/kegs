@@ -513,21 +513,6 @@ void x_key_special(int key_id) {
       g_limit_speed = key_id;
       g_config_kegs_update_needed = 1;
       break;
-    case 10:
-    case 11:
-    case 12:
-    case 13:
-    case 14:
-    case 15:
-    case 16:
-    case 17:
-    case 18:
-    case 19:
-      // Set startup slot in BRAM for ROM 1 and ROM 3.  Slot 0 is 'scan'.
-      clk_bram_set(0, 0x28, key_id - 10);
-      clk_bram_set(1, 0x28, key_id - 10);
-      g_config_kegs_update_needed = 1;
-      break;
     case 120:
       set_halt(HALT_WANTTOQUIT);  // request kegsmain to exit
       break;
