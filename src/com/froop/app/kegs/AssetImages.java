@@ -41,6 +41,17 @@ class AssetImages extends AsyncTask<Void, Void, Boolean> {
     checkOldImagePath("System 6.hdv");
   }
 
+  public static boolean isAssetFilename(final String filename) {
+    // We have to ignore any temporary files that we are working on, too.
+    if (filename.equals("System 6.hdv") ||
+        filename.equals("XMAS_DEMO.2MG") ||
+        filename.equals("tmp_System 6.hdv") ||
+        filename.equals("tmp_XMAS_DEMO.2MG")) {
+      return true;
+    }
+    return false;
+  }
+
   public static String translateTitle(final String title) {
     if (title.equals("System 6.hdv")) {
       return "System 6";

@@ -51,7 +51,11 @@ public class DiskImageFragment extends SherlockDialogFragment {
       String[] files = new File(dir).list();
       if (files != null) {
         for (String filename : files) {
-          if (!filename.startsWith(".") && DiskImage.isDiskImageFilename(filename)) {
+          // NOTE: Checking each filename against the known asset image names
+          //       is a bit silly.
+          if (!filename.startsWith(".") &&
+              DiskImage.isDiskImageFilename(filename) &&
+              !AssetImages.isAssetFilename(filename)) {
             final DiskImage image = DiskImage.fromPath(dir + "/" + filename);
             if (image != null) {
               mFoundImages.add(image);
@@ -60,6 +64,9 @@ public class DiskImageFragment extends SherlockDialogFragment {
         }
       }
     }
+    // NOTE HACK.  These files may not exist yet, so we cannot use fromPath.
+    mFoundImages.add(new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7, DiskImage.ASSET));
+    mFoundImages.add(new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.ASSET));
     Collections.sort(mFoundImages);
   }
 
