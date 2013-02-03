@@ -58,3 +58,7 @@ int mac_send_audio(byte *ptr, int in_size);
 void child_sound_init_mac();
 void macsnd_init(word32 *shmaddr);
 
+/* Prototypes for android_sound_driver.c functions */
+int android_send_audio(byte *ptr, int in_size);
+void child_sound_init_android();
+void android_snd_init(word32 *shmaddr);
