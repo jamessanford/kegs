@@ -51,11 +51,11 @@ void U_STACK_TRACE();
 #define DRECIP_DCYCS_IN_16MS	(1.0 / (DCYCS_IN_16MS))
 
 #ifdef KEGS_LITTLE_ENDIAN
-# define BIGEND(a)    ((((a) >> 24) & 0xff) +			\
-			(((a) >> 8) & 0xff00) + 		\
-			(((a) << 8) & 0xff0000) + 		\
-			(((a) << 24) & 0xff000000))
-# define GET_BE_WORD16(a)	((((a) >> 8) & 0xff) + (((a) << 8) & 0xff00))
+# define BIGEND(a)	((((a & 0xff000000) >> 24)) + \
+			 (((a & 0x00ff0000) >> 8)) + \
+			 (((a & 0x0000ff00) << 8)) + \
+			 (((a & 0x000000ff) << 24)))
+# define GET_BE_WORD16(a)	((((a & 0xff00) >> 8)) + (((a & 0x00ff) << 8)))
 # define GET_BE_WORD32(a)	(BIGEND(a))
 #else
 # define BIGEND(a)	(a)
