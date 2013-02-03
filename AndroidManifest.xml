@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.froop.app.kegs"
     android:versionCode="6"
-    android:versionName="0.6beta">
+    android:versionName="0.6beta"
     android:installLocation="auto">
 
     <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="16" />
