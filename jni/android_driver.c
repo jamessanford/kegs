@@ -619,5 +619,7 @@ void x_release_kimage(Kimage* kimage_ptr)
 // OG Addding ratio
 int x_calc_ratio(float x,float y)
 {
+	// NOTE: This is a little bit slower, but is consistent time with each frame update.
+        //       Using this looks better as sleep() successfully syncs up with 1/60sec updates.
         return 1;
 }
