@@ -21,7 +21,14 @@ class ConfigFile {
 
   ConfigFile(Context context) {
     mContext = context;
-    mConfigPath = mContext.getExternalFilesDir(null).getPath();
+
+    File externalDir = mContext.getExternalFilesDir(null);
+    if (externalDir == null) {
+      // Use internal storage if external directory is not available.
+      externalDir = mContext.getFilesDir();
+    }
+
+    mConfigPath = externalDir.getPath();
   }
 
   public String getConfigFile() {
