@@ -48,7 +48,18 @@ class ConfigFile {
   }
 
   public String[] getAllImageDirs() {
-    String externalStorage = Environment.getExternalStorageDirectory().getPath();
+    // Return an array of pathnames that may contain disk images.
+    // The pathnames may not actually exist, that is OK.
+    String externalStorage;
+
+    File externalDir = Environment.getExternalStorageDirectory();
+    if (externalDir != null) {
+      externalStorage = externalDir.getPath();
+    } else {
+      // Try harder.  It is OK if this does not exist.
+      externalStorage = "/mnt/sdcard";
+    }
+
     String[] dirs = {
       getImagePath(),
       externalStorage,
