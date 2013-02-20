@@ -44,7 +44,12 @@ class ConfigFile {
   }
 
   public String getCachePath() {
-    return mContext.getExternalCacheDir().getPath();
+    File cacheDir = mContext.getExternalCacheDir();
+    if (cacheDir == null) {
+      // Use internal storage if external directory is not available.
+      cacheDir = mContext.getCacheDir();
+    }
+    return cacheDir.getPath();
   }
 
   public String[] getAllImageDirs() {
@@ -53,11 +58,11 @@ class ConfigFile {
     String externalStorage;
 
     File externalDir = Environment.getExternalStorageDirectory();
-    if (externalDir != null) {
-      externalStorage = externalDir.getPath();
-    } else {
+    if (externalDir == null) {
       // Try harder.  It is OK if this does not exist.
       externalStorage = "/mnt/sdcard";
+    } else {
+      externalStorage = externalDir.getPath();
     }
 
     String[] dirs = {
