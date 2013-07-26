@@ -391,6 +391,8 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
     mKegsView.updateScreenSize(bitmapSize);
 
+    // Update scale of mouse movements.
+    mKegsTouch.updateScale(bitmapSize.getScaleX(), bitmapSize.getScaleY());
 
     // Update special click zone that toggles the ActionBar.
     final TouchSpecialZone zone = new TouchSpecialZone(getSpecialActionBarRect(bitmapSize)) {
