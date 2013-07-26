@@ -566,12 +566,12 @@ check_input_events()
 
   // check if paused, first
   jclass cls = (*g_env)->GetObjectClass(g_env, g_thiz);
-  jmethodID mid = (*g_env)->GetMethodID(g_env, cls, "checkForPause", "()V");
+  jmethodID mid = (*g_env)->GetMethodID(g_env, cls, "checkForPause", "(I)V");
   (*g_env)->DeleteLocalRef(g_env, cls);
   if (mid == NULL) {
     return;
   }
-  (*g_env)->CallVoidMethod(g_env, g_thiz, mid);
+  (*g_env)->CallVoidMethod(g_env, g_thiz, mid, g_limit_speed);
 
   do {
     cls = (*g_env)->GetObjectClass(g_env, g_eventqueue);

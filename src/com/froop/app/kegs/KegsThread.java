@@ -3,6 +3,8 @@ package com.froop.app.kegs;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.util.Log;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -14,12 +16,13 @@ class KegsThread extends Thread {
 
   private String mConfigFile;  // full path to config_kegs
   private Bitmap mBitmap;
+  private final AtomicInteger mCurrentSpeed = new AtomicInteger(0);
   private final ReentrantLock mPauseLock = new ReentrantLock();
   private final ReentrantLock mPowerWait = new ReentrantLock();
 
   // Look also at mPauseLock.
-  private boolean mPaused = false;
-  private boolean mReady = false;     // 'true' will begin the native thread.
+  private final AtomicBoolean mPaused = new AtomicBoolean(false);
+  private final AtomicBoolean mReady = new AtomicBoolean(false);
 
   interface UpdateScreen {
     void updateScreen();
@@ -47,8 +50,9 @@ class KegsThread extends Thread {
   }
 
   // Called by native thread.
-  private void checkForPause() {
-    if (mPaused) {
+  private void checkForPause(int currentEmulationSpeed) {
+    mCurrentSpeed.set(currentEmulationSpeed);  // NOTE: This is a hack.
+    if (mPaused.get()) {
       mPauseLock.lock();
       // deadlock here until onResume.  Maybe not efficient.
       mPauseLock.unlock();
@@ -80,22 +84,22 @@ class KegsThread extends Thread {
   }
 
   public void onPause() {
-    if (!mReady) {
+    if (!mReady.get()) {
       return;  // bail out, we haven't started doing anything yet
     }
-    if (!mPaused) {
-      mPaused = true;
+    if (!mPaused.get()) {
+      mPaused.set(true);
       mPauseLock.lock();
     }
   }
 
   public void onResume() {
-    if (!mReady) {
+    if (!mReady.get()) {
       return;  // bail out, we haven't started doing anything yet
     }
     updateScreen();
-    if (mPaused) {
-      mPaused = false;
+    if (mPaused.get()) {
+      mPaused.set(false);
       mPauseLock.unlock();
     } else if (!isAlive()) {
       start();
@@ -108,7 +112,7 @@ class KegsThread extends Thread {
   }
 
   public void doPowerOff() {
-    if (!mReady) {
+    if (!mReady.get()) {
       return;  // bail out, we haven't started doing anything yet
     }
 
@@ -121,8 +125,8 @@ class KegsThread extends Thread {
 
   // Call from the UI thread only.
   public void allowPowerOn() {
-    if (!mReady) {
-      mReady = true;
+    if (!mReady.get()) {
+      mReady.set(true);
       onResume();  // Will start the thread if not already started.
       return;
     }
@@ -136,7 +140,7 @@ class KegsThread extends Thread {
 
   // Is native thread loop sitting around waiting for us to allow power on?
   public boolean nowWaitingForPowerOn() {
-    if (!mReady) {
+    if (!mReady.get()) {
       return true;  // bail out, we haven't started doing anything yet
     }
 
@@ -148,6 +152,11 @@ class KegsThread extends Thread {
     // Instead of a separate "control" event, key ids with bit 8 high are
     // special events.  See android_driver.c:x_key_special()
     getEventQueue().add(new Event.KeyKegsEvent(speed + 0x80, true));
+  }
+
+  public int getEmulationSpeed() {
+    // Equal to g_limit_speed inside KEGS.
+    return mCurrentSpeed.get();
   }
 
   public void doWarmReset() {
