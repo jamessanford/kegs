@@ -42,8 +42,6 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private ConfigFile mConfigFile;
   private KegsThread mKegsThread;
 
-  // For the software renderer, use 'KegsView' here and in res/layout/main.xml
-  //   Also consider undef ANDROID_GL in jni/android_driver.c
   protected KegsViewGL mKegsView;
   private KegsTouch mKegsTouch;
   private KegsKeyboard mKegsKeyboard;
@@ -595,9 +593,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   protected void onPause() {
     super.onPause();
     getThread().onPause();
-    if (mKegsView instanceof KegsViewGL) {
-      mKegsView.onPause();
-    }
+    mKegsView.onPause();
     mPaused = true;
   }
 
@@ -605,9 +601,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   protected void onResume() {
     super.onResume();
     getThread().onResume();
-    if (mKegsView instanceof KegsViewGL) {
-      mKegsView.onResume();
-    }
+    mKegsView.onResume();
     mPaused = false;
 
     Runnable runnable;
