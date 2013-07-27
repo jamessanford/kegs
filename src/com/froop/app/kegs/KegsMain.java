@@ -323,8 +323,11 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       // TODO: should probably use an XML layout for this.
       dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
       dialog.setMessage(getResources().getText(R.string.rom_check));
-      dialog.setProgressNumberFormat(null);
-      if (android.os.Build.VERSION.SDK_INT >= 11) {
+      if (android.os.Build.VERSION.SDK_INT <= 10 || android.os.Build.VERSION.SDK_INT >= 14) {
+        // This seems to crash on some vendors Honeycomb.
+        dialog.setProgressNumberFormat(null);
+      }
+      if (android.os.Build.VERSION.SDK_INT >= 14) {
         dialog.setProgressPercentFormat(null);
       }
       dialog.setIndeterminate(true);
