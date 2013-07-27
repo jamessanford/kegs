@@ -283,7 +283,7 @@ void sim65816_initglobals()
 
 	g_cur_sim_dtime = 0.0;
 	g_projected_pmhz = 1.0;
-	g_zip_pmhz = 8.0;
+	g_zip_pmhz = 16.0;
 	g_sim_mhz = 100.0;
 	g_line_ref_amt = 1;
 	g_video_line_update_interval = 0;
@@ -1563,7 +1563,7 @@ double	g_sim_sum = 0.0;
 
 double	g_cur_sim_dtime = 0.0;
 double	g_projected_pmhz = 1.0;
-double	g_zip_pmhz = 8.0;
+double	g_zip_pmhz = 16.0;
 double	g_sim_mhz = 100.0;
 int	g_line_ref_amt = 1;
 int	g_video_line_update_interval = 0;
@@ -1590,7 +1590,7 @@ setup_zip_speeds()
 
 	mult = 16 - ((g_zipgs_reg_c05a >> 4) & 0xf);
 		// 16 = full speed, 1 = 1/16th speed
-	fmhz = (8.0 * mult) / 16.0;
+	fmhz = (16.0 * mult) / 16.0;
 #if 0
 	if(mult == 16) {
 		/* increase full speed by 19% to make zipgs freq measuring */
