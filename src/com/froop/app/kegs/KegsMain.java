@@ -43,8 +43,8 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   private KegsThread mKegsThread;
 
   protected KegsViewGL mKegsView;
-  private KegsTouch mKegsTouch;
   private KegsKeyboard mKegsKeyboard;
+  private TouchMouse mTouchMouse;
   private TouchJoystick mJoystick;
 
   private boolean mModeMouse = true;
@@ -392,7 +392,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     mKegsView.updateScreenSize(bitmapSize);
 
     // Update scale of mouse movements.
-    mKegsTouch.updateScale(bitmapSize.getScaleX(), bitmapSize.getScaleY());
+    mTouchMouse.updateScale(bitmapSize.getScaleX(), bitmapSize.getScaleY());
 
     // Update special click zone that toggles the ActionBar.
     final TouchSpecialZone zone = new TouchSpecialZone(getSpecialActionBarRect(bitmapSize)) {
@@ -401,7 +401,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           updateActionBar(mOverrideActionBar);
         }
       };
-    mKegsTouch.setSpecialZone(zone);
+    mTouchMouse.setSpecialZone(zone);
     mJoystick.setSpecialZone(zone);
 
     // Force another redraw of the bitmap into the canvas.  Bug workaround.
@@ -535,7 +535,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
                                  mKegsView.getBitmap());
     mKegsThread.registerUpdateScreenInterface(mKegsView);
 
-    mKegsTouch = new KegsTouch(this, getThread().getEventQueue());
+    mTouchMouse = new TouchMouse(this, getThread().getEventQueue());
     mJoystick = new TouchJoystick(getThread().getEventQueue());
 
     final SpecialRelativeLayout mainView = (SpecialRelativeLayout)findViewById(R.id.mainview);
@@ -545,7 +545,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       public boolean onTouch(View v, MotionEvent event) {
         // TODO: consider using two listeners and setOnTouchListener them
         if (mModeMouse) {
-          return mKegsTouch.onTouchEvent(event);
+          return mTouchMouse.onTouchEvent(event);
         } else {
           return mJoystick.onTouchEvent(event);
         }

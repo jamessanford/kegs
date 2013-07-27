@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 // Translate onTouchEvent calls into mouse pointer movement.
 
-class KegsTouch {
+class TouchMouse {
   private ConcurrentLinkedQueue mEventQueue;
   private int mButton1 = 0;
   private int mTouchSlopSquare;
@@ -37,7 +37,7 @@ class KegsTouch {
 
   private TouchSpecialZone mSpecialZone = null;
 
-  public KegsTouch(Context context, ConcurrentLinkedQueue q) {
+  public TouchMouse(Context context, ConcurrentLinkedQueue q) {
     mEventQueue = q;
 
     final ViewConfiguration configuration = ViewConfiguration.get(context);
