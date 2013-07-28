@@ -2,16 +2,27 @@ Port of Kent Dickey's KEGS Apple IIgs Emulator to Android.  Also includes OG Act
 
 You can find a release version in Google Play: https://play.google.com/store/apps/details?id=com.froop.app.kegs
 
-Work in progress!  Screen may be cropped in portrait mode on phones.
-Flip it over to landscape orientation.
+Usability notes:
+  The touch screen acts as a big trackpad for the mouse.
 
-Look on your sdcard in /Android/data/com.froop.app.kegs/files/
-There's a 'default' config there that gets copied to 'config.kegs' on startup.
+  To click and drag, either Long Press then drag or
+  use one finger for movement and one finger for the mouse button.
 
-The touch screen acts as a big trackpad for the mouse.
+  It looks for disk images on the main sdcard or 'legacy' storage directory,
+  and a few subdirectories under that: Downloads, KEGS, and
+  Android/data/com.froop.app.kegs/files/
 
-To click and drag, either Long Press then drag or
-use one finger for movement and one finger for the mouse button.
+  If you want to edit the KEGS 'config.kegs' directly, edit 'default' in
+  the last directory mentioned above.
+
+  Input: Physical keyboards should work, though on some devices you may need
+  to reset the input method to something like Hacker's Keyboard.
+
+  Sound: If you hear no sound, do something where sound should be playing
+  (perhaps the X-MAS demo main menu) and then adjust the sound volume.
+  If KEGS is not generating sound, the volume buttons adjust a different
+  sound level (for example your ringer)
+
 
 Source code:
   https://github.com/jamessanford/kegs/
@@ -39,9 +50,9 @@ All UI events are sent to the native thread by pushing events into the Concurren
 
 The native thread pulls events off the queue, writes updates into the bitmap object, then calls the Java "updateScreen" in the KegsThread object.
 
-The native thread also calls support functions in Java, such as checkForPause(), which deadlocks the thread while it should be paused.  See comments in KegsThread.java for more details.
+The native thread also calls support functions in Java, such as checkForPause(), which blocks the native thread while it should be paused.  See comments in KegsThread.java for more details.
 
-Android NDK samples were used as a base for this:
+Android NDK samples were helpful when creating this port:
 - bitmap-plasma
 - JetBoy
 - native-audio
