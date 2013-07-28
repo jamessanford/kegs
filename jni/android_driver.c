@@ -49,6 +49,7 @@ extern Kimage g_mainwin_kimage;
 
 extern int g_config_kegs_update_needed;
 extern int g_limit_speed;
+extern int g_zipgs_reg_c05a;
 
 extern word32 g_red_mask;
 extern word32 g_green_mask;
@@ -505,17 +506,14 @@ int x_diskimage(jclass diskimage_class, jobject diskimage_event) {
 
 void x_key_special(int key_id) {
   key_id = key_id & 0x7f;  // only use lower 7 bits
-  switch(key_id) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-      g_limit_speed = key_id;
-      g_config_kegs_update_needed = 1;
-      break;
-    case 120:
-      set_halt(HALT_WANTTOQUIT);  // request kegsmain to exit
-      break;
+  if (key_id >= 0 && key_id <= 3) {
+    g_limit_speed = key_id;
+    g_config_kegs_update_needed = 1;
+  } else if (key_id >= 0x10 && key_id <= 0x1f) {
+    // run_prog() will see the change and call setup_zip_speeds()
+    g_zipgs_reg_c05a = ((key_id & 0x0f) << 4) | 0x0f;
+  } else if (key_id == 120) {
+    set_halt(HALT_WANTTOQUIT);  // request kegsmain to exit
   }
 }
 
@@ -566,12 +564,12 @@ check_input_events()
 
   // check if paused, first
   jclass cls = (*g_env)->GetObjectClass(g_env, g_thiz);
-  jmethodID mid = (*g_env)->GetMethodID(g_env, cls, "checkForPause", "(I)V");
+  jmethodID mid = (*g_env)->GetMethodID(g_env, cls, "checkForPause", "(II)V");
   (*g_env)->DeleteLocalRef(g_env, cls);
   if (mid == NULL) {
     return;
   }
-  (*g_env)->CallVoidMethod(g_env, g_thiz, mid, g_limit_speed);
+  (*g_env)->CallVoidMethod(g_env, g_thiz, mid, g_limit_speed, g_zipgs_reg_c05a);
 
   do {
     cls = (*g_env)->GetObjectClass(g_env, g_eventqueue);

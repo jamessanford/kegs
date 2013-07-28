@@ -16,7 +16,8 @@ class KegsThread extends Thread {
 
   private String mConfigFile;  // full path to config_kegs
   private Bitmap mBitmap;
-  private final AtomicInteger mCurrentSpeed = new AtomicInteger(0);
+  private final AtomicInteger mCurrentSpeedLimit = new AtomicInteger(0);
+  private final AtomicInteger mCurrentSpeedZip = new AtomicInteger(0);
   private final ReentrantLock mPauseLock = new ReentrantLock();
   private final ReentrantLock mPowerWait = new ReentrantLock();
 
@@ -50,8 +51,9 @@ class KegsThread extends Thread {
   }
 
   // Called by native thread.
-  private void checkForPause(int currentEmulationSpeed) {
-    mCurrentSpeed.set(currentEmulationSpeed);  // NOTE: This is a hack.
+  private void checkForPause(int currentEmulationSpeed, int currentZipSpeed) {
+    mCurrentSpeedLimit.set(currentEmulationSpeed);  // g_limit_speed
+    mCurrentSpeedZip.set(currentZipSpeed);          // g_zipgs_reg_c05a
     if (mPaused.get()) {
       mPauseLock.lock();
       // deadlock here until onResume.  Maybe not efficient.
@@ -147,16 +149,9 @@ class KegsThread extends Thread {
     return mPowerWait.hasQueuedThreads();
   }
 
-  public void setEmulationSpeed(int speed) {
-    // Speed matches g_limit_speed inside KEGS.
-    // Instead of a separate "control" event, key ids with bit 8 high are
-    // special events.  See android_driver.c:x_key_special()
-    getEventQueue().add(new Event.KeyKegsEvent(speed + 0x80, true));
-  }
-
-  public int getEmulationSpeed() {
-    // Equal to g_limit_speed inside KEGS.
-    return mCurrentSpeed.get();
+  public SpeedSetting getEmulationSpeed() {
+    return new SpeedSetting(getEventQueue(),
+                            mCurrentSpeedLimit.get(), mCurrentSpeedZip.get());
   }
 
   public void doWarmReset() {

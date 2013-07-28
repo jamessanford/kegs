@@ -13,24 +13,15 @@ public class SpeedFragment extends SherlockDialogFragment {
   public Dialog onCreateDialog(Bundle savedInstanceState) {
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
-    int currentSpeed = ((KegsMain)getActivity()).getThread().getEmulationSpeed();
-    // Adjust g_limit_speed to match default item number.
-    currentSpeed--;
-    if (currentSpeed < 0) {
-      currentSpeed = 3;
-    }
+    final SpeedSetting currentSpeed = ((KegsMain)getActivity()).getThread().getEmulationSpeed();
 
     builder.setTitle(R.string.speed_title);
-    builder.setSingleChoiceItems(R.array.speed_choices, currentSpeed,
+    builder.setSingleChoiceItems(R.array.speed_choices,
+                                 currentSpeed.getMenuItem(),
         new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int item) {
         dismiss();
-        // Adjust selected item number to match g_limit_speed.
-        item++;
-        if (item > 3) {
-          item = 0;
-        }
-        ((KegsMain)getActivity()).getThread().setEmulationSpeed(item);
+        currentSpeed.setFromMenuItem(item);
       }
     });
     return builder.create();
