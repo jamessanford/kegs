@@ -93,6 +93,9 @@ class KegsRenderer implements GLSurfaceView.Renderer {
         // Show as much of the border as we can.
         int leftover = (30+400+32) - mHeightUnscaled;
         leftover /= 2;
+        // NOTE FIXME: Adding 1.0 offset seemed to fix the leaking border pixel
+        //       on the left.  However, double check that it was not a problem
+        //       with the bitmap itself being uncentered.  Check scale=1.0.
         gl.glOrthof(1.0f, (float)mWidth+1.0f, (50.0f+leftover) * mScaleY, (50.0f+leftover+mHeightUnscaled) * mScaleY, 0.0f, 1.0f);
       } else {
         // Just show the 400 pixels.
@@ -155,14 +158,10 @@ class KegsRenderer implements GLSurfaceView.Renderer {
     checkGlError(gl, "surfaceCreatedB");
   }
 
-  private FpsCounter fpsCount = new FpsCounter("kegs", "draw");
-
   public void onDrawFrame(GL10 gl) {
     if (!mTexIdOK) {
       return;
     }
-// for testing
-//    fpsCount.fps();
 
     if (mSizeChange) {
       mSizeChange = false;
