@@ -571,6 +571,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
     findViewById(R.id.key_escape).setOnClickListener(mButtonClick);
     findViewById(R.id.key_return).setOnClickListener(mButtonClick);
+    findViewById(R.id.key_tab).setOnClickListener(mButtonClick);
     findViewById(R.id.key_control).setOnClickListener(mButtonClick);
     findViewById(R.id.key_open_apple).setOnClickListener(mButtonClick);
     findViewById(R.id.key_closed_apple).setOnClickListener(mButtonClick);
