@@ -339,8 +339,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     @Override
     public void onCancel(DialogInterface dialog) {
       super.onCancel(dialog);
-      //FIXME TODO
-      //finish();
+      ((KegsMain)getActivity()).finish();
     }
   }
 
