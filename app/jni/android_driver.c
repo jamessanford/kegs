@@ -22,6 +22,11 @@
 
 #include "defc.h"
 
+// FIXME: See note about KEGS_LITTLE_ENDIAN in Android.mk
+#if _BYTE_ORDER != _LITTLE_ENDIAN
+#error Refactor Android.mk to set KEGS_LITTLE_ENDIAN based on _BYTE_ORDER
+#endif
+
 // KegsViewGL, when defined lock pixels only once per mainLoop.
 #define ANDROID_GL
 

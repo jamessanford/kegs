@@ -1,10 +1,8 @@
 package com.froop.app.kegs;
 
 import android.content.Context;
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import java.util.concurrent.ConcurrentLinkedQueue;

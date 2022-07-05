@@ -13,13 +13,13 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
+import android.app.DialogFragment;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class DiskImageFragment extends SherlockDialogFragment {
+public class DiskImageFragment extends DialogFragment {
   private ArrayList<DiskImage> mFoundImages = new ArrayList<DiskImage>();
 
   // TODO: This should be the title name, and then we should index to it.
@@ -87,12 +87,14 @@ public class DiskImageFragment extends SherlockDialogFragment {
         }
       }
     });
+/* Seems strange to have a Cancel button.  Disable.
     builder.setNegativeButton(R.string.dialog_cancel,
                               new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int button) {
         dismiss();
       }
     });
+*/
     final AlertDialog dialog = builder.create();
     return dialog;
   }

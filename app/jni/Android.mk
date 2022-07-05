@@ -2,6 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
+# FIXME: Use _BYTE_ORDER instead of KEGS_LITTLE_ENDIAN
 LOCAL_CFLAGS	:= -DNDEBUG -DKEGS_LITTLE_ENDIAN -O2 -I.
 LOCAL_MODULE    := kegs
 LOCAL_SRC_FILES := adb.c clock.c config_generic.c config_kegs.c \

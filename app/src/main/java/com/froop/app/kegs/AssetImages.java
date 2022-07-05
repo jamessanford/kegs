@@ -1,6 +1,5 @@
 package com.froop.app.kegs;
 
-import android.util.Log;
 import android.os.AsyncTask;
 
 import java.io.File;

@@ -6,9 +6,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
+import android.app.DialogFragment;
 
-public class RomDialogFragment extends SherlockDialogFragment {
+public class RomDialogFragment extends DialogFragment {
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

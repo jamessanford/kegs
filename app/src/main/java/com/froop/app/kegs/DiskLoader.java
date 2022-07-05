@@ -41,7 +41,8 @@ class DiskLoader extends AsyncTask<Void, Void, Boolean> {
       mDestPath = config.getImagePath();
 
       final File local_copy = new File(mDestPath, image.filename);
-      if (local_copy != null && local_copy.exists()) {
+      // TODO: check local_copy errors?
+      if (local_copy.exists()) {
         // Assume whatever is there will work.
         mSlow = false;
       }
@@ -85,7 +86,7 @@ class DiskLoader extends AsyncTask<Void, Void, Boolean> {
         return true;
       } else {
         return new DownloadHelper().save(
-            "http://jsan.co/KEGS/images/" + mImage.filename,
+            "https://jsan.co/KEGS/images/" + mImage.filename,
             local_copy.getPath());
       }
     }

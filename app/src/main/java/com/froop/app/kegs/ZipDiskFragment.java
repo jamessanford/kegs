@@ -2,7 +2,6 @@ package com.froop.app.kegs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,9 +11,9 @@ import java.util.Enumeration;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
+import android.app.DialogFragment;
 
-public class ZipDiskFragment extends SherlockDialogFragment {
+public class ZipDiskFragment extends DialogFragment {
   private ArrayList<String> mFiles = new ArrayList<String>();
   private ArrayList<String> mTitles = new ArrayList<String>();
   private DiskImage mImage;

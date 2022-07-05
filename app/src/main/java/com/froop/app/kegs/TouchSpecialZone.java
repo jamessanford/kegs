@@ -1,12 +1,11 @@
 package com.froop.app.kegs;
 
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.MotionEvent;
 
 class TouchSpecialZone {
   // Clicks within this rect have a special handler.
-  private Rect mSpecialRect = null;
+  private Rect mSpecialRect;
 
   public TouchSpecialZone(Rect zone) {
     mSpecialRect = zone;  // may be null

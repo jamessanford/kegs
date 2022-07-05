@@ -1,30 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
 <!-- ic_bt_keyboard_hid, ic_lockscreen_ime -->
     <item android:id="@+id/action_keyboard"
           android:icon="@drawable/ic_bt_keyboard_hid"
-          android:showAsAction="ifRoom"
-          android:title="@string/input_keyboard" />
+        android:title="@string/input_keyboard"
+        android:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_diskimage"
+        android:icon="@drawable/ic_menu_save"
+        android:title="@string/diskimage"
+        android:showAsAction="ifRoom" />
+
+    <item android:id="@+id/action_speed"
+        android:icon="@drawable/dial"
+        android:title="@string/emulation_speed"
+        android:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_joystick"
           android:icon="@drawable/ic_bt_misc_hid"
-          android:showAsAction="ifRoom"
-          android:title="@string/input_joystick" />
-
-    <item android:id="@+id/action_speed"
-          android:icon="@drawable/dial"
-          android:showAsAction="ifRoom"
-          android:title="@string/emulation_speed" />
-
-    <item android:id="@+id/action_diskimage"
-          android:icon="@drawable/ic_menu_save"
-          android:showAsAction="ifRoom"
-          android:title="@string/diskimage" />
+        android:title="@string/input_joystick"
+        android:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_more_keys"
-          android:showAsAction="never"
-          android:title="@string/more_keys" />
+        android:title="@string/more_keys"
+        android:showAsAction="never" />
 
     <item android:id="@+id/action_power_off"
           android:showAsAction="never"

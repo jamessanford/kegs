@@ -21,15 +21,15 @@ import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.ToggleButton;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.actionbarsherlock.app.SherlockDialogFragment;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuItem;
+import android.app.ActionBar;
+import android.app.Activity;
+import android.app.DialogFragment;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import java.util.ArrayDeque;
 
-public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady, DiskLoader.ImageReady {
+public class KegsMain extends Activity implements KegsKeyboard.StickyReset, AssetImages.AssetsReady, DiskLoader.ImageReady {
   private static final String FRAGMENT_ROM = "rom";
   private static final String FRAGMENT_DOWNLOAD = "download";
   private static final String FRAGMENT_ERROR = "error";
@@ -70,7 +70,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     // TODO: deal with error conditions from assets as a warning.
   }
 
-  private View.OnClickListener mButtonClick = new View.OnClickListener() {
+  private final View.OnClickListener mButtonClick = new View.OnClickListener() {
     public void onClick(View v) {
       final int click_id = v.getId();
       int key_id = -1;
@@ -181,11 +181,11 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
             cancel = null;
           }
           new ErrorDialogFragment(R.string.image_error, cancel).show(
-                getSupportFragmentManager(), FRAGMENT_ERROR);
+                getFragmentManager(), FRAGMENT_ERROR);
         } else if (image.action != DiskImage.ASK) {
           loadDiskImage(image);
         } else {
-          new SwapDiskFragment(image).show(getSupportFragmentManager(),
+          new SwapDiskFragment(image).show(getFragmentManager(),
                                            FRAGMENT_SWAPDISK);
         }
       }
@@ -202,7 +202,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     if (image.filename.endsWith(".zip") || image.filename.endsWith(".ZIP")) {
       final ZipDiskFragment zip = new ZipDiskFragment(image);
       if (zip.needsDialog()) {
-        zip.show(getSupportFragmentManager(), FRAGMENT_ZIPDISK);
+        zip.show(getFragmentManager(), FRAGMENT_ZIPDISK);
         return;
       } else {
         image = zip.getFirstImage();
@@ -231,7 +231,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
         mDiskLoader = new DiskLoader(notify, mConfigFile, image);
         if (mDiskLoader.willBeSlow()) {
-          new SpecialProgressDialog(cancel).show(getSupportFragmentManager(),
+          new SpecialProgressDialog(cancel).show(getFragmentManager(),
                                                  FRAGMENT_LOADING);
         }
         if (android.os.Build.VERSION.SDK_INT >= 11) {
@@ -244,7 +244,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   }
 
   private DiskImage getBootDiskImage(Intent intent) {
-    if (intent != null && intent.getAction() == Intent.ACTION_VIEW) {
+    if (intent != null && intent.getAction().equals(Intent.ACTION_VIEW)) {
       final Uri uri = intent.getData();
       if (uri != null && uri.getScheme().equals("file")) {
         final String path = uri.getPath();
@@ -269,7 +269,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
           withUIActive(new Runnable() {
             public void run() {
               if (findFragment(FRAGMENT_DISKIMAGE) == null) {
-                new DiskImageFragment(mConfigFile, DiskImage.BOOT).show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
+                new DiskImageFragment(mConfigFile, DiskImage.BOOT).show(getFragmentManager(), FRAGMENT_DISKIMAGE);
               }
             }
           });
@@ -279,8 +279,8 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
   }
 
   protected void getRomFile(String romfile) {
-    final SherlockDialogFragment download = new DownloadDialogFragment();
-    download.show(getSupportFragmentManager(), FRAGMENT_DOWNLOAD);
+    final DialogFragment download = new DownloadDialogFragment();
+    download.show(getFragmentManager(), FRAGMENT_DOWNLOAD);
     if (android.os.Build.VERSION.SDK_INT >= 11) {
       new DownloadRom().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, romfile);
     } else {
@@ -293,20 +293,20 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     protected Boolean doInBackground(String ... raw_romfile) {
       mRomfile = raw_romfile[0];
       return new DownloadHelper().save(
-          "http://jsan.co/KEGS/" + mRomfile,
+          "https://jsan.co/KEGS/" + mRomfile,
           mConfigFile.getConfigPath() + "/" + mRomfile);
     }
     protected void onPostExecute(final Boolean success) {
       withUIActive(new Runnable() {
         public void run() {
-          final SherlockDialogFragment frag = (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
+          final DialogFragment frag = (DialogFragment)getFragmentManager().findFragmentByTag(FRAGMENT_DOWNLOAD);
           if (frag != null) {
             frag.dismiss();
           }
           if (!success) {
             if (!isCancelled()) {
               new ErrorDialogFragment(R.string.rom_error, mErrorFinish).show(
-                    getSupportFragmentManager(), FRAGMENT_ERROR);
+                    getFragmentManager(), FRAGMENT_ERROR);
             }
           } else {
             boot();
@@ -316,7 +316,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     }
   }
 
-  class DownloadDialogFragment extends SherlockDialogFragment {
+  public static class DownloadDialogFragment extends DialogFragment {
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
       ProgressDialog dialog = new ProgressDialog(getActivity());
@@ -339,7 +339,8 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     @Override
     public void onCancel(DialogInterface dialog) {
       super.onCancel(dialog);
-      finish();
+      //FIXME TODO
+      //finish();
     }
   }
 
@@ -365,10 +366,15 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
   private void updateActionBar(boolean showActionBar) {
     showActionBar = mOverrideActionBar || showActionBar;
-    final ActionBar actionBar = getSupportActionBar();
-    if (actionBar != null && showActionBar) {
+
+    final ActionBar actionBar = getActionBar();
+    if (actionBar == null) {
+      return;
+    }
+
+    if (showActionBar) {
       actionBar.show();
-    } else if (actionBar != null && !showActionBar) {
+    } else {
       actionBar.hide();
     }
   }
@@ -439,7 +445,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     super.onCreateOptionsMenu(menu);
     // BUG: no overflow menu on devices with menu button
     // BUG: when action bar is hidden, menu bar only shows overflow items
-    getSupportMenuInflater().inflate(R.menu.actions, menu);
+    getMenuInflater().inflate(R.menu.actions, menu);
     return true;
   }
 
@@ -468,14 +474,14 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
       }
       return true;
     } else if (item_id == R.id.action_speed) {
-      new SpeedFragment().show(getSupportFragmentManager(), FRAGMENT_SPEED);
+      new SpeedFragment().show(getFragmentManager(), FRAGMENT_SPEED);
       return true;
     } else if (item_id == R.id.action_joystick) {
       mModeMouse = !mModeMouse;
-      supportInvalidateOptionsMenu();  // update icon
+      invalidateOptionsMenu();  // update icon
       return true;
     } else if (item_id == R.id.action_diskimage) {
-      new DiskImageFragment(mConfigFile, DiskImage.ASK).show(getSupportFragmentManager(), FRAGMENT_DISKIMAGE);
+      new DiskImageFragment(mConfigFile, DiskImage.ASK).show(getFragmentManager(), FRAGMENT_DISKIMAGE);
       return true;
     } else if (item_id == R.id.action_more_keys) {
       final int vis = areControlsVisible() ? View.GONE : View.VISIBLE;
@@ -490,12 +496,12 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     return false;
   }
 
-  private SherlockDialogFragment findFragment(final String tag) {
-    return (SherlockDialogFragment)getSupportFragmentManager().findFragmentByTag(tag);
+  private DialogFragment findFragment(final String tag) {
+    return (DialogFragment)getFragmentManager().findFragmentByTag(tag);
   }
 
   private boolean dismissFragment(final String tag) {
-    final SherlockDialogFragment frag = findFragment(tag);
+    final DialogFragment frag = findFragment(tag);
     if (frag == null) {
       return false;
     } else {
@@ -530,7 +536,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
     updateActionBar(BitmapSize.quick(this).showActionBar());
 
-    mKegsView = (KegsViewGL)findViewById(R.id.kegsview);
+    mKegsView = findViewById(R.id.kegsview);
 
     mConfigFile = new ConfigFile(this);
 
@@ -541,7 +547,10 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
     mTouchMouse = new TouchMouse(this, getThread().getEventQueue());
     mJoystick = new TouchJoystick(getThread().getEventQueue());
 
-    final SpecialRelativeLayout mainView = (SpecialRelativeLayout)findViewById(R.id.mainview);
+    final SpecialRelativeLayout mainView = findViewById(R.id.mainview);
+    if (android.os.Build.VERSION.SDK_INT >= 26) {
+        mainView.setDefaultFocusHighlightEnabled(false);
+    }
     mainView.setClickable(true);
     mainView.setLongClickable(true);
     mainView.setOnTouchListener(new OnTouchListener() {
@@ -589,7 +598,7 @@ public class KegsMain extends SherlockFragmentActivity implements KegsKeyboard.S
 
     final String romfile = mConfigFile.whichRomFile();
     if (romfile == null) {
-      new RomDialogFragment().show(getSupportFragmentManager(), FRAGMENT_ROM);
+      new RomDialogFragment().show(getFragmentManager(), FRAGMENT_ROM);
     } else {
       boot();
     }

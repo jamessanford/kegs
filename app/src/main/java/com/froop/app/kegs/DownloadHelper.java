@@ -7,21 +7,21 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.HttpURLConnection;
+import javax.net.ssl.HttpsURLConnection;
 import java.net.URL;
 
 // Ick.  Look elsewhere.
 
 public class DownloadHelper {
   private URL mURL;
-  private HttpURLConnection mConnection;
+  private HttpsURLConnection mConnection;
   private InputStream mStream;
 
   private boolean openInputStream() {
     try {
-      mConnection = (HttpURLConnection)mURL.openConnection();
+      mConnection = (HttpsURLConnection)mURL.openConnection();
       mConnection.connect();
-      if (mConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+      if (mConnection.getResponseCode() != HttpsURLConnection.HTTP_OK) {
         mConnection.disconnect();
         Log.e("kegs", "HTTP ERROR " + mConnection.getResponseCode());
         return false;

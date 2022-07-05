@@ -1,6 +1,8 @@
 // Lots of boilerplate OpenSLES code from the Android NDK 'native-audio' sample.
 // Hooked up to a copy of the KEGS Mac sound driver.
 
+// FIXME: Consider switching to https://github.com/google/oboe
+
 #include <assert.h>
 #include <jni.h>
 #include <android/log.h>

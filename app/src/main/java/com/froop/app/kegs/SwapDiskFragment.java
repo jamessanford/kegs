@@ -4,11 +4,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
+import android.app.DialogFragment;
 
-public class SwapDiskFragment extends SherlockDialogFragment {
+public class SwapDiskFragment extends DialogFragment {
   private DiskImage mImage;
 
   public SwapDiskFragment(DiskImage image) {

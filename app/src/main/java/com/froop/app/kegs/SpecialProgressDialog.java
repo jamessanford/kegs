@@ -6,11 +6,11 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
+import android.app.DialogFragment;
 
 // A predefined progress dialog that calls a Runner when it's cancelled.
 
-public class SpecialProgressDialog extends SherlockDialogFragment {
+public class SpecialProgressDialog extends DialogFragment {
   private Runnable mCancelRunnable;
 
   public SpecialProgressDialog(Runnable runnable) {

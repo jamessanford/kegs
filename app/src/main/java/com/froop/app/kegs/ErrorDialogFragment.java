@@ -6,9 +6,9 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.actionbarsherlock.app.SherlockDialogFragment;
+import android.app.DialogFragment;
 
-class ErrorDialogFragment extends SherlockDialogFragment {
+public class ErrorDialogFragment extends DialogFragment {
   private int mMessage;
   private Runnable mRunnable;
 
