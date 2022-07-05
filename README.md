@@ -27,15 +27,7 @@ Usability notes:
 Source code:
   https://github.com/jamessanford/kegs/
 
-To build from source:
-<pre>
-  (git submodule init && git submodule update)
-  android update project -p ActionBarSherlock/library -s
-  android update project -p . -s
-  ndk-build
-  ant debug install
-</pre>
-
+To build from source, open this project in Android Studio.
 
 Changes made to KEGS:
 - Various ifdefs for \_\_ANDROID\_\_ in the kegs 'core'
