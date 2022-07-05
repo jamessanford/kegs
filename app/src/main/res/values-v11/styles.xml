@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<!-- For API level 11 and later, use a parent of Theme.Holo. -->
-
-<resources>
-  <style name="Theme.BlackBackground" parent="Theme.Sherlock">
-    <item name="android:windowBackground">@drawable/screen_background_black</item>
-  </style>
-</resources>
