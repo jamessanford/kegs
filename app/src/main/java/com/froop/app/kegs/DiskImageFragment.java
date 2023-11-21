@@ -64,9 +64,10 @@ public class DiskImageFragment extends DialogFragment {
         }
       }
     }
-    // NOTE HACK.  These files may not exist yet, so we cannot use fromPath.
-    mFoundImages.add(new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7, DiskImage.ASSET));
-    mFoundImages.add(new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.ASSET));
+
+    // NOTE: When registering images manually, update the hardcoded names in AssetImages.java and use 'new DiskImage' (not DiskImage.fromPath)
+    mFoundImages.add(new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7, DiskImage.DOWNLOAD));
+    mFoundImages.add(new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.DOWNLOAD));
     Collections.sort(mFoundImages);
   }
 
