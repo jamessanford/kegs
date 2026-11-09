@@ -69,10 +69,18 @@ public class DiskImageFragment extends DialogFragment {
     mFoundImages.add(new DiskImage("System 6.hdv", "s7d1", 3, DiskImage.BOOT_SLOT_7, DiskImage.DOWNLOAD));
     mFoundImages.add(new DiskImage("XMAS_DEMO.2MG", "s5d1", 2, DiskImage.BOOT_SLOT_5, DiskImage.DOWNLOAD));
     Collections.sort(mFoundImages);
+    mFoundImages.add(0, new DiskImage("[ Browse for file... ]", "", 0, "", DiskImage.LOCALFILE));
   }
 
   @Override
   public Dialog onCreateDialog(Bundle savedInstanceState) {
+    if (getActivity() instanceof KegsMain) {
+      KegsMain activity = (KegsMain) getActivity();
+      if (!activity.hasStoragePermission()) {
+        activity.checkAndRequestStoragePermission();
+      }
+    }
+
     final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
     builder.setTitle(R.string.diskimage_title);
@@ -80,22 +88,32 @@ public class DiskImageFragment extends DialogFragment {
     builder.setSingleChoiceItems(items, mLastSelected, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int item) {
         dismiss();
-        mLastSelected = item;
-        DiskImage image = mFoundImages.get(item);
-        if (image != null) {
-          image.action = mDiskImageAction;
-          ((KegsMain)getActivity()).prepareDiskImage(image);
+        if (item >= 0 && item < mFoundImages.size()) {
+          DiskImage image = mFoundImages.get(item);
+          if (image != null) {
+            if ("[ Browse for file... ]".equals(image.filename)) {
+              if (getActivity() instanceof KegsMain) {
+                ((KegsMain) getActivity()).openFilePicker();
+              }
+            } else {
+              mLastSelected = item;
+              image.action = mDiskImageAction;
+              ((KegsMain)getActivity()).prepareDiskImage(image);
+            }
+          }
         }
       }
     });
-/* Seems strange to have a Cancel button.  Disable.
-    builder.setNegativeButton(R.string.dialog_cancel,
-                              new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int button) {
+
+    builder.setNeutralButton(R.string.browse_file, new DialogInterface.OnClickListener() {
+      public void onClick(DialogInterface dialog, int which) {
         dismiss();
+        if (getActivity() instanceof KegsMain) {
+          ((KegsMain) getActivity()).openFilePicker();
+        }
       }
     });
-*/
+
     final AlertDialog dialog = builder.create();
     return dialog;
   }

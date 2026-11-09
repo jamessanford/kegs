@@ -69,7 +69,12 @@ class ConfigFile {
       getImagePath(),
       externalStorage,
       externalStorage + "/kegs",
-      externalStorage + "/Download"
+      externalStorage + "/Download",
+      externalStorage + "/Download/kegs",
+      externalStorage + "/Documents",
+      externalStorage + "/Documents/kegs",
+      externalStorage + "/Apple2",
+      externalStorage + "/DiskImages"
     };
     return dirs;
   }

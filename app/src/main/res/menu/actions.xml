@@ -6,29 +6,29 @@
     <item android:id="@+id/action_keyboard"
           android:icon="@drawable/ic_bt_keyboard_hid"
         android:title="@string/input_keyboard"
-        android:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_diskimage"
         android:icon="@drawable/ic_menu_save"
         android:title="@string/diskimage"
-        android:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_speed"
         android:icon="@drawable/dial"
         android:title="@string/emulation_speed"
-        android:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_joystick"
           android:icon="@drawable/ic_bt_misc_hid"
         android:title="@string/input_joystick"
-        android:showAsAction="ifRoom" />
+        app:showAsAction="ifRoom" />
 
     <item android:id="@+id/action_more_keys"
         android:title="@string/more_keys"
-        android:showAsAction="never" />
+        app:showAsAction="never" />
 
     <item android:id="@+id/action_power_off"
-          android:showAsAction="never"
-          android:title="@string/power_off" />
+        android:title="@string/power_off"
+        app:showAsAction="never" />
 
 </menu>

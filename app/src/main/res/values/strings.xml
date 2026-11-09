@@ -11,6 +11,11 @@
   <string name="dialog_ok">OK</string>
   <string name="dialog_cancel">Cancel</string>
 
+  <string name="permission_dialog_title">All Files Access Needed</string>
+  <string name="permission_dialog_message">KEGS requires All Files Access to load Apple II disk images (such as .2mg, .dsk, .hdv, .po) from external storage.</string>
+  <string name="permission_dialog_grant">Grant Access</string>
+  <string name="browse_file">Browse File...</string>
+
   <string-array name="rom_choices">
     <item>I have a ROM 01</item>
     <item>I have a ROM 03</item>

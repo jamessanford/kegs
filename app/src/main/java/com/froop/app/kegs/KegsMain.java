@@ -26,6 +26,15 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.Settings;
+import android.provider.OpenableColumns;
+import android.database.Cursor;
+import android.content.pm.PackageManager;
+import android.Manifest;
+import java.io.File;
+import java.io.InputStream;
 
 import java.util.ArrayDeque;
 
@@ -243,13 +252,162 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     });
   }
 
+  private static final int REQUEST_STORAGE_PERMISSION = 1001;
+  public static final int REQUEST_OPEN_IMAGE = 1002;
+
+  public void openFilePicker() {
+    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+    intent.addCategory(Intent.CATEGORY_OPENABLE);
+    intent.setType("*/*");
+    String[] mimeTypes = {
+      "application/x-apple-diskimage",
+      "application/zip",
+      "application/gzip",
+      "application/x-gzip",
+      "application/octet-stream"
+    };
+    intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+    try {
+      startActivityForResult(intent, REQUEST_OPEN_IMAGE);
+    } catch (Exception e) {
+      try {
+        Intent fallback = new Intent(Intent.ACTION_GET_CONTENT);
+        fallback.addCategory(Intent.CATEGORY_OPENABLE);
+        fallback.setType("*/*");
+        startActivityForResult(fallback, REQUEST_OPEN_IMAGE);
+      } catch (Exception ex) {
+        Log.e("kegs", "Unable to launch file picker", ex);
+      }
+    }
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == REQUEST_OPEN_IMAGE && resultCode == RESULT_OK && data != null) {
+      Uri uri = data.getData();
+      if (uri != null) {
+        String path = null;
+        if ("file".equals(uri.getScheme())) {
+          path = uri.getPath();
+        } else {
+          path = copyContentUriToCache(uri);
+        }
+        if (path != null) {
+          DiskImage image = DiskImage.fromPath(path);
+          if (image != null) {
+            image.action = DiskImage.ASK;
+            prepareDiskImage(image);
+          } else {
+            new ErrorDialogFragment(R.string.image_error, null).show(
+                getFragmentManager(), FRAGMENT_ERROR);
+          }
+        }
+      }
+    }
+  }
+
+  public boolean hasStoragePermission() {
+    if (Build.VERSION.SDK_INT >= 30) {
+      return Environment.isExternalStorageManager();
+    } else if (Build.VERSION.SDK_INT >= 23) {
+      return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    } else {
+      return true;
+    }
+  }
+
+  public void requestStoragePermission() {
+    if (Build.VERSION.SDK_INT >= 30) {
+      try {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivity(intent);
+      } catch (Exception e) {
+        try {
+          Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+          startActivity(intent);
+        } catch (Exception ex) {
+          Log.e("kegs", "Unable to launch all files access settings", ex);
+        }
+      }
+    } else if (Build.VERSION.SDK_INT >= 23) {
+      requestPermissions(new String[]{
+          Manifest.permission.READ_EXTERNAL_STORAGE,
+          Manifest.permission.WRITE_EXTERNAL_STORAGE
+      }, REQUEST_STORAGE_PERMISSION);
+    }
+  }
+
+  public void checkAndRequestStoragePermission() {
+    if (!hasStoragePermission()) {
+      if (Build.VERSION.SDK_INT >= 30) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.permission_dialog_title)
+            .setMessage(R.string.permission_dialog_message)
+            .setPositiveButton(R.string.permission_dialog_grant, new DialogInterface.OnClickListener() {
+              public void onClick(DialogInterface dialog, int which) {
+                requestStoragePermission();
+              }
+            })
+            .setNegativeButton(R.string.dialog_cancel, null)
+            .show();
+      } else {
+        requestStoragePermission();
+      }
+    }
+  }
+
+  private String copyContentUriToCache(Uri uri) {
+    try {
+      String filename = "opened_disk.2mg";
+      Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+      if (cursor != null) {
+        try {
+          if (cursor.moveToFirst()) {
+            int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            if (nameIndex != -1) {
+              String displayName = cursor.getString(nameIndex);
+              if (displayName != null && !displayName.isEmpty()) {
+                filename = displayName;
+              }
+            }
+          }
+        } finally {
+          cursor.close();
+        }
+      } else {
+        String pathStr = uri.getPath();
+        if (pathStr != null && pathStr.contains(".")) {
+          filename = pathStr.substring(pathStr.lastIndexOf('/') + 1);
+        }
+      }
+      File destFile = new File(mConfigFile.getCachePath(), filename);
+      InputStream in = getContentResolver().openInputStream(uri);
+      if (in != null) {
+        new CopyHelper(in, mConfigFile.getCachePath(), filename).copy();
+        return destFile.getAbsolutePath();
+      }
+    } catch (Exception e) {
+      Log.e("kegs", "Failed to copy content URI: " + e.getMessage(), e);
+    }
+    return null;
+  }
+
   private DiskImage getBootDiskImage(Intent intent) {
     if (intent != null && intent.getAction().equals(Intent.ACTION_VIEW)) {
       final Uri uri = intent.getData();
-      if (uri != null && uri.getScheme().equals("file")) {
-        final String path = uri.getPath();
-        if (path != null) {
-          return DiskImage.fromPath(path);
+      if (uri != null) {
+        if ("file".equals(uri.getScheme())) {
+          final String path = uri.getPath();
+          if (path != null) {
+            return DiskImage.fromPath(path);
+          }
+        } else if ("content".equals(uri.getScheme())) {
+          final String path = copyContentUriToCache(uri);
+          if (path != null) {
+            return DiskImage.fromPath(path);
+          }
         }
       }
     }
@@ -538,6 +696,7 @@ public class KegsMain extends Activity implements KegsKeyboard.StickyReset, Asse
     mKegsView = findViewById(R.id.kegsview);
 
     mConfigFile = new ConfigFile(this);
+    checkAndRequestStoragePermission();
 
     mKegsThread = new KegsThread(mConfigFile.getConfigFile(),
                                  mKegsView.getBitmap());

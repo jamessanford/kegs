@@ -11,6 +11,7 @@ LOCAL_SRC_FILES := adb.c clock.c config_generic.c config_kegs.c \
 	sound.c sound_driver.c video.c scc_socket_driver.c scc_windriver.c \
 	scc_macdriver.c android_driver.c android_sound_driver.c
 LOCAL_LDLIBS    := -lm -llog -ljnigraphics -lOpenSLES
+LOCAL_LDFLAGS   := -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 
 # To peek at the generated code:
 # android-ndk-r8b/toolchains/arm-linux-androideabi-4.6/prebuilt/darwin-x86/bin/arm-linux-androideabi-objdump -h -S -z objectfile.o

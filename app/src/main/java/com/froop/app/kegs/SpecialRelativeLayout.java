@@ -3,7 +3,6 @@ package com.froop.app.kegs;
 import android.widget.RelativeLayout;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 
 // A RelativeLayout that sends notifications when its screen size changes.
 
@@ -29,13 +28,32 @@ class SpecialRelativeLayout extends RelativeLayout {
     }
   }
 
+  private void checkSizeAndNotify() {
+    int availWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+    int availHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+
+    if (availWidth > 0 && availHeight > 0) {
+      if (availWidth != mWidth || availHeight != mHeight) {
+        int oldw = mWidth;
+        int oldh = mHeight;
+        mWidth = availWidth;
+        mHeight = availHeight;
+        if (mNotify != null) {
+          mNotify.onSizeChanged(mWidth, mHeight, oldw, oldh);
+        }
+      }
+    }
+  }
+
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     super.onSizeChanged(w, h, oldw, oldh);
-    mWidth = w;
-    mHeight = h;
-    if (mNotify != null) {
-      mNotify.onSizeChanged(w, h, oldw, oldh);
-    }
+    checkSizeAndNotify();
+  }
+
+  @Override
+  protected void onLayout(boolean changed, int l, int t, int r, int b) {
+    super.onLayout(changed, l, t, r, b);
+    checkSizeAndNotify();
   }
 }
